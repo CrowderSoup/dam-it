@@ -1,0 +1,69 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scenes/main/main.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/world/tree.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/world/dam_slot.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="5"]
+
+[node name="Main" type="Node2D"]
+script = ExtResource("1")
+
+[node name="Background" type="ColorRect" parent="."]
+offset_right = 1400.0
+offset_bottom = 800.0
+color = Color(0.35, 0.55, 0.28, 1)
+
+[node name="River" type="ColorRect" parent="."]
+offset_top = 350.0
+offset_right = 1400.0
+offset_bottom = 450.0
+color = Color(0.25, 0.45, 0.65, 1)
+
+[node name="Trees" type="Node2D" parent="."]
+
+[node name="Tree1" parent="Trees" instance=ExtResource("3")]
+position = Vector2(150, 150)
+
+[node name="Tree2" parent="Trees" instance=ExtResource("3")]
+position = Vector2(320, 220)
+
+[node name="Tree3" parent="Trees" instance=ExtResource("3")]
+position = Vector2(1100, 180)
+
+[node name="Tree4" parent="Trees" instance=ExtResource("3")]
+position = Vector2(1250, 260)
+
+[node name="Tree5" parent="Trees" instance=ExtResource("3")]
+position = Vector2(200, 600)
+
+[node name="Tree6" parent="Trees" instance=ExtResource("3")]
+position = Vector2(400, 680)
+
+[node name="Tree7" parent="Trees" instance=ExtResource("3")]
+position = Vector2(1050, 650)
+
+[node name="Tree8" parent="Trees" instance=ExtResource("3")]
+position = Vector2(1250, 580)
+
+[node name="DamSlots" type="Node2D" parent="."]
+
+[node name="DamSlot1" parent="DamSlots" instance=ExtResource("4")]
+position = Vector2(500, 400)
+
+[node name="DamSlot2" parent="DamSlots" instance=ExtResource("4")]
+position = Vector2(620, 400)
+
+[node name="DamSlot3" parent="DamSlots" instance=ExtResource("4")]
+position = Vector2(740, 400)
+
+[node name="DamSlot4" parent="DamSlots" instance=ExtResource("4")]
+position = Vector2(860, 400)
+
+[node name="DamSlot5" parent="DamSlots" instance=ExtResource("4")]
+position = Vector2(980, 400)
+
+[node name="Player" parent="." instance=ExtResource("2")]
+position = Vector2(200, 200)
+
+[node name="HUD" parent="." instance=ExtResource("5")]
