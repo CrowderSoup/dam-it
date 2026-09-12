@@ -33,3 +33,7 @@ shape = SubResource("2")
 position_smoothing_enabled = true
 position_smoothing_speed = 6.0
 zoom = Vector2(1.6, 1.6)
+limit_left = 0
+limit_top = 0
+limit_right = 1400
+limit_bottom = 800
