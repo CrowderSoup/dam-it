@@ -3,12 +3,15 @@ extends Node
 ## Autoloaded as "GameState" (see project.godot).
 
 signal wood_changed(new_amount: int)
+signal stone_changed(new_amount: int)
 signal dam_progress_changed(built: int, total: int)
 signal dam_completed
 
-const WOOD_PER_DAM_PIECE := 3
+const WOOD_PER_DAM_PIECE := 2
+const STONE_PER_DAM_PIECE := 1
 
 var wood: int = 0
+var stone: int = 0
 var dam_pieces_total: int = 0
 var dam_pieces_built: int = 0
 
@@ -22,21 +25,29 @@ func add_wood(amount: int) -> void:
 	wood += amount
 	wood_changed.emit(wood)
 
+func add_stone(amount: int) -> void:
+	stone += amount
+	stone_changed.emit(stone)
+
 func can_afford_dam_piece() -> bool:
-	return wood >= WOOD_PER_DAM_PIECE
+	return wood >= WOOD_PER_DAM_PIECE and stone >= STONE_PER_DAM_PIECE
 
 ## Zeroes progress ahead of a scene reload; dam_pieces_total is rebuilt as
 ## the reloaded DamSlot instances re-register themselves.
 func reset() -> void:
 	wood = 0
+	stone = 0
 	dam_pieces_total = 0
 	dam_pieces_built = 0
 	wood_changed.emit(wood)
+	stone_changed.emit(stone)
 	dam_progress_changed.emit(dam_pieces_built, dam_pieces_total)
 
-func spend_wood_on_dam_piece() -> void:
+func spend_resources_on_dam_piece() -> void:
 	wood -= WOOD_PER_DAM_PIECE
+	stone -= STONE_PER_DAM_PIECE
 	wood_changed.emit(wood)
+	stone_changed.emit(stone)
 	dam_pieces_built += 1
 	dam_progress_changed.emit(dam_pieces_built, dam_pieces_total)
 	if dam_pieces_total > 0 and dam_pieces_built >= dam_pieces_total:

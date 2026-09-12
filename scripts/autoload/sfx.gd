@@ -5,17 +5,22 @@ extends Node
 const SAMPLE_RATE := 22050
 
 var _chop_player: AudioStreamPlayer
+var _mine_player: AudioStreamPlayer
 var _build_player: AudioStreamPlayer
 var _complete_player: AudioStreamPlayer
 
 func _ready() -> void:
 	_chop_player = _make_player(_make_tone(220.0, 0.08, 0.5))
+	_mine_player = _make_player(_make_tone(160.0, 0.05, 0.55))
 	_build_player = _make_player(_make_tone(120.0, 0.18, 0.6))
 	_complete_player = _make_player(_make_arpeggio([440.0, 554.0, 659.0, 880.0], 0.12))
 	GameState.dam_completed.connect(play_complete)
 
 func play_chop() -> void:
 	_chop_player.play()
+
+func play_mine() -> void:
+	_mine_player.play()
 
 func play_build() -> void:
 	_build_player.play()

@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scenes/main/main.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2"]
@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" path="res://scenes/world/dam_slot.tscn" id="4"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="5"]
 [ext_resource type="PackedScene" path="res://scenes/world/decoration.tscn" id="6"]
+[ext_resource type="PackedScene" path="res://scenes/world/rock.tscn" id="7"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1")
@@ -22,15 +23,6 @@ offset_bottom = 450.0
 color = Color(0.25, 0.45, 0.65, 1)
 
 [node name="Decorations" type="Node2D" parent="."]
-
-[node name="Rock1" parent="Decorations" instance=ExtResource("6")]
-position = Vector2(80, 350)
-
-[node name="Rock2" parent="Decorations" instance=ExtResource("6")]
-position = Vector2(700, 120)
-
-[node name="Rock3" parent="Decorations" instance=ExtResource("6")]
-position = Vector2(950, 700)
 
 [node name="Bush1" parent="Decorations" instance=ExtResource("6")]
 kind = 1
@@ -73,6 +65,20 @@ position = Vector2(1050, 650)
 
 [node name="Tree8" parent="Trees" instance=ExtResource("3")]
 position = Vector2(1250, 580)
+
+[node name="Rocks" type="Node2D" parent="."]
+
+[node name="Rock1" parent="Rocks" instance=ExtResource("7")]
+position = Vector2(60, 320)
+
+[node name="Rock2" parent="Rocks" instance=ExtResource("7")]
+position = Vector2(700, 120)
+
+[node name="Rock3" parent="Rocks" instance=ExtResource("7")]
+position = Vector2(950, 700)
+
+[node name="Rock4" parent="Rocks" instance=ExtResource("7")]
+position = Vector2(1300, 700)
 
 [node name="DamSlots" type="Node2D" parent="."]
 
