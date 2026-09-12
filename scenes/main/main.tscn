@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://scenes/main/main.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2"]
@@ -8,6 +8,8 @@
 [ext_resource type="PackedScene" path="res://scenes/world/decoration.tscn" id="6"]
 [ext_resource type="PackedScene" path="res://scenes/world/rock.tscn" id="7"]
 [ext_resource type="PackedScene" path="res://scenes/world/grass_patch.tscn" id="8"]
+[ext_resource type="PackedScene" path="res://scenes/world/lodge.tscn" id="9"]
+[ext_resource type="PackedScene" path="res://scenes/world/critter.tscn" id="10"]
 
 [sub_resource type="RectangleShape2D" id="1"]
 size = Vector2(1400, 100)
@@ -132,6 +134,26 @@ position = Vector2(860, 400)
 
 [node name="DamSlot5" parent="DamSlots" instance=ExtResource("4")]
 position = Vector2(980, 400)
+
+[node name="Lodge" parent="." instance=ExtResource("9")]
+position = Vector2(700, 580)
+
+[node name="Critters" type="Node2D" parent="."]
+
+[node name="Frog" parent="Critters" instance=ExtResource("10")]
+kind = 0
+required_stage = 1
+position = Vector2(650, 605)
+
+[node name="Duck" parent="Critters" instance=ExtResource("10")]
+kind = 1
+required_stage = 2
+position = Vector2(550, 460)
+
+[node name="Fish" parent="Critters" instance=ExtResource("10")]
+kind = 2
+required_stage = 3
+position = Vector2(700, 400)
 
 [node name="Player" parent="." instance=ExtResource("2")]
 position = Vector2(200, 200)

@@ -7,12 +7,12 @@ script = ExtResource("1")
 
 [node name="StatsBackground" type="ColorRect" parent="."]
 position = Vector2(16, 16)
-size = Vector2(240, 88)
+size = Vector2(240, 110)
 color = Color(0, 0, 0, 0.35)
 
 [node name="Margin" type="MarginContainer" parent="."]
 position = Vector2(16, 16)
-size = Vector2(240, 88)
+size = Vector2(240, 110)
 theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 8
 theme_override_constants/margin_right = 8
@@ -29,13 +29,16 @@ text = "Stone: 0"
 [node name="DamLabel" type="Label" parent="Margin/VBox"]
 text = "Dam pieces: 0 / 0"
 
+[node name="LodgeLabel" type="Label" parent="Margin/VBox"]
+text = "Lodge: locked"
+
 [node name="HintBackground" type="ColorRect" parent="."]
-position = Vector2(16, 114)
+position = Vector2(16, 136)
 size = Vector2(430, 30)
 color = Color(0, 0, 0, 0.35)
 
 [node name="HintLabel" type="Label" parent="."]
-position = Vector2(20, 116)
+position = Vector2(20, 138)
 size = Vector2(426, 26)
 text = "WASD / arrows to move · E to chop, mine & build (2 wood + 1 stone / piece)"
 
@@ -47,5 +50,5 @@ color = Color(0, 0, 0, 0.35)
 [node name="CompleteLabel" type="Label" parent="."]
 position = Vector2(288, 24)
 size = Vector2(344, 48)
-text = "Dam complete! The pond is filling up.
-Press R to build another."
+text = "Dam complete! The Lodge site
+south of the river is now open."

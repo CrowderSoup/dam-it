@@ -18,6 +18,8 @@ func _ready() -> void:
 	var rock1: StaticBody2D = main.get_node("Rocks/Rock1")
 	var dam_slot1: Area2D = main.get_node("DamSlots/DamSlot1")
 	var river_water: Area2D = main.get_node("RiverWater")
+	var lodge: Area2D = main.get_node("Lodge")
+	var frog: Node2D = main.get_node("Critters/Frog")
 
 	assert(GameState.dam_pieces_total == 5, "expected 5 dam slots, got %d" % GameState.dam_pieces_total)
 	print("OK: dam_pieces_total == 5")
@@ -27,7 +29,8 @@ func _ready() -> void:
 	assert(player._resolve_target(tree_area) == tree1)
 	assert(player._resolve_target(rock_area) == rock1)
 	assert(player._resolve_target(dam_slot1) == dam_slot1)
-	print("OK: Player._resolve_target resolves trees, rocks, and dam slots correctly")
+	assert(player._resolve_target(lodge) == lodge)
+	print("OK: Player._resolve_target resolves trees, rocks, dam slots, and the lodge correctly")
 
 	assert(not tree1.highlighted)
 	tree1.set_highlighted(true)
@@ -48,6 +51,10 @@ func _ready() -> void:
 	rock1.mine()
 	assert(GameState.stone == 2, "mining a broken rock should not yield more stone")
 	print("OK: mining a rock 2 times yields stone and breaks it; broken rocks give no more")
+
+	assert(not lodge.unlocked, "lodge should be locked before the dam is finished")
+	assert(not lodge.can_advance())
+	print("OK: lodge starts locked")
 
 	assert(GameState.can_afford_dam_piece())
 	assert(dam_slot1.can_build())
@@ -80,6 +87,24 @@ func _ready() -> void:
 	assert(not is_instance_valid(river_water), "RiverWater should be freed once the dam is complete")
 	print("OK: RiverWater is removed on completion, so crossing is no longer slowed")
 
+	assert(lodge.unlocked, "lodge should unlock once the dam is complete")
+	print("OK: lodge unlocks once the dam is complete")
+
+	assert(not frog.visible, "frog should not be visible before lodge stage 1")
+	GameState.add_wood(10)
+	GameState.add_stone(10)
+	assert(lodge.can_advance() and GameState.can_afford_lodge_stage())
+	lodge.advance()
+	assert(GameState.lodge_stage == 1)
+	assert(frog.visible, "frog should appear once lodge reaches stage 1")
+	print("OK: advancing the lodge spends resources, and the frog appears at stage 1")
+
+	lodge.advance()
+	lodge.advance()
+	assert(GameState.lodge_stage == GameState.LODGE_MAX_STAGE)
+	assert(not lodge.can_advance(), "lodge should not advance past max stage")
+	print("OK: lodge reaches max stage and stops accepting further advances")
+
 	for action_name in ["move_up", "move_down", "move_left", "move_right", "interact", "restart"]:
 		assert(InputMap.has_action(action_name), "missing action: %s" % action_name)
 		var has_physical := false
@@ -101,7 +126,11 @@ func _ready() -> void:
 	GameState.reset()
 	assert(GameState.wood == 0 and GameState.stone == 0)
 	assert(GameState.dam_pieces_built == 0 and GameState.dam_pieces_total == 0)
-	print("OK: GameState.reset() zeroes progress")
+	assert(GameState.lodge_stage == 0)
+	print("OK: GameState.reset() zeroes progress including lodge_stage")
+
+	# Let the lodge-advance Fx.burst() timers run their course before quitting.
+	await get_tree().create_timer(1.0).timeout
 
 	print("ALL SMOKE TESTS PASSED")
 	get_tree().quit()

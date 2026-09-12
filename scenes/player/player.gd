@@ -58,13 +58,13 @@ func _unhandled_input(event: InputEvent) -> void:
 
 ## Trees and rocks register their InteractArea (a child) in a "*_areas"
 ## group, so the overlap result is the area, not the interactable itself;
-## dam slots ARE the Area2D, so no indirection is needed. This resolves any
-## of the three to the node that actually has chop()/mine()/build()/
-## set_highlighted().
+## dam slots and the Lodge ARE the Area2D, so no indirection is needed.
+## This resolves any of them to the node that actually has
+## chop()/mine()/build()/advance()/set_highlighted().
 func _resolve_target(area: Area2D) -> Node:
 	if area.is_in_group("tree_areas") or area.is_in_group("rock_areas"):
 		return area.get_parent()
-	if area.is_in_group("dam_slots"):
+	if area.is_in_group("dam_slots") or area.is_in_group("lodge"):
 		return area
 	return null
 
@@ -83,6 +83,10 @@ func _try_interact() -> void:
 			if target.can_build() and GameState.can_afford_dam_piece():
 				GameState.spend_resources_on_dam_piece()
 				target.build()
+			return
+		if target.is_in_group("lodge"):
+			if target.can_advance() and GameState.can_afford_lodge_stage():
+				target.advance()
 			return
 
 func _update_highlight() -> void:
