@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scenes/main/main.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2"]
@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="5"]
 [ext_resource type="PackedScene" path="res://scenes/world/decoration.tscn" id="6"]
 [ext_resource type="PackedScene" path="res://scenes/world/rock.tscn" id="7"]
+[ext_resource type="PackedScene" path="res://scenes/world/grass_patch.tscn" id="8"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1")
@@ -15,6 +16,28 @@ script = ExtResource("1")
 offset_right = 1400.0
 offset_bottom = 800.0
 color = Color(0.35, 0.55, 0.28, 1)
+
+[node name="GrassPatches" type="Node2D" parent="."]
+
+[node name="Patch1" parent="GrassPatches" instance=ExtResource("8")]
+position = Vector2(180, 550)
+patch_color = Color(0.32, 0.58, 0.3, 0.5)
+patch_radius = 70.0
+
+[node name="Patch2" parent="GrassPatches" instance=ExtResource("8")]
+position = Vector2(1050, 120)
+patch_color = Color(0.39, 0.52, 0.24, 0.45)
+patch_radius = 90.0
+
+[node name="Patch3" parent="GrassPatches" instance=ExtResource("8")]
+position = Vector2(650, 620)
+patch_color = Color(0.3, 0.56, 0.33, 0.4)
+patch_radius = 80.0
+
+[node name="Patch4" parent="GrassPatches" instance=ExtResource("8")]
+position = Vector2(300, 100)
+patch_color = Color(0.4, 0.53, 0.26, 0.4)
+patch_radius = 55.0
 
 [node name="River" type="ColorRect" parent="."]
 offset_top = 350.0

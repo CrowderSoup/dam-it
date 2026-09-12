@@ -6,11 +6,13 @@ const SPEED := 140.0
 const WORLD_BOUNDS := Rect2(20, 20, 1360, 760)
 const BOB_SPEED := 10.0
 const BOB_HEIGHT := 2.0
+const FOOTSTEP_INTERVAL := 0.35
 
 @onready var interact_area: Area2D = $InteractionArea
 @onready var visual: Node2D = $Visual
 
 var _bob_time := 0.0
+var _footstep_time := 0.0
 var _highlighted_target: Node = null
 
 func _physics_process(delta: float) -> void:
@@ -37,8 +39,13 @@ func _physics_process(delta: float) -> void:
 	if input_vector.length() > 0.01:
 		_bob_time += delta * BOB_SPEED
 		visual.position.y = sin(_bob_time) * BOB_HEIGHT
+		_footstep_time += delta
+		if _footstep_time >= FOOTSTEP_INTERVAL:
+			_footstep_time = 0.0
+			Sfx.play_footstep()
 	else:
 		visual.position.y = lerp(visual.position.y, 0.0, 0.2)
+		_footstep_time = FOOTSTEP_INTERVAL
 
 	_update_highlight()
 

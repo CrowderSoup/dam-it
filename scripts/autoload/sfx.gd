@@ -8,12 +8,14 @@ var _chop_player: AudioStreamPlayer
 var _mine_player: AudioStreamPlayer
 var _build_player: AudioStreamPlayer
 var _complete_player: AudioStreamPlayer
+var _footstep_player: AudioStreamPlayer
 
 func _ready() -> void:
 	_chop_player = _make_player(_make_tone(220.0, 0.08, 0.5))
 	_mine_player = _make_player(_make_tone(160.0, 0.05, 0.55))
 	_build_player = _make_player(_make_tone(120.0, 0.18, 0.6))
 	_complete_player = _make_player(_make_arpeggio([440.0, 554.0, 659.0, 880.0], 0.12))
+	_footstep_player = _make_player(_make_tone(90.0, 0.04, 0.2))
 	GameState.dam_completed.connect(play_complete)
 
 func play_chop() -> void:
@@ -27,6 +29,9 @@ func play_build() -> void:
 
 func play_complete() -> void:
 	_complete_player.play()
+
+func play_footstep() -> void:
+	_footstep_player.play()
 
 func _make_player(stream: AudioStreamWAV) -> AudioStreamPlayer:
 	var player := AudioStreamPlayer.new()
