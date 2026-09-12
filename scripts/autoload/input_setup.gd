@@ -11,6 +11,18 @@ func _ready() -> void:
 	_bind("interact", KEY_E, KEY_SPACE)
 	_bind("restart", KEY_R)
 
+	_add_joy_button("move_up", JOY_BUTTON_DPAD_UP)
+	_add_joy_button("move_down", JOY_BUTTON_DPAD_DOWN)
+	_add_joy_button("move_left", JOY_BUTTON_DPAD_LEFT)
+	_add_joy_button("move_right", JOY_BUTTON_DPAD_RIGHT)
+	_add_joy_button("interact", JOY_BUTTON_A)
+	_add_joy_button("restart", JOY_BUTTON_START)
+
+	_add_joy_axis("move_up", JOY_AXIS_LEFT_Y, -1.0)
+	_add_joy_axis("move_down", JOY_AXIS_LEFT_Y, 1.0)
+	_add_joy_axis("move_left", JOY_AXIS_LEFT_X, -1.0)
+	_add_joy_axis("move_right", JOY_AXIS_LEFT_X, 1.0)
+
 func _bind(action_name: String, primary: Key, secondary: Key = KEY_NONE) -> void:
 	if InputMap.has_action(action_name):
 		return
@@ -30,3 +42,14 @@ func _add_key(action_name: String, key: Key) -> void:
 	var logical_event := InputEventKey.new()
 	logical_event.keycode = key
 	InputMap.action_add_event(action_name, logical_event)
+
+func _add_joy_button(action_name: String, button: JoyButton) -> void:
+	var event := InputEventJoypadButton.new()
+	event.button_index = button
+	InputMap.action_add_event(action_name, event)
+
+func _add_joy_axis(action_name: String, axis: JoyAxis, axis_sign: float) -> void:
+	var event := InputEventJoypadMotion.new()
+	event.axis = axis
+	event.axis_value = axis_sign
+	InputMap.action_add_event(action_name, event)

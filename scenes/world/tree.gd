@@ -42,9 +42,16 @@ func chop() -> void:
 	GameState.add_wood(WOOD_YIELD)
 	Sfx.play_chop()
 	Fx.burst(global_position, Color(0.55, 0.4, 0.22), 8)
+	_shake()
 	queue_redraw()
 	if hits_taken >= HITS_TO_FELL:
 		_fell()
+
+func _shake() -> void:
+	scale = Vector2.ONE
+	var tween := create_tween()
+	tween.tween_property(self, "scale", Vector2(1.15, 0.85), 0.06)
+	tween.tween_property(self, "scale", Vector2.ONE, 0.12)
 
 func _fell() -> void:
 	felled = true
