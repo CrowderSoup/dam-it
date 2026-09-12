@@ -7,8 +7,10 @@ const WORLD_BOUNDS := Rect2(20, 20, 1360, 760)
 const BOB_SPEED := 10.0
 const BOB_HEIGHT := 2.0
 const FOOTSTEP_INTERVAL := 0.35
+const WATER_SPEED_MULTIPLIER := 0.5
 
 @onready var interact_area: Area2D = $InteractionArea
+@onready var water_detector: Area2D = $WaterDetector
 @onready var visual: Node2D = $Visual
 
 var _bob_time := 0.0
@@ -27,7 +29,8 @@ func _physics_process(delta: float) -> void:
 		input_vector.x += 1
 	input_vector = input_vector.normalized()
 
-	velocity = input_vector * SPEED
+	var speed_multiplier := WATER_SPEED_MULTIPLIER if water_detector.get_overlapping_areas().size() > 0 else 1.0
+	velocity = input_vector * SPEED * speed_multiplier
 	move_and_slide()
 
 	global_position.x = clamp(global_position.x, WORLD_BOUNDS.position.x, WORLD_BOUNDS.end.x)

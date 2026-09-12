@@ -1,0 +1,107 @@
+extends Node
+## Headless regression test for the core loop. Not a proper test framework
+## (no GUT/GoDotTest set up yet) - just enough to catch obvious breakage
+## before it reaches a session where you're testing by hand.
+##
+## Run with:
+##   godot --headless --path . tests/smoke_test.tscn
+## It exits 0 and prints ALL SMOKE TESTS PASSED on success, or hits a
+## SCRIPT ERROR: Assertion failed on the first broken behavior.
+
+func _ready() -> void:
+	var main_scene: PackedScene = load("res://scenes/main/main.tscn")
+	var main: Node = main_scene.instantiate()
+	add_child(main)
+
+	var player: CharacterBody2D = main.get_node("Player")
+	var tree1: StaticBody2D = main.get_node("Trees/Tree1")
+	var rock1: StaticBody2D = main.get_node("Rocks/Rock1")
+	var dam_slot1: Area2D = main.get_node("DamSlots/DamSlot1")
+	var river_water: Area2D = main.get_node("RiverWater")
+
+	assert(GameState.dam_pieces_total == 5, "expected 5 dam slots, got %d" % GameState.dam_pieces_total)
+	print("OK: dam_pieces_total == 5")
+
+	var tree_area: Area2D = tree1.get_node("InteractArea")
+	var rock_area: Area2D = rock1.get_node("InteractArea")
+	assert(player._resolve_target(tree_area) == tree1)
+	assert(player._resolve_target(rock_area) == rock1)
+	assert(player._resolve_target(dam_slot1) == dam_slot1)
+	print("OK: Player._resolve_target resolves trees, rocks, and dam slots correctly")
+
+	assert(not tree1.highlighted)
+	tree1.set_highlighted(true)
+	assert(tree1.highlighted)
+	tree1.set_highlighted(false)
+	print("OK: tree highlighting toggles")
+
+	for i in 3:
+		tree1.chop()
+	assert(GameState.wood == 3 and tree1.felled, "expected 3 wood, tree felled after 3 hits")
+	tree1.chop()
+	assert(GameState.wood == 3, "chopping a felled tree should not yield more wood")
+	print("OK: chopping a tree 3 times yields wood and fells it; felled trees give no more")
+
+	for i in 2:
+		rock1.mine()
+	assert(GameState.stone == 2 and rock1.broken, "expected 2 stone, rock broken after 2 hits")
+	rock1.mine()
+	assert(GameState.stone == 2, "mining a broken rock should not yield more stone")
+	print("OK: mining a rock 2 times yields stone and breaks it; broken rocks give no more")
+
+	assert(GameState.can_afford_dam_piece())
+	assert(dam_slot1.can_build())
+	GameState.spend_resources_on_dam_piece()
+	dam_slot1.build()
+	assert(GameState.dam_pieces_built == 1 and not dam_slot1.can_build())
+	print("OK: building a dam piece spends resources and marks the slot built")
+
+	assert(is_instance_valid(river_water), "river_water should exist before completion")
+	player.global_position = river_water.global_position
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	assert(player.water_detector.get_overlapping_areas().size() > 0, "player standing in the river should detect RiverWater")
+	print("OK: water detector notices the player standing in the river")
+
+	var completed_flag := [false]
+	GameState.dam_completed.connect(func(): completed_flag[0] = true)
+	for slot_name in ["DamSlot2", "DamSlot3", "DamSlot4", "DamSlot5"]:
+		var slot: Area2D = main.get_node("DamSlots/%s" % slot_name)
+		GameState.add_wood(2)
+		GameState.add_stone(1)
+		GameState.spend_resources_on_dam_piece()
+		slot.build()
+	assert(completed_flag[0], "dam_completed should fire once all 5 slots are built")
+	print("OK: dam_completed fires once all slots are built")
+
+	# Let Fx.burst() timers (chop/mine/build/completion) run their course
+	# before quitting, and let RiverWater's queue_free() take effect.
+	await get_tree().create_timer(1.0).timeout
+	assert(not is_instance_valid(river_water), "RiverWater should be freed once the dam is complete")
+	print("OK: RiverWater is removed on completion, so crossing is no longer slowed")
+
+	for action_name in ["move_up", "move_down", "move_left", "move_right", "interact", "restart"]:
+		assert(InputMap.has_action(action_name), "missing action: %s" % action_name)
+		var has_physical := false
+		var has_logical := false
+		var has_joy := false
+		for event in InputMap.action_get_events(action_name):
+			if event is InputEventKey:
+				if event.physical_keycode != KEY_NONE:
+					has_physical = true
+				if event.keycode != KEY_NONE:
+					has_logical = true
+			elif event is InputEventJoypadButton or event is InputEventJoypadMotion:
+				has_joy = true
+		assert(has_physical, "%s has no physical_keycode event" % action_name)
+		assert(has_logical, "%s has no keycode event" % action_name)
+		assert(has_joy, "%s has no joypad event" % action_name)
+	print("OK: all actions have physical, logical, and joypad bindings")
+
+	GameState.reset()
+	assert(GameState.wood == 0 and GameState.stone == 0)
+	assert(GameState.dam_pieces_built == 0 and GameState.dam_pieces_total == 0)
+	print("OK: GameState.reset() zeroes progress")
+
+	print("ALL SMOKE TESTS PASSED")
+	get_tree().quit()

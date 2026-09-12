@@ -9,6 +9,9 @@ radius = 12.0
 [sub_resource type="CircleShape2D" id="2"]
 radius = 30.0
 
+[sub_resource type="CircleShape2D" id="3"]
+radius = 8.0
+
 [node name="Player" type="CharacterBody2D"]
 collision_layer = 2
 collision_mask = 1
@@ -28,6 +31,15 @@ monitorable = false
 
 [node name="InteractionShape" type="CollisionShape2D" parent="InteractionArea"]
 shape = SubResource("2")
+
+[node name="WaterDetector" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 16
+monitoring = true
+monitorable = false
+
+[node name="WaterDetectorShape" type="CollisionShape2D" parent="WaterDetector"]
+shape = SubResource("3")
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position_smoothing_enabled = true

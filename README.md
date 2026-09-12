@@ -40,11 +40,13 @@ godot --path .
    8 seconds.
 3. Walk up to a rock and interact to mine it (2 hits, 1 stone each). Mined
    rocks respawn after 10 seconds.
-4. Walk to one of the 5 empty dam slots along the river (also highlights in
-   range) and press interact to place a dam piece (costs 2 wood + 1 stone).
-5. Once all 5 slots are filled, the river visibly rises and deepens behind
-   your finished dam, with a completion sound and a particle burst at
-   every slot.
+4. Walking through the river slows you down (wading) until the dam is
+   finished. Walk to one of the 5 empty dam slots along the river (also
+   highlights in range) and press interact to place a dam piece (costs
+   2 wood + 1 stone).
+5. Once all 5 slots are filled, the slowdown goes away (dam's done, cross
+   freely), the river visibly rises and deepens behind it, and there's a
+   completion sound plus a particle burst at every slot.
 6. Press restart any time to reset progress and build it again.
 
 ## Project layout
@@ -72,24 +74,24 @@ code doesn't care about the visuals or how the sounds are generated.
 ## Known simplifications / next steps
 
 - No real art or animation yet (beyond the simple facing/bob/shake juice).
-- The river is decorative, not a movement obstacle — building the dam is a
-  visual/narrative payoff rather than something that changes traversal.
+- The river only slows you down (wading), it never blocks movement, so
+  there's no risk of getting stuck on either bank.
 - No save/load, no export presets for other platforms.
 - Gamepad movement is 4-directional (bound to the left stick as digital
   push, not full analog), matching the existing discrete movement model.
 
 ## Development notes
 
-There's no in-tree automated test suite yet (Godot's GUT/GoDotTest aren't
-set up). When making logic changes, a quick way to sanity-check without a
-display is to temporarily drop a scene + script under `scripts/` that
-instantiates `main.tscn`, exercises the objects directly (e.g.
-`tree.chop()`, `dam_slot.build()`), asserts on `GameState`, then
-`get_tree().quit()` — run it with:
+There's a headless regression test at `tests/smoke_test.gd` (no real
+framework like GUT/GoDotTest set up - just plain `assert()`s against the
+actual game objects). Run it after making logic changes:
 
 ```
-godot --headless --path . scripts/your_test.tscn
+godot --headless --path . tests/smoke_test.tscn
 ```
 
-Delete the scratch files when done, or turn them into a real test suite if
-this project grows.
+It instantiates `main.tscn`, drives the real Tree/Rock/DamSlot/GameState
+objects directly (chop, mine, build, complete, reset), and prints
+`ALL SMOKE TESTS PASSED` on success or hits a `SCRIPT ERROR: Assertion
+failed` at the first broken behavior. Extend this file as new mechanics are
+added, rather than writing one-off scratch tests each time.

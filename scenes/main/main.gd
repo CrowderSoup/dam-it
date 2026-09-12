@@ -3,6 +3,7 @@ extends Node2D
 ## the player restart the level at any time.
 
 @onready var river: ColorRect = $River
+@onready var river_water: Area2D = $RiverWater
 @onready var dam_slots: Node2D = $DamSlots
 @onready var camera: Camera2D = $Player/Camera2D
 
@@ -15,6 +16,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_tree().reload_current_scene()
 
 func _on_dam_completed() -> void:
+	river_water.queue_free()
+
 	var tween := create_tween()
 	tween.tween_property(river, "color", Color(0.2, 0.35, 0.75, 1), 2.0)
 	tween.parallel().tween_property(river, "offset_top", 250.0, 2.0)
