@@ -1,8 +1,8 @@
 # Dam it!
 
 A cozy top-down builder game where you play as a beaver gathering wood and
-building a dam across a river. Built with Godot 4 (GDScript), targeting
-native Linux for now.
+stone to build a dam across a river. Built with Godot 4 (GDScript),
+targeting native Linux for now.
 
 ## Requirements
 
@@ -27,7 +27,8 @@ godot --path .
 
 - `WASD` or arrow keys, or a gamepad's d-pad/left stick — move
 - `E` / `Space` / gamepad A — context-sensitive interact: chop a nearby
-  tree, or build a dam piece at a nearby empty slot if you have enough wood
+  tree, mine a nearby rock, or build a dam piece at a nearby empty slot if
+  you have enough wood + stone
 - `R` / gamepad Start — reset progress and replay
 
 ## Current demo loop
@@ -37,11 +38,14 @@ godot --path .
    interact repeatedly to chop it down (3 hits, 1 wood each, with a little
    shake, wood-chip burst, and sound per hit). Felled trees respawn after
    8 seconds.
-3. Walk to one of the 5 empty dam slots along the river (also highlights in
-   range) and press interact to place a dam piece (costs 3 wood).
-4. Once all 5 slots are filled, the river visibly rises and deepens behind
-   your finished dam, with a completion sound and message.
-5. Press restart any time to reset progress and build it again.
+3. Walk up to a rock and interact to mine it (2 hits, 1 stone each). Mined
+   rocks respawn after 10 seconds.
+4. Walk to one of the 5 empty dam slots along the river (also highlights in
+   range) and press interact to place a dam piece (costs 2 wood + 1 stone).
+5. Once all 5 slots are filled, the river visibly rises and deepens behind
+   your finished dam, with a completion sound and a particle burst at
+   every slot.
+6. Press restart any time to reset progress and build it again.
 
 ## Project layout
 
@@ -49,9 +53,9 @@ godot --path .
 scenes/
   main/     - the playable level (main.tscn) and its small "pond rises" script
   player/   - the beaver: movement, facing/bob animation, interact
-  world/    - tree, dam slot, dam piece, and purely-visual decorations
-              (rocks/bushes)
-  ui/       - title screen and HUD (wood count, dam progress)
+  world/    - tree, rock, dam slot, dam piece, and purely-visual
+              decorations (bushes)
+  ui/       - title screen and HUD (wood/stone counts, dam progress)
 scripts/
   autoload/ - GameState (progress/signals), InputSetup (key/gamepad
               bindings, registered in code instead of hand-edited
