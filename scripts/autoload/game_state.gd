@@ -25,6 +25,15 @@ func add_wood(amount: int) -> void:
 func can_afford_dam_piece() -> bool:
 	return wood >= WOOD_PER_DAM_PIECE
 
+## Zeroes progress ahead of a scene reload; dam_pieces_total is rebuilt as
+## the reloaded DamSlot instances re-register themselves.
+func reset() -> void:
+	wood = 0
+	dam_pieces_total = 0
+	dam_pieces_built = 0
+	wood_changed.emit(wood)
+	dam_progress_changed.emit(dam_pieces_built, dam_pieces_total)
+
 func spend_wood_on_dam_piece() -> void:
 	wood -= WOOD_PER_DAM_PIECE
 	wood_changed.emit(wood)

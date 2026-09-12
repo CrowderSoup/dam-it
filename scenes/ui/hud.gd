@@ -1,8 +1,11 @@
 extends CanvasLayer
 
+const HINT_DURATION := 6.0
+
 @onready var wood_label: Label = $Margin/VBox/WoodLabel
 @onready var dam_label: Label = $Margin/VBox/DamLabel
 @onready var complete_label: Label = $CompleteLabel
+@onready var hint_label: Label = $HintLabel
 
 func _ready() -> void:
 	GameState.wood_changed.connect(_on_wood_changed)
@@ -11,6 +14,7 @@ func _ready() -> void:
 	_on_wood_changed(GameState.wood)
 	_on_dam_progress_changed(GameState.dam_pieces_built, GameState.dam_pieces_total)
 	complete_label.hide()
+	get_tree().create_timer(HINT_DURATION).timeout.connect(hint_label.hide)
 
 func _on_wood_changed(amount: int) -> void:
 	wood_label.text = "Wood: %d" % amount

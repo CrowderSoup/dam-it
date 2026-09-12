@@ -23,5 +23,11 @@ text = "Dam pieces: 0 / 0"
 
 [node name="CompleteLabel" type="Label" parent="."]
 position = Vector2(280, 16)
-size = Vector2(340, 40)
-text = "Dam complete! The pond is filling up."
+size = Vector2(360, 60)
+text = "Dam complete! The pond is filling up.
+Press R to build another."
+
+[node name="HintLabel" type="Label" parent="."]
+position = Vector2(16, 90)
+size = Vector2(400, 40)
+text = "WASD / arrows to move · E to chop trees & build dam pieces"
