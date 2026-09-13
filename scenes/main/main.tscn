@@ -11,6 +11,7 @@
 [ext_resource type="PackedScene" path="res://scenes/world/lodge.tscn" id="9"]
 [ext_resource type="PackedScene" path="res://scenes/world/critter.tscn" id="10"]
 [ext_resource type="Shader" path="res://shaders/water.gdshader" id="11"]
+[ext_resource type="PackedScene" path="res://scenes/world/garden_spot.tscn" id="12"]
 
 [sub_resource type="RectangleShape2D" id="1"]
 size = Vector2(1400, 100)
@@ -164,6 +165,30 @@ position = Vector2(550, 460)
 kind = 2
 required_stage = 3
 position = Vector2(700, 400)
+
+[node name="Butterfly" parent="Critters" instance=ExtResource("10")]
+kind = 3
+required_stage = 99
+bob_height = 3.0
+bob_speed = 4.0
+position = Vector2(605, 590)
+
+[node name="Rabbit" parent="Critters" instance=ExtResource("10")]
+kind = 4
+required_stage = 99
+position = Vector2(800, 615)
+
+[node name="GardenSpots" type="Node2D" parent="."]
+
+[node name="FlowerBedSpot" parent="GardenSpots" instance=ExtResource("12")]
+kind = 0
+critter_path = NodePath("../../Critters/Butterfly")
+position = Vector2(620, 615)
+
+[node name="BenchSpot" parent="GardenSpots" instance=ExtResource("12")]
+kind = 1
+critter_path = NodePath("../../Critters/Rabbit")
+position = Vector2(790, 610)
 
 [node name="Player" parent="." instance=ExtResource("2")]
 position = Vector2(200, 200)

@@ -56,11 +56,16 @@ means to an end, not the whole game:
    than the last. A critter moves in at each milestone: a frog at the
    foundation, a duck once the walls are up, and a fish in the pond once
    the roof's on.
-7. Progress **saves automatically** (periodically, when the dam is
+7. Once the Lodge is complete, two **garden spots** near it unlock (also
+   padlocked until then) - a flower bed and a bench, 3 wood + 2 stone each,
+   one-time purchases with no further stages. Building one reveals its own
+   critter (a butterfly for the flower bed, a rabbit for the bench), giving
+   leftover resources somewhere to go once the Lodge itself is finished.
+8. Progress **saves automatically** (periodically, when the dam is
    completed, and when you close the window) and reloads next time you
    start the game - close it and come back later, your pond is still
-   there. `R` any time to reset everything (dam + Lodge + critters) and
-   start over from scratch, deleting the save.
+   there. `R` any time to reset everything (dam + Lodge + garden spots +
+   critters) and start over from scratch, deleting the save.
 
 ## Project layout
 
@@ -68,8 +73,9 @@ means to an end, not the whole game:
 scenes/
   main/     - the playable level (main.tscn) and its small "pond rises" script
   player/   - the beaver: movement, facing/bob animation, interact
-  world/    - tree, rock, dam slot, dam piece, lodge, critter (frog/duck/
-              fish), and purely-visual decorations (bushes)
+  world/    - tree, rock, dam slot, dam piece, lodge, garden spot (flower
+              bed/bench), critter (frog/duck/fish/butterfly/rabbit), and
+              purely-visual decorations (bushes)
   ui/       - title screen and HUD (wood/stone counts, dam + Lodge progress)
 scripts/
   autoload/ - GameState (progress/signals for both the dam and the Lodge),
@@ -100,10 +106,10 @@ code doesn't care about the visuals or how the sounds are generated.
 - No export presets for other platforms yet.
 - Gamepad movement is 4-directional (bound to the left stick as digital
   push, not full analog), matching the existing discrete movement model.
-- The Lodge tops out at 3 stages with no further content after that - the
-  "grow your pond" idea has room for a second, bigger dam/pond expansion
-  after the Lodge is finished, more critters, or seasonal events, but none
-  of that exists yet.
+- Once both garden spots are built there's currently no further content -
+  the "grow your pond" idea has room for a second, bigger dam/pond
+  expansion, more garden spots/critters, or seasonal events, but none of
+  that exists yet.
 - One save slot, no save UI - it's an implicit "your one pond" save, not a
   menu with multiple slots. Felled trees/mined rocks don't persist their
   mid-respawn-timer state across a save (they just reappear whole on

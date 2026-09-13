@@ -59,3 +59,12 @@ const DUCK_BODY := Color("f6f1e4")
 const DUCK_BILL := Color("e8a838")
 const FISH_BODY := Color("5b93c9")
 const FISH_BELLY := Color("bcd8ee")
+const BUTTERFLY_WING := Color("d98bb0")
+const RABBIT_FUR := Color("ddd7cd")
+
+# Garden decorations
+const PETAL_PINK := Color("e6708f")
+const PETAL_YELLOW := Color("f2cc4d")
+const PETAL_PURPLE := Color("9a72c9")
+const PETAL_ORANGE := Color("ec8b3f")
+const PETAL_CENTER := Color("fce77d")

@@ -110,6 +110,21 @@ func _ready() -> void:
 	assert(not lodge.can_advance(), "lodge should not advance past max stage")
 	print("OK: lodge reaches max stage and stops accepting further advances")
 
+	# --- Garden spots (post-Lodge cosmetic decorations) ---
+	var flower_spot: GardenSpot = main.get_node("GardenSpots/FlowerBedSpot")
+	var butterfly: Node2D = main.get_node("Critters/Butterfly")
+	assert(flower_spot.unlocked, "garden spots should unlock once the lodge is complete")
+	assert(not butterfly.visible, "butterfly should stay hidden until its garden spot is built")
+	assert(player._resolve_target(flower_spot) == flower_spot)
+
+	GameState.add_wood(10)
+	GameState.add_stone(10)
+	assert(flower_spot.can_build() and GameState.can_afford(GardenSpot.WOOD_COST, GardenSpot.STONE_COST))
+	flower_spot.build()
+	assert(flower_spot.built and not flower_spot.can_build())
+	assert(butterfly.visible, "building the flower bed should reveal the butterfly")
+	print("OK: garden spots unlock with the lodge, and building one reveals its critter")
+
 	for action_name in ["move_up", "move_down", "move_left", "move_right", "interact", "restart"]:
 		assert(InputMap.has_action(action_name), "missing action: %s" % action_name)
 		var has_physical := false
@@ -136,6 +151,7 @@ func _ready() -> void:
 	assert(saved_data["wood"] == GameState.wood)
 	assert(saved_data["lodge_stage"] == GameState.LODGE_MAX_STAGE)
 	assert(saved_data["dam_slots_built"]["DamSlot1"] == true)
+	assert(saved_data["garden_spots_built"]["FlowerBedSpot"] == true)
 
 	# save_game() reads get_tree().current_scene, which Godot only allows to
 	# be a direct child of root - reparent there just for this call, the
@@ -161,6 +177,10 @@ func _ready() -> void:
 	assert(restored_slot1.built, "loading should restore built dam slots")
 	var restored_lodge: Area2D = main2.get_node("Lodge")
 	assert(restored_lodge.unlocked, "loading should unlock the lodge if the dam was complete")
+	var restored_flower_spot: GardenSpot = main2.get_node("GardenSpots/FlowerBedSpot")
+	assert(restored_flower_spot.unlocked and restored_flower_spot.built, "loading should restore built garden spots")
+	var restored_butterfly: Node2D = main2.get_node("Critters/Butterfly")
+	assert(restored_butterfly.visible, "loading a built garden spot should re-reveal its critter")
 	print("OK: a fresh scene instance auto-loads saved progress on _ready()")
 
 	SaveManager.delete_save()

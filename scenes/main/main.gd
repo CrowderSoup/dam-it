@@ -8,6 +8,7 @@ extends Node2D
 @onready var river_water: Area2D = $RiverWater
 @onready var dam_slots: Node2D = $DamSlots
 @onready var lodge: Area2D = $Lodge
+@onready var garden_spots: Node2D = $GardenSpots
 @onready var player: CharacterBody2D = $Player
 @onready var camera: Camera2D = $Player/Camera2D
 
@@ -41,11 +42,15 @@ func get_save_data() -> Dictionary:
 	var dam_slots_built := {}
 	for slot in dam_slots.get_children():
 		dam_slots_built[slot.name] = slot.built
+	var garden_spots_built := {}
+	for spot in garden_spots.get_children():
+		garden_spots_built[spot.name] = spot.built
 	return {
 		"wood": GameState.wood,
 		"stone": GameState.stone,
 		"lodge_stage": GameState.lodge_stage,
 		"dam_slots_built": dam_slots_built,
+		"garden_spots_built": garden_spots_built,
 		"player_x": player.global_position.x,
 		"player_y": player.global_position.y,
 	}
@@ -65,12 +70,20 @@ func apply_save_data(data: Dictionary) -> void:
 		_apply_completed_dam_visuals()
 		lodge.restore_unlocked()
 
+	if GameState.lodge_stage >= GameState.LODGE_MAX_STAGE:
+		var spots_built: Dictionary = data.get("garden_spots_built", {})
+		for spot in garden_spots.get_children():
+			spot.restore_unlocked()
+			if spots_built.get(spot.name, false):
+				spot.set_built_silently(true)
+
 	if data.has("player_x") and data.has("player_y"):
 		player.global_position = Vector2(data["player_x"], data["player_y"])
 
-	# Only now that dam slots, the lodge, and the river are all fully
-	# restored is it safe to let anything (HUD, critters, SaveManager's
-	# autosave-on-signal) react to the change - see GameState.load_from_save().
+	# Only now that dam slots, the lodge, garden spots, and the river are
+	# all fully restored is it safe to let anything (HUD, critters,
+	# SaveManager's autosave-on-signal) react to the change - see
+	# GameState.load_from_save().
 	GameState.announce_loaded_state()
 
 ## Same end state as the _on_dam_completed() tween, applied instantly since

@@ -53,6 +53,17 @@ func spend_resources_on_dam_piece() -> void:
 	if dam_pieces_total > 0 and dam_pieces_built >= dam_pieces_total:
 		dam_completed.emit()
 
+## Generic spend for one-off cosmetic purchases (garden decorations) that
+## don't need their own dedicated cost table like the dam/Lodge do.
+func can_afford(wood_cost: int, stone_cost: int) -> bool:
+	return wood >= wood_cost and stone >= stone_cost
+
+func spend(wood_cost: int, stone_cost: int) -> void:
+	wood -= wood_cost
+	stone -= stone_cost
+	wood_changed.emit(wood)
+	stone_changed.emit(stone)
+
 func can_afford_lodge_stage() -> bool:
 	if lodge_stage >= LODGE_MAX_STAGE:
 		return false
