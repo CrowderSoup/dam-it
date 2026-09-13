@@ -26,6 +26,7 @@ func _ready() -> void:
 	var lodge: Area2D = main.get_node("Lodge")
 	var frog: Node2D = main.get_node("Critters/Frog")
 	var raccoon: Raccoon = main.get_node("Raccoon")
+	var hud: CanvasLayer = main.get_node("HUD")
 
 	assert(GameState.dam_pieces_total == 5, "expected 5 dam slots, got %d" % GameState.dam_pieces_total)
 	print("OK: dam_pieces_total == 5")
@@ -58,9 +59,9 @@ func _ready() -> void:
 	assert(GameState.stone == 2, "mining a broken rock should not yield more stone")
 	print("OK: mining a rock 2 times yields stone and breaks it; broken rocks give no more")
 
-	assert(not lodge.unlocked, "lodge should be locked before the dam is finished")
+	assert(not lodge.visible, "lodge should be hidden before the dam is finished")
 	assert(not lodge.can_advance())
-	print("OK: lodge starts locked")
+	print("OK: lodge starts hidden")
 
 	assert(GameState.can_afford_dam_piece())
 	assert(dam_slot1.can_build())
@@ -70,7 +71,7 @@ func _ready() -> void:
 	print("OK: building a dam piece spends resources and marks the slot built")
 
 	assert(is_instance_valid(river_water), "river_water should exist before completion")
-	player.global_position = river_water.global_position
+	player.global_position = dam_slot1.global_position
 	await get_tree().physics_frame
 	await get_tree().physics_frame
 	assert(player.water_detector.get_overlapping_areas().size() > 0, "player standing in the river should detect RiverWater")
@@ -93,8 +94,20 @@ func _ready() -> void:
 	assert(not is_instance_valid(river_water), "RiverWater should be freed once the dam is complete")
 	print("OK: RiverWater is removed on completion, so crossing is no longer slowed")
 
-	assert(lodge.unlocked, "lodge should unlock once the dam is complete")
-	print("OK: lodge unlocks once the dam is complete")
+	assert(lodge.visible, "lodge should appear once the dam is complete")
+	print("OK: lodge appears once the dam is complete")
+
+	# --- HUD toast + edge indicators (threat visibility) ---
+	assert(hud.toast_label.visible and hud.toast_background.visible, "dam_completed should have shown a toast")
+	hud.point_to_storm(dam_slot1)
+	assert(hud.storm_indicator.target == dam_slot1)
+	hud.clear_storm_indicator()
+	assert(hud.storm_indicator.target == null, "clear_storm_indicator() should drop the target")
+	hud.point_to_raccoon(raccoon)
+	assert(hud.raccoon_indicator.target == raccoon)
+	hud.clear_raccoon_indicator()
+	assert(hud.raccoon_indicator.target == null, "clear_raccoon_indicator() should drop the target")
+	print("OK: HUD shows a toast on dam completion, and the edge indicators track/clear targets")
 
 	# --- Storms: a leak on a built dam slot, repaired without re-triggering
 	# dam completion or changing the built-piece count. ---
@@ -104,6 +117,10 @@ func _ready() -> void:
 	assert(not dam_slot1.can_build(), "a leaking slot is still built, not buildable again")
 	dam_slot1.start_leaking()
 	assert(dam_slot1.leaking, "start_leaking() should be idempotent, not double-apply")
+
+	# Main listens to every slot's leak_changed to keep the storm indicator
+	# pointed at a real leak - not just testing the HUD API in isolation.
+	assert(hud.storm_indicator.target == dam_slot1, "leak_changed should have pointed the storm indicator at the leaking slot")
 
 	GameState.add_wood(5)
 	GameState.add_stone(5)
@@ -116,16 +133,19 @@ func _ready() -> void:
 	assert(not dam_slot1.leaking and not dam_slot1.can_repair(), "repair() should clear the leak")
 	assert(GameState.dam_pieces_built == built_before_repair, "repairing must not change the built-piece count")
 	assert(not repair_completed_flag[0], "repairing an already-complete dam must not refire dam_completed")
+	assert(hud.storm_indicator.target == null, "repairing the only leak should clear the storm indicator")
 	print("OK: a leaking dam slot can be repaired without affecting dam_pieces_built or re-firing dam_completed")
 
 	# --- Scavenger: shoo vs. steal-and-flee ---
 	assert(not raccoon.can_shoo(), "raccoon should be inactive until spawned")
 	raccoon.spawn_at(Vector2(300, 300))
+	hud.point_to_raccoon(raccoon)
 	assert(raccoon.can_shoo() and raccoon.visible, "spawn_at() should activate and show the raccoon")
 	assert(player._resolve_target(raccoon) == raccoon)
 	raccoon.shoo()
 	assert(not raccoon.can_shoo() and not raccoon.visible, "shoo() should despawn the raccoon with no theft")
-	print("OK: shooing the raccoon despawns it without stealing anything")
+	assert(hud.raccoon_indicator.target == null, "despawning (via shoo) should clear the raccoon indicator")
+	print("OK: shooing the raccoon despawns it without stealing anything, and clears its indicator")
 
 	raccoon.spawn_at(Vector2(300, 300))
 	var wood_before_theft := GameState.wood
@@ -159,7 +179,7 @@ func _ready() -> void:
 	# --- Garden spots (post-Lodge cosmetic decorations) ---
 	var flower_spot: GardenSpot = main.get_node("GardenSpots/FlowerBedSpot")
 	var butterfly: Node2D = main.get_node("Critters/Butterfly")
-	assert(flower_spot.unlocked, "garden spots should unlock once the lodge is complete")
+	assert(flower_spot.visible, "garden spots should appear once the lodge is complete")
 	assert(not butterfly.visible, "butterfly should stay hidden until its garden spot is built")
 	assert(player._resolve_target(flower_spot) == flower_spot)
 
@@ -229,9 +249,9 @@ func _ready() -> void:
 	assert(restored_slot2.leaking, "loading should restore a leaking dam slot")
 	assert(restored_slot2.can_repair())
 	var restored_lodge: Area2D = main2.get_node("Lodge")
-	assert(restored_lodge.unlocked, "loading should unlock the lodge if the dam was complete")
+	assert(restored_lodge.visible, "loading should reveal the lodge if the dam was complete")
 	var restored_flower_spot: GardenSpot = main2.get_node("GardenSpots/FlowerBedSpot")
-	assert(restored_flower_spot.unlocked and restored_flower_spot.built, "loading should restore built garden spots")
+	assert(restored_flower_spot.visible and restored_flower_spot.built, "loading should restore built garden spots")
 	var restored_butterfly: Node2D = main2.get_node("Critters/Butterfly")
 	assert(restored_butterfly.visible, "loading a built garden spot should re-reveal its critter")
 	print("OK: a fresh scene instance auto-loads saved progress on _ready()")

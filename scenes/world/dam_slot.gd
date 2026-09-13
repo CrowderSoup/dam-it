@@ -4,6 +4,11 @@ extends Area2D
 ## timer) that needs a repair - same interact action, same cost - before it
 ## goes back to just sitting there quietly.
 
+## Emitted whenever `leaking` starts or stops, live or restored from a save
+## - Main listens to keep the storm edge-indicator pointed at a leak that
+## still needs attention (or cleared once none remain).
+signal leak_changed
+
 var built: bool = false
 var leaking: bool = false
 var highlighted: bool = false
@@ -57,6 +62,7 @@ func start_leaking() -> void:
 	if _piece:
 		_piece.set_leaking(true)
 	queue_redraw()
+	leak_changed.emit()
 
 func repair() -> void:
 	if not can_repair():
@@ -67,6 +73,7 @@ func repair() -> void:
 	Sfx.play_build()
 	Fx.burst(global_position, Color(0.6, 0.6, 0.65), 10)
 	queue_redraw()
+	leak_changed.emit()
 
 ## Restores a built slot from a save file - same end state as build(), but
 ## silent (no sound/particles) since nothing just happened live.
@@ -84,6 +91,7 @@ func set_leaking_silently(value: bool) -> void:
 	if _piece:
 		_piece.set_leaking(true)
 	queue_redraw()
+	leak_changed.emit()
 
 func _place_piece() -> void:
 	built = true

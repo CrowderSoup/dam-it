@@ -3,7 +3,7 @@ extends Area2D
 ## A cosmetic garden decoration, buildable once the Lodge is complete. No
 ## further stages once built - the payoff is purely a prettier pond and a
 ## critter moving in, giving leftover wood/stone somewhere to go after the
-## Lodge itself is finished.
+## Lodge itself is finished. Hidden entirely until then.
 
 enum Kind { FLOWER_BED, BENCH }
 
@@ -14,23 +14,27 @@ const STONE_COST := 2
 ## Relative path to the critter this decoration reveals when built.
 @export var critter_path: NodePath
 
-var unlocked: bool = false
 var built: bool = false
 var highlighted: bool = false
 
 func _ready() -> void:
 	add_to_group("garden_spots")
-	unlocked = GameState.lodge_stage >= GameState.LODGE_MAX_STAGE
-	GameState.lodge_completed.connect(_on_unlocked)
+	monitorable = false
+	hide()
+	GameState.lodge_completed.connect(reveal)
 
-func _on_unlocked() -> void:
-	unlocked = true
+## Shows the garden spot with a little pop-in, if it isn't already visible.
+## Called either by the lodge_completed signal or directly on a save load
+## where the Lodge was already complete.
+func reveal() -> void:
+	if visible:
+		return
+	monitorable = true
+	show()
+	scale = Vector2.ZERO
+	var tween := create_tween()
+	tween.tween_property(self, "scale", Vector2.ONE, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	queue_redraw()
-
-## Restores the unlocked state from a save file - same as _on_unlocked(),
-## exposed publicly since it isn't reacting to the signal in that case.
-func restore_unlocked() -> void:
-	_on_unlocked()
 
 func set_highlighted(value: bool) -> void:
 	if highlighted == value:
@@ -39,7 +43,7 @@ func set_highlighted(value: bool) -> void:
 	queue_redraw()
 
 func can_build() -> bool:
-	return unlocked and not built
+	return visible and not built
 
 func build() -> void:
 	if not can_build():
@@ -66,18 +70,12 @@ func _place() -> void:
 			critter.reveal()
 
 func _draw() -> void:
-	# Built always renders as built, regardless of `unlocked` bookkeeping -
-	# on load, a save can restore built=true before restore_unlocked() has
-	# run yet, and it should never flash "locked" in that case.
 	if built:
 		match kind:
 			Kind.FLOWER_BED:
 				_draw_flower_bed()
 			Kind.BENCH:
 				_draw_bench()
-		return
-	if not unlocked:
-		_draw_locked()
 		return
 	if highlighted and can_build():
 		draw_arc(Vector2(0, -2), 16.0, 0, TAU, 24, Palette.HIGHLIGHT_RING, 2.5)
@@ -87,11 +85,6 @@ func _draw() -> void:
 	var closed := marker.duplicate()
 	closed.append(marker[0])
 	draw_polyline(closed, Color(1, 1, 1, 0.6), 2.0, true)
-
-func _draw_locked() -> void:
-	DrawUtil.shadow(self, Vector2(0, 8), Vector2(10, 3))
-	draw_rect(Rect2(-5, -4, 10, 8), Palette.LOCK_BODY)
-	draw_arc(Vector2(0, -4), 5.0, PI, TAU, 10, Palette.LOCK_BODY, 2.0)
 
 func _draw_flower_bed() -> void:
 	DrawUtil.shadow(self, Vector2(0, 7), Vector2(12, 3))

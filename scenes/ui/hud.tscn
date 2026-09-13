@@ -1,7 +1,8 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scenes/ui/hud.gd" id="1"]
 [ext_resource type="Script" path="res://scenes/ui/hud_icon.gd" id="2"]
+[ext_resource type="Script" path="res://scenes/ui/edge_indicator.gd" id="3"]
 
 [sub_resource type="StyleBoxFlat" id="1"]
 bg_color = Color(0.1, 0.09, 0.1, 0.55)
@@ -111,14 +112,25 @@ size = Vector2(424, 24)
 label_settings = SubResource("2")
 text = "WASD / arrows to move · E to chop, mine & build (2 wood + 1 stone / piece)"
 
-[node name="CompleteBackground" type="Panel" parent="."]
+[node name="ToastBackground" type="Panel" parent="."]
+visible = false
 position = Vector2(140, 60)
 size = Vector2(360, 68)
 theme_override_styles/panel = SubResource("1")
 
-[node name="CompleteLabel" type="Label" parent="."]
+[node name="ToastLabel" type="Label" parent="."]
+visible = false
 position = Vector2(156, 70)
 size = Vector2(328, 48)
 label_settings = SubResource("3")
-text = "Dam complete! The Lodge site
-south of the river is now open."
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="StormIndicator" type="Control" parent="."]
+size = Vector2(20, 20)
+script = ExtResource("3")
+
+[node name="RaccoonIndicator" type="Control" parent="."]
+size = Vector2(20, 20)
+script = ExtResource("3")

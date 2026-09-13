@@ -1,24 +1,30 @@
 extends Area2D
-## The Lodge build site. Locked until the dam is finished; once unlocked,
-## interact repeatedly (with enough wood + stone) to advance it through
-## foundation -> walls -> roof.
+## The Lodge build site. Hidden entirely until the dam is finished, then
+## pops into view (see reveal()) south of the new pond; interact repeatedly
+## (with enough wood + stone) to advance it through foundation -> walls ->
+## roof.
 
-var unlocked: bool = false
 var highlighted: bool = false
 
 func _ready() -> void:
 	add_to_group("lodge")
-	GameState.dam_completed.connect(_on_unlocked)
+	monitorable = false
+	hide()
+	GameState.dam_completed.connect(reveal)
 	GameState.lodge_stage_changed.connect(_on_stage_changed)
 
-func _on_unlocked() -> void:
-	unlocked = true
+## Shows the Lodge with a little pop-in, if it isn't already visible.
+## Called either by the dam_completed signal or directly on a save load
+## where the dam was already complete.
+func reveal() -> void:
+	if visible:
+		return
+	monitorable = true
+	show()
+	scale = Vector2.ZERO
+	var tween := create_tween()
+	tween.tween_property(self, "scale", Vector2.ONE, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	queue_redraw()
-
-## Restores the unlocked state from a save file - same as _on_unlocked(),
-## exposed publicly since it isn't reacting to the signal in that case.
-func restore_unlocked() -> void:
-	_on_unlocked()
 
 func _on_stage_changed(_stage: int) -> void:
 	queue_redraw()
@@ -30,7 +36,7 @@ func set_highlighted(value: bool) -> void:
 	queue_redraw()
 
 func can_advance() -> bool:
-	return unlocked and GameState.lodge_stage < GameState.LODGE_MAX_STAGE
+	return visible and GameState.lodge_stage < GameState.LODGE_MAX_STAGE
 
 func advance() -> void:
 	if not can_advance():
@@ -41,10 +47,6 @@ func advance() -> void:
 	queue_redraw()
 
 func _draw() -> void:
-	if not unlocked:
-		_draw_locked()
-		return
-
 	DrawUtil.shadow(self, Vector2(0, 15), Vector2(24, 5))
 	if highlighted and can_advance():
 		draw_arc(Vector2(0, -10), 34, 0, TAU, 32, Palette.HIGHLIGHT_RING, 2.5)
@@ -77,18 +79,6 @@ func _draw() -> void:
 		draw_circle(Vector2(14, -42), 3.0, Color(1, 1, 1, 0.35))
 		draw_circle(Vector2(16, -47), 4.0, Color(1, 1, 1, 0.28))
 		draw_circle(Vector2(13, -51), 5.0, Color(1, 1, 1, 0.2))
-
-func _draw_locked() -> void:
-	DrawUtil.shadow(self, Vector2(0, 15), Vector2(22, 5))
-	var marker_points := PackedVector2Array([
-		Vector2(-20, -4), Vector2(20, -4), Vector2(20, 14), Vector2(-20, 14),
-	])
-	var closed := marker_points.duplicate()
-	closed.append(marker_points[0])
-	draw_polyline(closed, Palette.LOCK_BODY, 2.0, true)
-	draw_circle(Vector2(0, -6), 13.0, Color(0, 0, 0, 0.25))
-	_rounded_rect(Rect2(-6, -8, 12, 10), Palette.LOCK_BODY, 0.0)
-	draw_arc(Vector2(0, -8), 6.0, PI, TAU, 12, Palette.LOCK_BODY, 2.5)
 
 func _rounded_rect(rect: Rect2, color: Color, border_width: float) -> void:
 	var style := StyleBoxFlat.new()

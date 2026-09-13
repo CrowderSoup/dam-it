@@ -43,24 +43,26 @@ means to an end, not the whole game:
    8 seconds.
 3. Walk up to a rock and interact to mine it (2 hits, 1 stone each). Mined
    rocks respawn after 10 seconds.
-4. Walking through the river slows you down (wading) until the dam is
-   finished. Walk to one of the 5 empty dam slots along the river (also
-   highlights in range) and press interact to place a dam piece (costs
-   2 wood + 1 stone).
+4. The river winds across the map (not a straight line), and wading
+   through it slows you down until the dam is finished. Walk to one of the
+   5 dam slots sitting along the river's crossing point (also highlights
+   in range) and press interact to place a dam piece (costs 2 wood +
+   1 stone).
 5. Once all 5 slots are filled: the slowdown goes away (dam's done, cross
-   freely), the river visibly rises and deepens behind it, there's a
-   completion sound plus a particle burst at every slot - and the **Lodge**
-   site south of the river unlocks (it shows a padlock until then).
+   freely), a real pond-shaped body of water grows in behind the dam
+   (fading in, not just a rectangle getting taller), there's a completion
+   sound plus a particle burst at every slot - and the **Lodge** appears
+   for the first time, south of the new pond.
 6. Walk up to the Lodge and interact repeatedly to build it up through
    three stages - foundation, walls, roof - each costing more wood + stone
    than the last. A critter moves in at each milestone: a frog at the
    foundation, a duck once the walls are up, and a fish in the pond once
    the roof's on.
-7. Once the Lodge is complete, two **garden spots** near it unlock (also
-   padlocked until then) - a flower bed and a bench, 3 wood + 2 stone each,
-   one-time purchases with no further stages. Building one reveals its own
-   critter (a butterfly for the flower bed, a rabbit for the bench), giving
-   leftover resources somewhere to go once the Lodge itself is finished.
+7. Once the Lodge is complete, two **garden spots** appear near it - a
+   flower bed and a bench, 3 wood + 2 stone each, one-time purchases with
+   no further stages. Building one reveals its own critter (a butterfly
+   for the flower bed, a rabbit for the bench), giving leftover resources
+   somewhere to go once the Lodge itself is finished.
 8. Progress **saves automatically** (periodically, when the dam is
    completed, and when you close the window) and reloads next time you
    start the game - close it and come back later, your pond is still
@@ -83,20 +85,27 @@ gathering wood and stone:
   zero - it can never take more than you have) and scurries off.
 
 Both start only once the dam is first completed - a fresh game never has
-to deal with either.
+to deal with either. Both are also announced: a HUD toast names what just
+happened, and a small arrow appears at the edge of the screen pointing
+toward the leak/raccoon whenever it's off-screen (fading once you're close
+enough or it's dealt with) - so neither one relies on you noticing it by
+chance.
 
 ## Project layout
 
 ```
 scenes/
-  main/     - the playable level (main.tscn) and its "pond rises" script,
-              plus the storm and raccoon-spawner timers (see main.gd)
+  main/     - the playable level (main.tscn): the winding river/pond
+              polygons, the "pond fades in" completion script, and the
+              storm and raccoon-spawner timers (see main.gd)
   player/   - the beaver: movement, facing/bob animation, interact
   world/    - tree, rock, dam slot (build + repair-a-leak), dam piece,
               lodge, garden spot (flower bed/bench), raccoon (scavenger),
               critter (frog/duck/fish/butterfly/rabbit), and purely-visual
               decorations (bushes)
-  ui/       - title screen and HUD (icon-based counts along the bottom)
+  ui/       - title screen and HUD: icon-based counts along the bottom,
+              a toast banner for announcements, and edge_indicator.gd
+              (the off-screen threat arrows)
 scripts/
   autoload/ - GameState (progress/signals for both the dam and the Lodge),
               InputSetup (key/gamepad bindings, registered in code instead
@@ -130,9 +139,12 @@ code doesn't care about the visuals or how the sounds are generated.
   storms/the raccoon - there's no further one-time content to unlock. Room
   for a second, bigger dam/pond expansion, more garden spots/critters, or
   seasonal events, but none of that exists yet.
-- Storms give no advance warning (no telegraphing) and the raccoon isn't
-  hinted at before it appears - both were a deliberate scope cut to keep
-  things simple, and neither is punishing enough to need a warning.
+- The edge-arrow indicators point at only one storm leak and one raccoon
+  at a time (whichever leak is nearest the player); if multiple pieces
+  happen to be leaking at once, only the nearest gets an arrow.
+- The river/pond shape is one fixed, hand-authored layout (a winding
+  polygon + an organic pond blob at the dam site) - not randomized or
+  regenerated per game. Every new game and every reset looks the same.
 - One save slot, no save UI - it's an implicit "your one pond" save, not a
   menu with multiple slots. Felled trees/mined rocks, and the countdown to
   the next storm/raccoon, don't persist across a save (they just reset);

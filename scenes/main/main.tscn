@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=16 format=3]
 
 [ext_resource type="Script" path="res://scenes/main/main.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2"]
@@ -14,9 +14,6 @@
 [ext_resource type="PackedScene" path="res://scenes/world/garden_spot.tscn" id="12"]
 [ext_resource type="PackedScene" path="res://scenes/world/raccoon.tscn" id="13"]
 
-[sub_resource type="RectangleShape2D" id="1"]
-size = Vector2(1400, 100)
-
 [sub_resource type="ShaderMaterial" id="2"]
 shader = ExtResource("11")
 shader_parameter/shallow_color = Color(0.4314, 0.7765, 0.851, 1)
@@ -24,6 +21,14 @@ shader_parameter/deep_color = Color(0.2275, 0.5608, 0.6902, 1)
 shader_parameter/wave_speed = 0.6
 shader_parameter/wave_scale = 18.0
 shader_parameter/sparkle_strength = 0.35
+
+[sub_resource type="ShaderMaterial" id="3"]
+shader = ExtResource("11")
+shader_parameter/shallow_color = Color(0.2275, 0.498, 0.7882, 1)
+shader_parameter/deep_color = Color(0.1647, 0.3725, 0.6275, 1)
+shader_parameter/wave_speed = 0.4
+shader_parameter/wave_scale = 10.0
+shader_parameter/sparkle_strength = 0.25
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1")
@@ -55,22 +60,25 @@ position = Vector2(300, 100)
 patch_color = Color(0.5608, 0.7608, 0.3686, 0.4)
 patch_radius = 55.0
 
-[node name="River" type="ColorRect" parent="."]
+[node name="River" type="Polygon2D" parent="."]
 material = SubResource("2")
-offset_top = 350.0
-offset_right = 1400.0
-offset_bottom = 450.0
 color = Color(0.25, 0.45, 0.65, 1)
+polygon = PackedVector2Array(-55.2, 434.6, 153.8, 464.8, 321.0, 395.0, 497.7, 454.9, 619.3, 415.0, 740.7, 460.0, 861.5, 410.0, 980.6, 450.0, 1151.1, 405.0, 1446.5, 434.8, 1453.5, 365.2, 1148.9, 335.0, 979.4, 380.0, 858.5, 340.0, 739.3, 390.0, 620.7, 345.0, 502.3, 385.1, 319.0, 325.0, 146.2, 395.2, -44.8, 365.4)
 
 [node name="RiverWater" type="Area2D" parent="."]
-position = Vector2(700, 400)
 collision_layer = 16
 collision_mask = 0
 monitoring = false
 monitorable = true
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="RiverWater"]
-shape = SubResource("1")
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="RiverWater"]
+polygon = PackedVector2Array(-55.2, 434.6, 153.8, 464.8, 321.0, 395.0, 497.7, 454.9, 619.3, 415.0, 740.7, 460.0, 861.5, 410.0, 980.6, 450.0, 1151.1, 405.0, 1446.5, 434.8, 1453.5, 365.2, 1148.9, 335.0, 979.4, 380.0, 858.5, 340.0, 739.3, 390.0, 620.7, 345.0, 502.3, 385.1, 319.0, 325.0, 146.2, 395.2, -44.8, 365.4)
+
+[node name="Pond" type="Polygon2D" parent="."]
+visible = false
+material = SubResource("3")
+color = Color(0.2275, 0.498, 0.7882, 1)
+polygon = PackedVector2Array(950.0, 400.0, 894.6, 463.8, 855.5, 542.9, 740.0, 542.5, 619.2, 549.4, 576.3, 467.5, 519.5, 400.0, 594.5, 340.0, 624.5, 257.1, 740.0, 250.0, 834.5, 283.1, 931.0, 321.2)
 
 [node name="Decorations" type="Node2D" parent="."]
 
@@ -80,7 +88,7 @@ position = Vector2(420, 480)
 
 [node name="Bush2" parent="Decorations" instance=ExtResource("6")]
 kind = 1
-position = Vector2(900, 250)
+position = Vector2(950, 150)
 
 [node name="Bush3" parent="Decorations" instance=ExtResource("6")]
 kind = 1
@@ -88,7 +96,7 @@ position = Vector2(150, 720)
 
 [node name="Bush4" parent="Decorations" instance=ExtResource("6")]
 kind = 1
-position = Vector2(1300, 450)
+position = Vector2(1300, 480)
 
 [node name="Trees" type="Node2D" parent="."]
 
@@ -133,29 +141,29 @@ position = Vector2(1300, 700)
 [node name="DamSlots" type="Node2D" parent="."]
 
 [node name="DamSlot1" parent="DamSlots" instance=ExtResource("4")]
-position = Vector2(500, 400)
+position = Vector2(500, 420)
 
 [node name="DamSlot2" parent="DamSlots" instance=ExtResource("4")]
-position = Vector2(620, 400)
+position = Vector2(620, 380)
 
 [node name="DamSlot3" parent="DamSlots" instance=ExtResource("4")]
-position = Vector2(740, 400)
+position = Vector2(740, 425)
 
 [node name="DamSlot4" parent="DamSlots" instance=ExtResource("4")]
-position = Vector2(860, 400)
+position = Vector2(860, 375)
 
 [node name="DamSlot5" parent="DamSlots" instance=ExtResource("4")]
-position = Vector2(980, 400)
+position = Vector2(980, 415)
 
 [node name="Lodge" parent="." instance=ExtResource("9")]
-position = Vector2(700, 580)
+position = Vector2(740, 640)
 
 [node name="Critters" type="Node2D" parent="."]
 
 [node name="Frog" parent="Critters" instance=ExtResource("10")]
 kind = 0
 required_stage = 1
-position = Vector2(650, 605)
+position = Vector2(680, 675)
 
 [node name="Duck" parent="Critters" instance=ExtResource("10")]
 kind = 1
@@ -165,31 +173,31 @@ position = Vector2(550, 460)
 [node name="Fish" parent="Critters" instance=ExtResource("10")]
 kind = 2
 required_stage = 3
-position = Vector2(700, 400)
+position = Vector2(740, 400)
 
 [node name="Butterfly" parent="Critters" instance=ExtResource("10")]
 kind = 3
 required_stage = 99
 bob_height = 3.0
 bob_speed = 4.0
-position = Vector2(605, 590)
+position = Vector2(630, 670)
 
 [node name="Rabbit" parent="Critters" instance=ExtResource("10")]
 kind = 4
 required_stage = 99
-position = Vector2(800, 615)
+position = Vector2(840, 670)
 
 [node name="GardenSpots" type="Node2D" parent="."]
 
 [node name="FlowerBedSpot" parent="GardenSpots" instance=ExtResource("12")]
 kind = 0
 critter_path = NodePath("../../Critters/Butterfly")
-position = Vector2(620, 615)
+position = Vector2(650, 660)
 
 [node name="BenchSpot" parent="GardenSpots" instance=ExtResource("12")]
 kind = 1
 critter_path = NodePath("../../Critters/Rabbit")
-position = Vector2(790, 610)
+position = Vector2(830, 655)
 
 [node name="Raccoon" parent="." instance=ExtResource("13")]
 

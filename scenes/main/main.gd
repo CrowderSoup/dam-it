@@ -1,11 +1,13 @@
 extends Node2D
-## Wires up the "pond rises behind the finished dam" celebration, lets the
+## Wires up the "pond appears behind the finished dam" celebration, lets the
 ## player restart the level at any time, owns save/load for the level
 ## (SaveManager only knows how to read/write the file - it asks us for the
 ## data and hands us back whatever it finds on disk), and runs the ongoing
 ## "Storms & Scavengers" challenges that start once the dam is complete:
 ## storms occasionally weaken a dam piece into a leak, and a raccoon
-## occasionally shows up to raid the resource pile if not shooed off.
+## occasionally shows up to raid the resource pile if not shooed off. Also
+## keeps the HUD's edge-arrow indicators pointed at whichever of those is
+## currently active.
 
 const STORM_MIN_INTERVAL := 90.0
 const STORM_MAX_INTERVAL := 150.0
@@ -15,23 +17,28 @@ const RACCOON_SPAWN_POINTS := [
 	Vector2(250, 150), Vector2(1150, 200), Vector2(250, 650), Vector2(1000, 650), Vector2(700, 720),
 ]
 
-@onready var river: ColorRect = $River
+@onready var pond: Polygon2D = $Pond
 @onready var river_water: Area2D = $RiverWater
 @onready var dam_slots: Node2D = $DamSlots
 @onready var lodge: Area2D = $Lodge
 @onready var garden_spots: Node2D = $GardenSpots
-@onready var raccoon: Area2D = $Raccoon
+@onready var raccoon: Raccoon = $Raccoon
 @onready var player: CharacterBody2D = $Player
 @onready var camera: Camera2D = $Player/Camera2D
+@onready var hud: CanvasLayer = $HUD
 
 var _challenges_active := false
 var _storm_timer: Timer
 var _raccoon_timer: Timer
 
 func _ready() -> void:
+	hud.set_camera(camera)
+	for slot in dam_slots.get_children():
+		slot.leak_changed.connect(_update_storm_indicator)
+	raccoon.despawned.connect(_on_raccoon_despawned)
+
 	GameState.dam_completed.connect(_on_dam_completed)
 	GameState.dam_completed.connect(_start_challenges)
-	raccoon.despawned.connect(_schedule_next_raccoon)
 	SaveManager.load_into(self)
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -43,10 +50,10 @@ func _unhandled_input(event: InputEvent) -> void:
 func _on_dam_completed() -> void:
 	river_water.queue_free()
 
+	pond.show()
+	pond.modulate.a = 0.0
 	var tween := create_tween()
-	tween.tween_property(river, "material:shader_parameter/shallow_color", Palette.WATER_POND, 2.0)
-	tween.parallel().tween_property(river, "material:shader_parameter/deep_color", Palette.WATER_POND_DEEP, 2.0)
-	tween.parallel().tween_property(river, "offset_top", 250.0, 2.0)
+	tween.tween_property(pond, "modulate:a", 1.0, 2.0)
 
 	for slot in dam_slots.get_children():
 		Fx.burst(slot.global_position, Color(0.85, 0.95, 1.0), 16)
@@ -90,7 +97,25 @@ func _on_storm_timeout() -> void:
 		var slot = candidates[randi() % candidates.size()]
 		slot.start_leaking()
 		Sfx.play_storm()
+		hud.show_toast("A storm damaged a dam piece!")
 	_schedule_next_storm()
+
+## Points the storm indicator at whichever leaking slot is nearest the
+## player, or clears it once none remain. Connected to every slot's
+## leak_changed signal, so this stays correct through repairs too.
+func _update_storm_indicator() -> void:
+	var nearest: Area2D = null
+	var nearest_dist := INF
+	for slot in dam_slots.get_children():
+		if slot.leaking:
+			var dist: float = player.global_position.distance_squared_to(slot.global_position)
+			if dist < nearest_dist:
+				nearest_dist = dist
+				nearest = slot
+	if nearest:
+		hud.point_to_storm(nearest)
+	else:
+		hud.clear_storm_indicator()
 
 func _schedule_next_raccoon() -> void:
 	_raccoon_timer.wait_time = randf_range(RACCOON_MIN_INTERVAL, RACCOON_MAX_INTERVAL)
@@ -99,6 +124,12 @@ func _schedule_next_raccoon() -> void:
 func _on_raccoon_timeout() -> void:
 	var spawn_point: Vector2 = RACCOON_SPAWN_POINTS[randi() % RACCOON_SPAWN_POINTS.size()]
 	raccoon.spawn_at(spawn_point)
+	hud.point_to_raccoon(raccoon)
+	hud.show_toast("A raccoon is nearby!")
+
+func _on_raccoon_despawned() -> void:
+	hud.clear_raccoon_indicator()
+	_schedule_next_raccoon()
 
 func get_save_data() -> Dictionary:
 	var dam_slots_built := {}
@@ -136,13 +167,13 @@ func apply_save_data(data: Dictionary) -> void:
 
 	if built_count > 0 and built_count >= GameState.dam_pieces_total:
 		_apply_completed_dam_visuals()
-		lodge.restore_unlocked()
+		lodge.reveal()
 		_start_challenges()
 
 	if GameState.lodge_stage >= GameState.LODGE_MAX_STAGE:
 		var spots_built: Dictionary = data.get("garden_spots_built", {})
 		for spot in garden_spots.get_children():
-			spot.restore_unlocked()
+			spot.reveal()
 			if spots_built.get(spot.name, false):
 				spot.set_built_silently(true)
 
@@ -160,6 +191,5 @@ func apply_save_data(data: Dictionary) -> void:
 func _apply_completed_dam_visuals() -> void:
 	if is_instance_valid(river_water):
 		river_water.queue_free()
-	river.material.set_shader_parameter("shallow_color", Palette.WATER_POND)
-	river.material.set_shader_parameter("deep_color", Palette.WATER_POND_DEEP)
-	river.offset_top = 250.0
+	pond.show()
+	pond.modulate.a = 1.0
