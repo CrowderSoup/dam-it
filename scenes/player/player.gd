@@ -64,7 +64,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func _resolve_target(area: Area2D) -> Node:
 	if area.is_in_group("tree_areas") or area.is_in_group("rock_areas"):
 		return area.get_parent()
-	if area.is_in_group("dam_slots") or area.is_in_group("lodge") or area.is_in_group("garden_spots"):
+	if area.is_in_group("dam_slots") or area.is_in_group("lodge") or area.is_in_group("garden_spots") or area.is_in_group("raccoons"):
 		return area
 	return null
 
@@ -83,6 +83,9 @@ func _try_interact() -> void:
 			if target.can_build() and GameState.can_afford_dam_piece():
 				GameState.spend_resources_on_dam_piece()
 				target.build()
+			elif target.can_repair() and GameState.can_afford_dam_piece():
+				GameState.spend_resources_on_repair()
+				target.repair()
 			return
 		if target.is_in_group("lodge"):
 			if target.can_advance() and GameState.can_afford_lodge_stage():
@@ -91,6 +94,10 @@ func _try_interact() -> void:
 		if target.is_in_group("garden_spots"):
 			if target.can_build() and GameState.can_afford(GardenSpot.WOOD_COST, GardenSpot.STONE_COST):
 				target.build()
+			return
+		if target.is_in_group("raccoons"):
+			if target.can_shoo():
+				target.shoo()
 			return
 
 func _update_highlight() -> void:

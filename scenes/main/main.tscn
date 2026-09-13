@@ -12,6 +12,7 @@
 [ext_resource type="PackedScene" path="res://scenes/world/critter.tscn" id="10"]
 [ext_resource type="Shader" path="res://shaders/water.gdshader" id="11"]
 [ext_resource type="PackedScene" path="res://scenes/world/garden_spot.tscn" id="12"]
+[ext_resource type="PackedScene" path="res://scenes/world/raccoon.tscn" id="13"]
 
 [sub_resource type="RectangleShape2D" id="1"]
 size = Vector2(1400, 100)
@@ -189,6 +190,8 @@ position = Vector2(620, 615)
 kind = 1
 critter_path = NodePath("../../Critters/Rabbit")
 position = Vector2(790, 610)
+
+[node name="Raccoon" parent="." instance=ExtResource("13")]
 
 [node name="Player" parent="." instance=ExtResource("2")]
 position = Vector2(200, 200)

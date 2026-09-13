@@ -1,12 +1,23 @@
 extends Node2D
 ## The visual placed into a DamSlot once it's been built: a small stack of
-## logs, with visible end-grain where they face the camera.
+## logs, with visible end-grain where they face the camera. Shows a crack +
+## drip while its slot is leaking (see DamSlot.start_leaking()).
+
+var leaking: bool = false
+
+func set_leaking(value: bool) -> void:
+	if leaking == value:
+		return
+	leaking = value
+	queue_redraw()
 
 func _draw() -> void:
 	DrawUtil.shadow(self, Vector2(0, 13), Vector2(16, 4))
 	_draw_log(Vector2(0, -7))
 	_draw_log(Vector2(0, 2))
 	_draw_log(Vector2(0, 11))
+	if leaking:
+		_draw_leak()
 
 func _draw_log(center: Vector2) -> void:
 	var rect := Rect2(center + Vector2(-15, -4), Vector2(30, 8))
@@ -20,3 +31,11 @@ func _draw_log(center: Vector2) -> void:
 	for end_x in [-13.0, 13.0]:
 		draw_circle(center + Vector2(end_x, 0), 3.2, Palette.WOOD_LIGHT)
 		draw_arc(center + Vector2(end_x, 0), 3.2, 0, TAU, 12, Palette.WOOD_DARK, 1.0)
+
+func _draw_leak() -> void:
+	draw_line(Vector2(-4, -9), Vector2(3, 13), Palette.CRACK, 1.5)
+	var drip := PackedVector2Array([
+		Vector2(3, 13), Vector2(0, 19), Vector2(6, 19),
+	])
+	draw_colored_polygon(drip, Palette.LEAK_WATER)
+	draw_circle(Vector2(3, 21), 2.0, Palette.LEAK_WATER)

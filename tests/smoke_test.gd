@@ -25,6 +25,7 @@ func _ready() -> void:
 	var river_water: Area2D = main.get_node("RiverWater")
 	var lodge: Area2D = main.get_node("Lodge")
 	var frog: Node2D = main.get_node("Critters/Frog")
+	var raccoon: Raccoon = main.get_node("Raccoon")
 
 	assert(GameState.dam_pieces_total == 5, "expected 5 dam slots, got %d" % GameState.dam_pieces_total)
 	print("OK: dam_pieces_total == 5")
@@ -95,6 +96,51 @@ func _ready() -> void:
 	assert(lodge.unlocked, "lodge should unlock once the dam is complete")
 	print("OK: lodge unlocks once the dam is complete")
 
+	# --- Storms: a leak on a built dam slot, repaired without re-triggering
+	# dam completion or changing the built-piece count. ---
+	assert(not dam_slot1.can_repair(), "an intact slot should not be repairable")
+	dam_slot1.start_leaking()
+	assert(dam_slot1.leaking and dam_slot1.can_repair(), "start_leaking() should mark the slot leaking and repairable")
+	assert(not dam_slot1.can_build(), "a leaking slot is still built, not buildable again")
+	dam_slot1.start_leaking()
+	assert(dam_slot1.leaking, "start_leaking() should be idempotent, not double-apply")
+
+	GameState.add_wood(5)
+	GameState.add_stone(5)
+	var built_before_repair := GameState.dam_pieces_built
+	var repair_completed_flag := [false]
+	GameState.dam_completed.connect(func(): repair_completed_flag[0] = true)
+	assert(GameState.can_afford_dam_piece())
+	GameState.spend_resources_on_repair()
+	dam_slot1.repair()
+	assert(not dam_slot1.leaking and not dam_slot1.can_repair(), "repair() should clear the leak")
+	assert(GameState.dam_pieces_built == built_before_repair, "repairing must not change the built-piece count")
+	assert(not repair_completed_flag[0], "repairing an already-complete dam must not refire dam_completed")
+	print("OK: a leaking dam slot can be repaired without affecting dam_pieces_built or re-firing dam_completed")
+
+	# --- Scavenger: shoo vs. steal-and-flee ---
+	assert(not raccoon.can_shoo(), "raccoon should be inactive until spawned")
+	raccoon.spawn_at(Vector2(300, 300))
+	assert(raccoon.can_shoo() and raccoon.visible, "spawn_at() should activate and show the raccoon")
+	assert(player._resolve_target(raccoon) == raccoon)
+	raccoon.shoo()
+	assert(not raccoon.can_shoo() and not raccoon.visible, "shoo() should despawn the raccoon with no theft")
+	print("OK: shooing the raccoon despawns it without stealing anything")
+
+	raccoon.spawn_at(Vector2(300, 300))
+	var wood_before_theft := GameState.wood
+	var stone_before_theft := GameState.stone
+	raccoon._steal_and_flee()
+	assert(GameState.wood == wood_before_theft - Raccoon.STEAL_WOOD, "the raccoon should steal STEAL_WOOD wood")
+	assert(GameState.stone == stone_before_theft - Raccoon.STEAL_STONE, "the raccoon should steal STEAL_STONE stone")
+	assert(not raccoon.can_shoo(), "the raccoon should despawn after stealing")
+	print("OK: an unshooed raccoon steals a small amount of wood/stone then despawns")
+
+	GameState.wood = 0
+	assert(GameState.remove_wood(3) == 0, "remove_wood should clamp to what's actually available")
+	assert(GameState.wood == 0, "wood should never go negative")
+	print("OK: GameState.remove_wood()/remove_stone() clamp at zero")
+
 	assert(not frog.visible, "frog should not be visible before lodge stage 1")
 	GameState.add_wood(10)
 	GameState.add_stone(10)
@@ -144,6 +190,9 @@ func _ready() -> void:
 	print("OK: all actions have physical, logical, and joypad bindings")
 
 	# --- Save / load ---
+	var dam_slot2: Area2D = main.get_node("DamSlots/DamSlot2")
+	dam_slot2.start_leaking()
+
 	SaveManager.delete_save()
 	assert(not SaveManager.has_save())
 
@@ -151,6 +200,7 @@ func _ready() -> void:
 	assert(saved_data["wood"] == GameState.wood)
 	assert(saved_data["lodge_stage"] == GameState.LODGE_MAX_STAGE)
 	assert(saved_data["dam_slots_built"]["DamSlot1"] == true)
+	assert(saved_data["dam_slots_leaking"]["DamSlot2"] == true)
 	assert(saved_data["garden_spots_built"]["FlowerBedSpot"] == true)
 
 	# save_game() reads get_tree().current_scene, which Godot only allows to
@@ -175,6 +225,9 @@ func _ready() -> void:
 	assert(GameState.lodge_stage == GameState.LODGE_MAX_STAGE, "loading should restore lodge stage")
 	var restored_slot1: Area2D = main2.get_node("DamSlots/DamSlot1")
 	assert(restored_slot1.built, "loading should restore built dam slots")
+	var restored_slot2: Area2D = main2.get_node("DamSlots/DamSlot2")
+	assert(restored_slot2.leaking, "loading should restore a leaking dam slot")
+	assert(restored_slot2.can_repair())
 	var restored_lodge: Area2D = main2.get_node("Lodge")
 	assert(restored_lodge.unlocked, "loading should unlock the lodge if the dam was complete")
 	var restored_flower_spot: GardenSpot = main2.get_node("GardenSpots/FlowerBedSpot")

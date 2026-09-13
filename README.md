@@ -67,16 +67,36 @@ means to an end, not the whole game:
    there. `R` any time to reset everything (dam + Lodge + garden spots +
    critters) and start over from scratch, deleting the save.
 
+## "Storms & Scavengers": ongoing upkeep after the dam is done
+
+Once the dam is complete, two low-stakes challenges kick in - no combat,
+no permanent loss, nothing that can fail the game, just reasons to keep
+gathering wood and stone:
+
+- **Storms.** Every 90-150 seconds, a storm weakens one random built dam
+  piece into a leak (a crack + drip - the pond itself stays full, but that
+  piece slows you again if you wade near it). Repair it the same way you
+  built it - interact, same 2 wood + 1 stone cost.
+- **The raccoon.** Every 60-120 seconds, a raccoon shows up near your
+  resources and lingers for ~18 seconds. Walk up and interact to shoo it
+  off for free. Ignore it and it swipes a little wood/stone (clamped at
+  zero - it can never take more than you have) and scurries off.
+
+Both start only once the dam is first completed - a fresh game never has
+to deal with either.
+
 ## Project layout
 
 ```
 scenes/
-  main/     - the playable level (main.tscn) and its small "pond rises" script
+  main/     - the playable level (main.tscn) and its "pond rises" script,
+              plus the storm and raccoon-spawner timers (see main.gd)
   player/   - the beaver: movement, facing/bob animation, interact
-  world/    - tree, rock, dam slot, dam piece, lodge, garden spot (flower
-              bed/bench), critter (frog/duck/fish/butterfly/rabbit), and
-              purely-visual decorations (bushes)
-  ui/       - title screen and HUD (wood/stone counts, dam + Lodge progress)
+  world/    - tree, rock, dam slot (build + repair-a-leak), dam piece,
+              lodge, garden spot (flower bed/bench), raccoon (scavenger),
+              critter (frog/duck/fish/butterfly/rabbit), and purely-visual
+              decorations (bushes)
+  ui/       - title screen and HUD (icon-based counts along the bottom)
 scripts/
   autoload/ - GameState (progress/signals for both the dam and the Lodge),
               InputSetup (key/gamepad bindings, registered in code instead
@@ -106,15 +126,18 @@ code doesn't care about the visuals or how the sounds are generated.
 - No export presets for other platforms yet.
 - Gamepad movement is 4-directional (bound to the left stick as digital
   push, not full analog), matching the existing discrete movement model.
-- Once both garden spots are built there's currently no further content -
-  the "grow your pond" idea has room for a second, bigger dam/pond
-  expansion, more garden spots/critters, or seasonal events, but none of
-  that exists yet.
+- Once both garden spots are built, ongoing play is just fending off
+  storms/the raccoon - there's no further one-time content to unlock. Room
+  for a second, bigger dam/pond expansion, more garden spots/critters, or
+  seasonal events, but none of that exists yet.
+- Storms give no advance warning (no telegraphing) and the raccoon isn't
+  hinted at before it appears - both were a deliberate scope cut to keep
+  things simple, and neither is punishing enough to need a warning.
 - One save slot, no save UI - it's an implicit "your one pond" save, not a
-  menu with multiple slots. Felled trees/mined rocks don't persist their
-  mid-respawn-timer state across a save (they just reappear whole on
-  load); this only matters if you quit within ~8-10 seconds of chopping/
-  mining something.
+  menu with multiple slots. Felled trees/mined rocks, and the countdown to
+  the next storm/raccoon, don't persist across a save (they just reset);
+  only *current* leaks and built state are saved. This only matters if you
+  quit within seconds of one of those events.
 
 ## Development notes
 

@@ -68,3 +68,10 @@ const PETAL_YELLOW := Color("f2cc4d")
 const PETAL_PURPLE := Color("9a72c9")
 const PETAL_ORANGE := Color("ec8b3f")
 const PETAL_CENTER := Color("fce77d")
+
+# Storms & scavengers
+const LEAK_WATER := Color("74b8d9")
+const CRACK := Color("26211d")
+const RACCOON_FUR := Color("6b6664")
+const RACCOON_MASK := Color("262220")
+const RACCOON_TAIL_LIGHT := Color("d9d6d0")

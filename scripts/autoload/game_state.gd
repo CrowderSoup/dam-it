@@ -40,6 +40,20 @@ func add_stone(amount: int) -> void:
 	stone += amount
 	stone_changed.emit(stone)
 
+## Clamped removal for the raccoon's raids - never goes below zero. Returns
+## the amount actually taken, in case a caller wants to react to it.
+func remove_wood(amount: int) -> int:
+	var removed: int = min(amount, wood)
+	wood -= removed
+	wood_changed.emit(wood)
+	return removed
+
+func remove_stone(amount: int) -> int:
+	var removed: int = min(amount, stone)
+	stone -= removed
+	stone_changed.emit(stone)
+	return removed
+
 func can_afford_dam_piece() -> bool:
 	return wood >= WOOD_PER_DAM_PIECE and stone >= STONE_PER_DAM_PIECE
 
@@ -52,6 +66,15 @@ func spend_resources_on_dam_piece() -> void:
 	dam_progress_changed.emit(dam_pieces_built, dam_pieces_total)
 	if dam_pieces_total > 0 and dam_pieces_built >= dam_pieces_total:
 		dam_completed.emit()
+
+## Same cost as building a fresh piece, but for patching a leak on one
+## that's already built - must NOT touch dam_pieces_built/dam_completed,
+## unlike spend_resources_on_dam_piece().
+func spend_resources_on_repair() -> void:
+	wood -= WOOD_PER_DAM_PIECE
+	stone -= STONE_PER_DAM_PIECE
+	wood_changed.emit(wood)
+	stone_changed.emit(stone)
 
 ## Generic spend for one-off cosmetic purchases (garden decorations) that
 ## don't need their own dedicated cost table like the dam/Lodge do.
