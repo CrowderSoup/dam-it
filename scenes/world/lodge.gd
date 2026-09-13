@@ -15,6 +15,11 @@ func _on_unlocked() -> void:
 	unlocked = true
 	queue_redraw()
 
+## Restores the unlocked state from a save file - same as _on_unlocked(),
+## exposed publicly since it isn't reacting to the signal in that case.
+func restore_unlocked() -> void:
+	_on_unlocked()
+
 func _on_stage_changed(_stage: int) -> void:
 	queue_redraw()
 

@@ -56,8 +56,11 @@ means to an end, not the whole game:
    than the last. A critter moves in at each milestone: a frog at the
    foundation, a duck once the walls are up, and a fish in the pond once
    the roof's on.
-7. `R` any time to reset everything (dam + Lodge + critters) and start
-   over from scratch.
+7. Progress **saves automatically** (periodically, when the dam is
+   completed, and when you close the window) and reloads next time you
+   start the game - close it and come back later, your pond is still
+   there. `R` any time to reset everything (dam + Lodge + critters) and
+   start over from scratch, deleting the save.
 
 ## Project layout
 
@@ -73,7 +76,9 @@ scripts/
               InputSetup (key/gamepad bindings, registered in code instead
               of hand-edited project.godot resource literals), Sfx
               (procedurally generated sound effects - no audio assets), Fx
-              (one-shot particle bursts)
+              (one-shot particle bursts), SaveManager (reads/writes
+              user://savegame.json; Main owns the actual save data via
+              get_save_data()/apply_save_data())
 ```
 
 All art in this demo is hand-drawn vector shapes in `_draw()` (no image
@@ -92,14 +97,18 @@ code doesn't care about the visuals or how the sounds are generated.
   cycle, no per-frame animation, just the existing facing/bob/shake juice.
 - The river only slows you down (wading), it never blocks movement, so
   there's no risk of getting stuck on either bank.
-- No save/load (progress lives only in the running GameState singleton -
-  quitting the game loses it), no export presets for other platforms.
+- No export presets for other platforms yet.
 - Gamepad movement is 4-directional (bound to the left stick as digital
   push, not full analog), matching the existing discrete movement model.
 - The Lodge tops out at 3 stages with no further content after that - the
   "grow your pond" idea has room for a second, bigger dam/pond expansion
   after the Lodge is finished, more critters, or seasonal events, but none
   of that exists yet.
+- One save slot, no save UI - it's an implicit "your one pond" save, not a
+  menu with multiple slots. Felled trees/mined rocks don't persist their
+  mid-respawn-timer state across a save (they just reappear whole on
+  load); this only matters if you quit within ~8-10 seconds of chopping/
+  mining something.
 
 ## Development notes
 
@@ -112,7 +121,14 @@ godot --headless --path . tests/smoke_test.tscn
 ```
 
 It instantiates `main.tscn`, drives the real Tree/Rock/DamSlot/GameState
-objects directly (chop, mine, build, complete, reset), and prints
-`ALL SMOKE TESTS PASSED` on success or hits a `SCRIPT ERROR: Assertion
-failed` at the first broken behavior. Extend this file as new mechanics are
-added, rather than writing one-off scratch tests each time.
+objects directly (chop, mine, build, complete, reset, save, load), and
+prints `ALL SMOKE TESTS PASSED` on success or hits a `SCRIPT ERROR:
+Assertion failed` at the first broken behavior. Extend this file as new
+mechanics are added, rather than writing one-off scratch tests each time.
+
+The test deletes any real save file up front (`SaveManager.delete_save()`)
+so a leftover save from manual testing can't silently invalidate its
+assertions - keep that call if you add more tests that touch GameState via
+a fresh `main.tscn` instance. The save file itself lives at
+`user://savegame.json`, which Godot maps to
+`~/.local/share/godot/app_userdata/Dam it!/savegame.json` on Linux.

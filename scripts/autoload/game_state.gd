@@ -72,6 +72,32 @@ func advance_lodge_stage() -> void:
 	if lodge_stage >= LODGE_MAX_STAGE:
 		lodge_completed.emit()
 
+## Restores the plain scalar fields from a save file, silently (no signals
+## yet - Main hasn't finished restoring dam-slot/lodge scene state at this
+## point, and SaveManager autosaves on some of these signals, so emitting
+## early would save a still-half-restored scene over the real save data).
+## Call announce_loaded_state() once Main has finished restoring everything.
+func load_from_save(data: Dictionary) -> void:
+	wood = data.get("wood", 0)
+	stone = data.get("stone", 0)
+	lodge_stage = data.get("lodge_stage", 0)
+
+## Dam-slot state is scene-shaped, not GameState-shaped, so Main restores
+## that directly and reports back the resulting count here (silently, see
+## load_from_save()).
+func restore_dam_progress(built: int) -> void:
+	dam_pieces_built = built
+
+## Fires every progress signal once, reflecting whatever state is currently
+## set. Used after a full load (see load_from_save()) so every listener
+## (HUD, critters, SaveManager's autosave-on-signal) reacts to the final
+## restored state exactly once, instead of to each field as it's restored.
+func announce_loaded_state() -> void:
+	wood_changed.emit(wood)
+	stone_changed.emit(stone)
+	dam_progress_changed.emit(dam_pieces_built, dam_pieces_total)
+	lodge_stage_changed.emit(lodge_stage)
+
 ## Resets all progress (dam + Lodge) ahead of a scene reload;
 ## dam_pieces_total is rebuilt as the reloaded DamSlot instances
 ## re-register themselves.

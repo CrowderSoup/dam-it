@@ -33,10 +33,20 @@ func can_build() -> bool:
 func build() -> void:
 	if built:
 		return
+	Sfx.play_build()
+	Fx.burst(global_position, Color(0.6, 0.6, 0.65), 12)
+	_place_piece()
+
+## Restores a built slot from a save file - same end state as build(), but
+## silent (no sound/particles) since nothing just happened live.
+func set_built_silently(value: bool) -> void:
+	if not value or built:
+		return
+	_place_piece()
+
+func _place_piece() -> void:
 	built = true
 	set_highlighted(false)
 	queue_redraw()
-	Sfx.play_build()
-	Fx.burst(global_position, Color(0.6, 0.6, 0.65), 12)
 	var piece := preload("res://scenes/world/dam_piece.tscn").instantiate()
 	add_child(piece)

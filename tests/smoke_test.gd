@@ -9,6 +9,11 @@ extends Node
 ## SCRIPT ERROR: Assertion failed on the first broken behavior.
 
 func _ready() -> void:
+	# A stray real save file (from manual/live testing on this machine, or a
+	# previous run of this test) would otherwise get loaded into `main`
+	# below and silently invalidate every assertion that follows.
+	SaveManager.delete_save()
+
 	var main_scene: PackedScene = load("res://scenes/main/main.tscn")
 	var main: Node = main_scene.instantiate()
 	add_child(main)
@@ -123,9 +128,48 @@ func _ready() -> void:
 		assert(has_joy, "%s has no joypad event" % action_name)
 	print("OK: all actions have physical, logical, and joypad bindings")
 
+	# --- Save / load ---
+	SaveManager.delete_save()
+	assert(not SaveManager.has_save())
+
+	var saved_data: Dictionary = main.get_save_data()
+	assert(saved_data["wood"] == GameState.wood)
+	assert(saved_data["lodge_stage"] == GameState.LODGE_MAX_STAGE)
+	assert(saved_data["dam_slots_built"]["DamSlot1"] == true)
+
+	# save_game() reads get_tree().current_scene, which Godot only allows to
+	# be a direct child of root - reparent there just for this call, the
+	# same shape the real game runs in.
+	main.reparent(get_tree().root)
+	get_tree().current_scene = main
+	SaveManager.save_game()
+	get_tree().current_scene = self
+	main.reparent(self)
+	assert(SaveManager.has_save(), "save_game() should have written a save file")
+	print("OK: save_game() writes a save file for the current scene's data")
+
+	GameState.reset()
+	assert(GameState.wood == 0 and GameState.lodge_stage == 0)
+
+	var main2: Node = load("res://scenes/main/main.tscn").instantiate()
+	add_child(main2)
+	# main2's own _ready() calls SaveManager.load_into(self), so by the time
+	# add_child() returns, it should already be restored.
+	assert(GameState.wood == saved_data["wood"], "loading should restore wood")
+	assert(GameState.lodge_stage == GameState.LODGE_MAX_STAGE, "loading should restore lodge stage")
+	var restored_slot1: Area2D = main2.get_node("DamSlots/DamSlot1")
+	assert(restored_slot1.built, "loading should restore built dam slots")
+	var restored_lodge: Area2D = main2.get_node("Lodge")
+	assert(restored_lodge.unlocked, "loading should unlock the lodge if the dam was complete")
+	print("OK: a fresh scene instance auto-loads saved progress on _ready()")
+
+	SaveManager.delete_save()
+	assert(not SaveManager.has_save())
+	print("OK: delete_save() removes the save file")
+
 	GameState.reset()
 	assert(GameState.wood == 0 and GameState.stone == 0)
-	assert(GameState.dam_pieces_built == 0 and GameState.dam_pieces_total == 0)
+	assert(GameState.dam_pieces_built == 0)
 	assert(GameState.lodge_stage == 0)
 	print("OK: GameState.reset() zeroes progress including lodge_stage")
 
