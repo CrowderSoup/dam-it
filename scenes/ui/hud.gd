@@ -3,10 +3,10 @@ extends CanvasLayer
 const HINT_DURATION := 6.0
 const COMPLETE_MESSAGE_DURATION := 6.0
 
-@onready var wood_label: Label = $Margin/VBox/WoodLabel
-@onready var stone_label: Label = $Margin/VBox/StoneLabel
-@onready var dam_label: Label = $Margin/VBox/DamLabel
-@onready var lodge_label: Label = $Margin/VBox/LodgeLabel
+@onready var wood_label: Label = $BottomMargin/ItemsHBox/WoodGroup/WoodLabel
+@onready var stone_label: Label = $BottomMargin/ItemsHBox/StoneGroup/StoneLabel
+@onready var dam_label: Label = $BottomMargin/ItemsHBox/DamGroup/DamLabel
+@onready var lodge_label: Label = $BottomMargin/ItemsHBox/LodgeGroup/LodgeLabel
 @onready var complete_label: Label = $CompleteLabel
 @onready var complete_background: Panel = $CompleteBackground
 @onready var hint_label: Label = $HintLabel
@@ -30,21 +30,21 @@ func _ready() -> void:
 	get_tree().create_timer(HINT_DURATION).timeout.connect(hide_hint)
 
 func _on_wood_changed(amount: int) -> void:
-	wood_label.text = "Wood: %d" % amount
+	wood_label.text = str(amount)
 
 func _on_stone_changed(amount: int) -> void:
-	stone_label.text = "Stone: %d" % amount
+	stone_label.text = str(amount)
 
 func _on_dam_progress_changed(built: int, total: int) -> void:
-	dam_label.text = "Dam pieces: %d / %d" % [built, total]
+	dam_label.text = "%d / %d" % [built, total]
 
 func _on_lodge_stage_changed(stage: int) -> void:
 	if GameState.dam_pieces_total == 0 or GameState.dam_pieces_built < GameState.dam_pieces_total:
-		lodge_label.text = "Lodge: locked"
+		lodge_label.text = "Locked"
 	elif stage >= GameState.LODGE_MAX_STAGE:
-		lodge_label.text = "Lodge: complete!"
+		lodge_label.text = "Done!"
 	else:
-		lodge_label.text = "Lodge: %d / %d" % [stage, GameState.LODGE_MAX_STAGE]
+		lodge_label.text = "%d / %d" % [stage, GameState.LODGE_MAX_STAGE]
 
 func _on_dam_completed() -> void:
 	complete_label.show()
