@@ -10,9 +10,18 @@
 [ext_resource type="PackedScene" path="res://scenes/world/grass_patch.tscn" id="8"]
 [ext_resource type="PackedScene" path="res://scenes/world/lodge.tscn" id="9"]
 [ext_resource type="PackedScene" path="res://scenes/world/critter.tscn" id="10"]
+[ext_resource type="Shader" path="res://shaders/water.gdshader" id="11"]
 
 [sub_resource type="RectangleShape2D" id="1"]
 size = Vector2(1400, 100)
+
+[sub_resource type="ShaderMaterial" id="2"]
+shader = ExtResource("11")
+shader_parameter/shallow_color = Color(0.4314, 0.7765, 0.851, 1)
+shader_parameter/deep_color = Color(0.2275, 0.5608, 0.6902, 1)
+shader_parameter/wave_speed = 0.6
+shader_parameter/wave_scale = 18.0
+shader_parameter/sparkle_strength = 0.35
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1")
@@ -20,31 +29,32 @@ script = ExtResource("1")
 [node name="Background" type="ColorRect" parent="."]
 offset_right = 1400.0
 offset_bottom = 800.0
-color = Color(0.35, 0.55, 0.28, 1)
+color = Color(0.4196, 0.651, 0.2667, 1)
 
 [node name="GrassPatches" type="Node2D" parent="."]
 
 [node name="Patch1" parent="GrassPatches" instance=ExtResource("8")]
 position = Vector2(180, 550)
-patch_color = Color(0.32, 0.58, 0.3, 0.5)
+patch_color = Color(0.4824, 0.7137, 0.3294, 0.5)
 patch_radius = 70.0
 
 [node name="Patch2" parent="GrassPatches" instance=ExtResource("8")]
 position = Vector2(1050, 120)
-patch_color = Color(0.39, 0.52, 0.24, 0.45)
+patch_color = Color(0.5608, 0.7608, 0.3686, 0.45)
 patch_radius = 90.0
 
 [node name="Patch3" parent="GrassPatches" instance=ExtResource("8")]
 position = Vector2(650, 620)
-patch_color = Color(0.3, 0.56, 0.33, 0.4)
+patch_color = Color(0.4824, 0.7137, 0.3294, 0.4)
 patch_radius = 80.0
 
 [node name="Patch4" parent="GrassPatches" instance=ExtResource("8")]
 position = Vector2(300, 100)
-patch_color = Color(0.4, 0.53, 0.26, 0.4)
+patch_color = Color(0.5608, 0.7608, 0.3686, 0.4)
 patch_radius = 55.0
 
 [node name="River" type="ColorRect" parent="."]
+material = SubResource("2")
 offset_top = 350.0
 offset_right = 1400.0
 offset_bottom = 450.0

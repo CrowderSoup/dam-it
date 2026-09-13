@@ -3,9 +3,6 @@ extends Area2D
 ## interact repeatedly (with enough wood + stone) to advance it through
 ## foundation -> walls -> roof.
 
-const HIGHLIGHT_COLOR := Color(1.0, 0.95, 0.6, 0.9)
-const LOCKED_COLOR := Color(0.5, 0.5, 0.5, 0.6)
-
 var unlocked: bool = false
 var highlighted: bool = false
 
@@ -42,25 +39,57 @@ func _draw() -> void:
 	if not unlocked:
 		_draw_locked()
 		return
+
+	DrawUtil.shadow(self, Vector2(0, 15), Vector2(24, 5))
 	if highlighted and can_advance():
-		draw_arc(Vector2(0, -8), 32, 0, TAU, 28, HIGHLIGHT_COLOR, 2.0)
+		draw_arc(Vector2(0, -10), 34, 0, TAU, 32, Palette.HIGHLIGHT_RING, 2.5)
 
 	var stage := GameState.lodge_stage
 	if stage >= 1:
-		draw_rect(Rect2(-20, -4, 40, 18), Color(0.42, 0.3, 0.18))
+		_rounded_rect(Rect2(-20, -4, 40, 18), Palette.WOOD_DARK, 3.0)
 	else:
-		draw_rect(Rect2(-20, -4, 40, 18), Color(0.6, 0.5, 0.4), false, 2.0)
+		var marker_points := PackedVector2Array([
+			Vector2(-20, -4), Vector2(20, -4), Vector2(20, 14), Vector2(-20, 14),
+		])
+		var closed := marker_points.duplicate()
+		closed.append(marker_points[0])
+		draw_polyline(closed, Color(1, 1, 1, 0.6), 2.0, true)
+
 	if stage >= 2:
-		draw_rect(Rect2(-18, -22, 36, 20), Color(0.55, 0.42, 0.26))
-		draw_rect(Rect2(-4, -8, 8, 4), Color(0.25, 0.16, 0.08))
+		_rounded_rect(Rect2(-18, -24, 36, 22), Palette.WOOD_MID, 3.0)
+		_rounded_rect(Rect2(-4, -9, 8, 5), Palette.DOOR, 1.5)
+		_rounded_rect(Rect2(8, -19, 7, 7), Palette.WINDOW_GLOW, 1.5)
+		draw_line(Vector2(11.5, -19), Vector2(11.5, -12), Palette.OUTLINE, 1.0)
+		draw_line(Vector2(8, -15.5), Vector2(15, -15.5), Palette.OUTLINE, 1.0)
+
 	if stage >= 3:
 		var roof_points := PackedVector2Array([
-			Vector2(-22, -22), Vector2(22, -22), Vector2(0, -38),
+			Vector2(-24, -24), Vector2(24, -24), Vector2(0, -42),
 		])
-		draw_colored_polygon(roof_points, Color(0.5, 0.2, 0.15))
-		draw_rect(Rect2(10, -34, 5, 10), Color(0.4, 0.4, 0.4))
+		DrawUtil.outlined_polygon(self, roof_points, Palette.ROOF, 2.0)
+		draw_line(Vector2(-24, -24), Vector2(24, -24), Palette.ROOF_DARK, 2.0)
+		_rounded_rect(Rect2(11, -38, 6, 11), Palette.STONE_MID, 1.5)
+		draw_circle(Vector2(14, -42), 3.0, Color(1, 1, 1, 0.35))
+		draw_circle(Vector2(16, -47), 4.0, Color(1, 1, 1, 0.28))
+		draw_circle(Vector2(13, -51), 5.0, Color(1, 1, 1, 0.2))
 
 func _draw_locked() -> void:
-	draw_rect(Rect2(-20, -4, 40, 18), LOCKED_COLOR, false, 2.0)
-	draw_rect(Rect2(-6, -2, 12, 10), Color(0.3, 0.3, 0.3, 0.85))
-	draw_arc(Vector2(0, -2), 6, PI, TAU, 12, Color(0.3, 0.3, 0.3, 0.85), 2.0)
+	DrawUtil.shadow(self, Vector2(0, 15), Vector2(22, 5))
+	var marker_points := PackedVector2Array([
+		Vector2(-20, -4), Vector2(20, -4), Vector2(20, 14), Vector2(-20, 14),
+	])
+	var closed := marker_points.duplicate()
+	closed.append(marker_points[0])
+	draw_polyline(closed, Palette.LOCK_BODY, 2.0, true)
+	draw_circle(Vector2(0, -6), 13.0, Color(0, 0, 0, 0.25))
+	_rounded_rect(Rect2(-6, -8, 12, 10), Palette.LOCK_BODY, 0.0)
+	draw_arc(Vector2(0, -8), 6.0, PI, TAU, 12, Palette.LOCK_BODY, 2.5)
+
+func _rounded_rect(rect: Rect2, color: Color, border_width: float) -> void:
+	var style := StyleBoxFlat.new()
+	style.bg_color = color
+	style.set_corner_radius_all(3)
+	if border_width > 0.0:
+		style.border_color = Palette.OUTLINE
+		style.set_border_width_all(border_width)
+	style.draw(get_canvas_item(), rect)

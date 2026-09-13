@@ -5,11 +5,6 @@ const STONE_YIELD := 1
 const HITS_TO_BREAK := 2
 const RESPAWN_TIME := 10.0
 
-const ROCK_COLOR := Color(0.55, 0.55, 0.58)
-const ROCK_HIGHLIGHT_SPOT := Color(0.68, 0.68, 0.7)
-const RUBBLE_COLOR := Color(0.45, 0.45, 0.48)
-const HIGHLIGHT_COLOR := Color(1.0, 0.95, 0.6, 0.9)
-
 var hits_taken: int = 0
 var broken: bool = false
 var highlighted: bool = false
@@ -22,12 +17,33 @@ func _ready() -> void:
 
 func _draw() -> void:
 	if broken:
-		draw_circle(Vector2.ZERO, 5, RUBBLE_COLOR)
+		DrawUtil.shadow(self, Vector2(0, 6), Vector2(6, 2))
+		var rubble := PackedVector2Array([
+			Vector2(-5, 3), Vector2(-2, -2), Vector2(3, -3), Vector2(5, 2), Vector2(0, 4),
+		])
+		DrawUtil.outlined_polygon(self, rubble, Palette.STONE_DARK, 1.2)
 		return
+
+	DrawUtil.shadow(self, Vector2(0, 9), Vector2(9, 3))
 	if highlighted:
-		draw_arc(Vector2.ZERO, 16, 0, TAU, 24, HIGHLIGHT_COLOR, 2.0)
-	draw_circle(Vector2.ZERO, 10, ROCK_COLOR)
-	draw_circle(Vector2(-3, -3), 4, ROCK_HIGHLIGHT_SPOT)
+		draw_arc(Vector2.ZERO, 17, 0, TAU, 24, Palette.HIGHLIGHT_RING, 2.5)
+
+	# A small companion rock behind, so the cluster reads as rocky terrain
+	# rather than a single perfect blob.
+	var small_rock := PackedVector2Array([
+		Vector2(6, 6), Vector2(10, 2), Vector2(13, 6), Vector2(10, 9),
+	])
+	DrawUtil.outlined_polygon(self, small_rock, Palette.STONE_MID, 1.2)
+
+	var main_rock := PackedVector2Array([
+		Vector2(-10, 4), Vector2(-8, -6), Vector2(-2, -10),
+		Vector2(6, -8), Vector2(10, 0), Vector2(6, 8), Vector2(-4, 9),
+	])
+	DrawUtil.outlined_polygon(self, main_rock, Palette.STONE_MID, 1.6)
+	draw_circle(Vector2(-3, -4), 3.2, Palette.STONE_LIGHT)
+
+	draw_line(Vector2(0, -3), Vector2(3, 4), Palette.STONE_DARK, 1.0)
+	draw_circle(Vector2(4, -2), 2.2, Color(0.4, 0.55, 0.3, 0.8))
 
 func set_highlighted(value: bool) -> void:
 	if highlighted == value:

@@ -8,9 +8,9 @@ const COMPLETE_MESSAGE_DURATION := 6.0
 @onready var dam_label: Label = $Margin/VBox/DamLabel
 @onready var lodge_label: Label = $Margin/VBox/LodgeLabel
 @onready var complete_label: Label = $CompleteLabel
-@onready var complete_background: ColorRect = $CompleteBackground
+@onready var complete_background: Panel = $CompleteBackground
 @onready var hint_label: Label = $HintLabel
-@onready var hint_background: ColorRect = $HintBackground
+@onready var hint_background: Panel = $HintBackground
 
 func _ready() -> void:
 	GameState.wood_changed.connect(_on_wood_changed)

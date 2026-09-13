@@ -9,9 +9,14 @@ enum Kind { ROCK, BUSH }
 func _draw() -> void:
 	match kind:
 		Kind.ROCK:
-			draw_circle(Vector2.ZERO, 10, Color(0.55, 0.55, 0.58))
-			draw_circle(Vector2(-3, -3), 4, Color(0.68, 0.68, 0.7))
+			DrawUtil.shadow(self, Vector2(0, 7), Vector2(8, 3))
+			DrawUtil.outlined_circle(self, Vector2.ZERO, 10.0, Palette.STONE_MID, 1.5)
+			draw_circle(Vector2(-3, -3), 3.5, Palette.STONE_LIGHT)
 		Kind.BUSH:
-			draw_circle(Vector2(-7, 2), 8, Color(0.2, 0.48, 0.24))
-			draw_circle(Vector2(7, 2), 8, Color(0.22, 0.5, 0.26))
-			draw_circle(Vector2(0, -5), 9, Color(0.24, 0.52, 0.28))
+			DrawUtil.shadow(self, Vector2(0, 8), Vector2(11, 3))
+			DrawUtil.outlined_circle(self, Vector2(-7, 2), 8.0, Palette.BUSH_DARK, 1.5)
+			DrawUtil.outlined_circle(self, Vector2(7, 2), 8.0, Palette.BUSH_DARK, 1.5)
+			DrawUtil.outlined_circle(self, Vector2(0, -5), 9.5, Palette.BUSH_LIGHT, 1.5)
+			draw_circle(Vector2(-4, -3), 1.6, Color(0.75, 0.25, 0.3))
+			draw_circle(Vector2(3, 1), 1.6, Color(0.75, 0.25, 0.3))
+			draw_circle(Vector2(-1, -8), 1.6, Color(0.75, 0.25, 0.3))

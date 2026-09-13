@@ -76,14 +76,20 @@ scripts/
               (one-shot particle bursts)
 ```
 
-All art in this demo is placeholder vector shapes drawn in `_draw()`, and
-all sound is procedurally synthesized — no image or audio assets yet. Swap
-these out for real ones whenever you're ready; the interaction/collision
+All art in this demo is hand-drawn vector shapes in `_draw()` (no image
+files), styled as flat "cutout" shapes: a shared `Palette`
+(`scripts/util/palette.gd`) keeps colors consistent across every object,
+and `DrawUtil` (`scripts/util/draw_util.gd`) provides the shadow/outline/
+shading helpers that give them a cohesive look. The river uses an actual
+shader (`shaders/water.gdshader`) for an animated gradient + sparkle. All
+sound is still procedurally synthesized — no audio assets either. Swap any
+of this for real assets whenever you're ready; the interaction/collision
 code doesn't care about the visuals or how the sounds are generated.
 
 ## Known simplifications / next steps
 
-- No real art or animation yet (beyond the simple facing/bob/shake juice).
+- Art is still hand-drawn vector shapes, not sprites/animation - no walk
+  cycle, no per-frame animation, just the existing facing/bob/shake juice.
 - The river only slows you down (wading), it never blocks movement, so
   there's no risk of getting stuck on either bank.
 - No save/load (progress lives only in the running GameState singleton -

@@ -19,7 +19,8 @@ func _on_dam_completed() -> void:
 	river_water.queue_free()
 
 	var tween := create_tween()
-	tween.tween_property(river, "color", Color(0.2, 0.35, 0.75, 1), 2.0)
+	tween.tween_property(river, "material:shader_parameter/shallow_color", Palette.WATER_POND, 2.0)
+	tween.parallel().tween_property(river, "material:shader_parameter/deep_color", Palette.WATER_POND_DEEP, 2.0)
 	tween.parallel().tween_property(river, "offset_top", 250.0, 2.0)
 
 	for slot in dam_slots.get_children():
