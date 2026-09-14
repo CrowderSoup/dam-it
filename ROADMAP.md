@@ -15,8 +15,9 @@ reveals the team's actual content-production pace.
 
 ## North star
 
-> Restore a chain of neglected wetlands as a young beaver, build a home for a
-> returning community, and help the watershed weather one final storm.
+> Play as a young beaver restoring a chain of neglected wetlands. Build dams,
+> reshape waterways, and bring habitats and a community back to life—then help
+> the watershed weather one final storm.
 
 The 1.0 target is a polished **2–4 hour**, mostly linear cozy adventure with
 three connected regions, a small cast of recurring animal characters, a clear
@@ -64,8 +65,8 @@ These are planning constraints, not targets to exceed.
 
 - **Length:** 2–4 hours for the main story; no grinding required.
 - **World:** 3 authored regions connected into one watershed.
-- **Structure:** prologue, 3 acts, final storm, epilogue, and post-credits free
-  play.
+- **Structure:** prologue, 3 acts, a spring storm and runoff surge, epilogue,
+  and post-credits free play.
 - **Cast:** approximately 6 named residents, preferably using the frog, duck,
   fish, rabbit, butterfly, and raccoon already present.
 - **Character content:** one compact arc per resident, changing ambient
@@ -78,8 +79,9 @@ These are planning constraints, not targets to exceed.
   choice; capacity increases alone are not enough.
 - **Endings:** one authored ending with small acknowledgements of player
   choices. Branching endings are not required.
-- **Platforms:** Web plus keyboard-and-gamepad desktop builds for Windows,
-  macOS, and Linux, subject to export and signing feasibility.
+- **Platforms:** Free Web release for desktop browsers with keyboard and
+  gamepad. Touch/mobile layouts, downloadable builds, and storefronts are
+  outside the 1.0 baseline.
 
 ## Current foundation
 
@@ -112,7 +114,7 @@ disappeared. A resident explains the immediate need for water and teaches the
 player to observe the environment, gather materials, and make the first repair.
 The player is given a personal reason to stay and restore the watershed.
 
-### Act I — Creek Bend
+### Act I — Willowbend
 
 The existing map becomes the first complete chapter. The player constructs the
 starter dam, creates the first pond, meets the frog and other returning
@@ -122,7 +124,7 @@ small community moment and a newly opened route upstream.
 **Introduces:** gathering, fixed construction, pond transformation, energy,
 rest, and resident requests.
 
-### Act II — Meadow Marsh
+### Act II — Aspen Meadow
 
 Water reaches a broad meadow, but simply blocking the river would flood one
 habitat while leaving another dry. The player learns a second construction verb
@@ -133,23 +135,24 @@ between understandable needs.
 **Introduces:** water distribution, one reversible or clearly previewed choice,
 new traversal, and functional habitat improvements.
 
-### Act III — Highbank
+### Act III — Moraine Basin
 
-The upper watershed is unstable and littered with storm debris. The raccoon is
-revealed as a displaced neighbor rather than a permanent villain. The player
-combines earlier construction skills, resolves the raccoon's arc, and prepares
-all three regions for the coming rain.
+The upper watershed is unstable after an older wildfire and littered with
+deadfall and sediment. The raccoon is revealed as a displaced neighbor rather
+than a permanent villain. The player combines earlier construction skills,
+resolves the raccoon's arc, and prepares all three regions for spring runoff.
 
 **Introduces:** combined building problems, a capability upgrade, storm
 preparation, and the final relationship resolution.
 
-### Finale — The big rain
+### Finale — The spring surge
 
-A scripted storm tests the restored watershed. This is an active but forgiving
-sequence: the player checks vulnerable structures, helps residents, and sees
-earlier improvements protect the connected regions. Poor preparation may
-create extra repairs or different character reactions, but it must not destroy
-hours of work.
+A warm storm accelerates the mountain snowmelt and tests the restored
+watershed. This is an active but forgiving sequence: the player checks
+vulnerable structures, helps residents, and sees earlier improvements slow and
+spread the surge through the connected regions. Poor preparation may create
+extra repairs or different character reactions, but it must not destroy hours
+of work.
 
 ### Epilogue — A living watershed
 
@@ -167,15 +170,18 @@ building content that may not belong.
 
 #### Product decisions
 
-- [ ] Approve or revise the north-star pitch and 2–4 hour target.
-- [ ] Decide why the protagonist comes to the creek and what they personally
+Approved brief: [Milestone 0 — Product Decisions](PRODUCT_DECISIONS.md). Record
+future revisions there so implementation does not silently change the product.
+
+- [x] Approve or revise the north-star pitch and 2–4 hour target.
+- [x] Decide why the protagonist comes to the creek and what they personally
   want at the beginning.
-- [ ] Confirm the final story theme in one sentence.
-- [ ] Name the three regions and establish their visual identities.
-- [ ] Decide whether the player chooses a name or uses an authored identity.
-- [ ] Confirm whether construction choices are reversible, permanent, or only
+- [x] Confirm the final story theme in one sentence.
+- [x] Name the three regions and establish their visual identities.
+- [x] Decide whether the player chooses a name or uses an authored identity.
+- [x] Confirm whether construction choices are reversible, permanent, or only
   cosmetically acknowledged.
-- [ ] Confirm target release platforms and whether a storefront release is in
+- [x] Confirm target release platforms and whether a storefront release is in
   scope.
 
 #### Creative planning
@@ -246,6 +252,8 @@ together in a polished 30–45 minute chapter.
 - [ ] Separate Act I orchestration from global campaign state.
 - [ ] Introduce versioned save migrations and preserve existing saves where
   practical.
+- [ ] Keep save serialization independent from browser-local storage so a
+  future game library can exchange complete versioned save payloads.
 - [ ] Add automated coverage for dialogue progression, objective completion,
   chapter completion, and mid-dialogue/mid-objective save loading.
 
@@ -281,7 +289,7 @@ and that the second act meaningfully expands play.
 
 #### Act II content
 
-- [ ] Build Meadow Marsh with a distinct palette, layout, ambience, and
+- [ ] Build Aspen Meadow with a distinct palette, layout, ambience, and
   traversal identity.
 - [ ] Implement and tutorialize the water-distribution construction verb.
 - [ ] Preview consequences clearly before the habitat choice is made.
@@ -309,8 +317,8 @@ produced a documented, reusable content workflow.
 
 #### Act III
 
-- [ ] Build Highbank with its own visual and traversal identity.
-- [ ] Implement storm-debris or bank-stability problems using existing verbs
+- [ ] Build Moraine Basin with its own visual and traversal identity.
+- [ ] Implement burn-debris or bank-stability problems using existing verbs
   in a new combination.
 - [ ] Deliver the final capability upgrade before the player needs it.
 - [ ] Complete the raccoon relationship arc.
@@ -320,7 +328,8 @@ produced a documented, reusable content workflow.
 
 #### Finale and ending
 
-- [ ] Build a scripted, forgiving storm sequence spanning the three regions.
+- [ ] Build a scripted, forgiving spring-surge sequence spanning the three
+  regions.
 - [ ] Reflect earlier improvements through easier repairs, protected habitats,
   alternate dialogue, or visual details.
 - [ ] Ensure the finale remains recoverable at zero resources and low energy.
@@ -372,10 +381,10 @@ remaining bug list is triaged and finite.
 **Purpose:** validate distribution, presentation, and release quality without
 expanding scope.
 
-- [ ] Create and test release exports for Web, Windows, macOS, and Linux as
-  applicable.
-- [ ] Test first launch, upgrade from an older save, clean uninstall/reinstall,
-  and offline play.
+- [ ] Create and test the Web release across the supported desktop-browser
+  matrix.
+- [ ] Test first launch, upgrade from an older save, returning play, and clear
+  messaging when browser storage is unavailable.
 - [ ] Complete credits, licenses, privacy disclosures if needed, and version
   display.
 - [ ] Add crash/error logging appropriate to each target without collecting
@@ -519,4 +528,4 @@ A feature is done only when:
 4. Turn the Milestone 1 checkboxes into small issues, beginning with dialogue,
    objectives, interaction prompts, and versioned story saves.
 5. Build only enough narrative infrastructure to ship the Act I slice, then
-   validate it before starting Meadow Marsh.
+   validate it before starting Aspen Meadow.
