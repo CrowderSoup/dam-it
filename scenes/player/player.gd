@@ -59,7 +59,7 @@ func _physics_process(delta: float) -> void:
 	# No pond, no upkeep: energy only starts draining on its own once the dam
 	# (and the pond behind it) is finished, so a new player can focus on
 	# building without also having to watch the meter.
-	if GameState.is_dam_complete():
+	if GameState.is_dam_complete() and not input_vector.is_zero_approx():
 		_ambient_drain_time += delta
 		if _ambient_drain_time >= AMBIENT_DRAIN_INTERVAL:
 			_ambient_drain_time = 0.0
@@ -85,50 +85,38 @@ func _resolve_target(area: Area2D) -> Node:
 	return null
 
 func _try_interact() -> void:
-	for area in interact_area.get_overlapping_areas():
-		var target := _resolve_target(area)
-		if target == null:
-			continue
-		if target.is_in_group("trees"):
-			target.chop()
-			return
-		if target.is_in_group("rocks"):
-			target.mine()
-			return
-		if target.is_in_group("dam_slots"):
-			if target.can_build() and GameState.can_afford_dam_piece():
-				GameState.spend_resources_on_dam_piece()
-				target.build()
-			elif target.can_repair() and GameState.can_afford_dam_piece():
-				GameState.spend_resources_on_repair()
-				target.repair()
-			return
-		if target.is_in_group("lodge"):
-			if target.can_advance() and GameState.can_afford_lodge_stage():
-				target.advance()
-			elif target.can_rest():
-				target.rest()
-			elif target.can_upgrade_pouch():
-				target.upgrade_pouch()
-			return
-		if target.is_in_group("garden_spots"):
-			if target.can_build() and GameState.can_afford(GardenSpot.WOOD_COST, GardenSpot.STONE_COST):
-				target.build()
-			return
-		if target.is_in_group("raccoons"):
-			if target.can_feed():
-				target.feed()
-			return
-		if target.is_in_group("berry_bushes"):
-			if target.can_harvest():
-				target.harvest()
-			return
-		if target.is_in_group("pond_plants"):
-			if target.can_eat():
-				target.eat()
-			return
+	var target := _nearest_interaction_target()
+	if target == null:
+		return
+	if target.is_in_group("trees"):
+		target.chop()
+	elif target.is_in_group("rocks"):
+		target.mine()
+	elif target.is_in_group("dam_slots"):
+		if target.can_build() and GameState.can_afford_dam_piece():
+			GameState.spend_resources_on_dam_piece()
+			target.build()
+		elif target.can_repair() and GameState.can_afford_dam_piece():
+			GameState.spend_resources_on_repair()
+			target.repair()
+	elif target.is_in_group("lodge"):
+		if target.can_advance() and GameState.can_afford_lodge_stage():
+			target.advance()
+		elif target.can_rest():
+			target.rest()
+		elif target.can_upgrade_pouch():
+			target.upgrade_pouch()
+	elif target.is_in_group("garden_spots"):
+		if target.can_build() and GameState.can_afford(GardenSpot.WOOD_COST, GardenSpot.STONE_COST):
+			target.build()
+	elif target.is_in_group("raccoons") and target.can_feed():
+		target.feed()
+	elif target.is_in_group("berry_bushes") and target.can_harvest():
+		target.harvest()
+	elif target.is_in_group("pond_plants") and target.can_eat():
+		target.eat()
 
-func _update_highlight() -> void:
+func _nearest_interaction_target() -> Node:
 	var nearest: Node = null
 	var nearest_dist := INF
 	for area in interact_area.get_overlapping_areas():
@@ -139,6 +127,10 @@ func _update_highlight() -> void:
 		if dist < nearest_dist:
 			nearest_dist = dist
 			nearest = target
+	return nearest
+
+func _update_highlight() -> void:
+	var nearest := _nearest_interaction_target()
 	if nearest == _highlighted_target:
 		return
 	if _highlighted_target and is_instance_valid(_highlighted_target):

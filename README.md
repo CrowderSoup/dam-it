@@ -150,8 +150,8 @@ scripts/
               InputSetup (key/gamepad bindings, registered in code instead
               of hand-edited project.godot resource literals), Sfx
               (procedurally generated sound effects - no audio assets), Fx
-              (one-shot particle bursts), SaveManager (reads/writes
-              user://savegame.json; Main owns the actual save data via
+              (one-shot particle bursts), SaveManager (reads/writes three
+              user://savegame_slot_N.json files; Main owns the save data via
               get_save_data()/apply_save_data())
 ```
 
@@ -185,9 +185,8 @@ code doesn't care about the visuals or how the sounds are generated.
 - The river/pond shape is one fixed, hand-authored layout (a winding
   polygon + an organic pond blob at the dam site) - not randomized or
   regenerated per game. Every new game and every reset looks the same.
-- One save slot, no save UI - it's an implicit "your one pond" save, not a
-  menu with multiple slots. Felled trees/mined rocks, and the countdown to
-  the next storm/raccoon, don't persist across a save (they just reset);
+- Felled trees/mined rocks, and the countdown to the next storm/raccoon,
+  don't persist across a save (they just reset);
   only *current* leaks and built state are saved. This only matters if you
   quit within seconds of one of those events.
 
@@ -227,6 +226,7 @@ framework like GUT/GoDotTest set up - just plain `assert()`s against the
 actual game objects). Run it after making logic changes:
 
 ```
+godot --headless --editor --path . --quit # populate a fresh checkout's import cache
 godot --headless --path . tests/smoke_test.tscn
 ```
 
@@ -236,9 +236,9 @@ prints `ALL SMOKE TESTS PASSED` on success or hits a `SCRIPT ERROR:
 Assertion failed` at the first broken behavior. Extend this file as new
 mechanics are added, rather than writing one-off scratch tests each time.
 
-The test deletes any real save file up front (`SaveManager.delete_save()`)
-so a leftover save from manual testing can't silently invalidate its
-assertions - keep that call if you add more tests that touch GameState via
-a fresh `main.tscn` instance. The save file itself lives at
-`user://savegame.json`, which Godot maps to
-`~/.local/share/godot/app_userdata/Dam it!/savegame.json` on Linux.
+The suite switches `SaveManager` to the isolated `user://automated_tests`
+directory before touching any files, so it cannot read, overwrite, or delete
+the player's three normal save slots. Keep that override at the start of any
+future test entry point that exercises persistence. Normal saves live at
+`user://savegame_slot_N.json`, which Godot maps beneath
+`~/.local/share/godot/app_userdata/Dam it!/` on Linux.

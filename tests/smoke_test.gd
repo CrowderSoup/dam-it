@@ -9,8 +9,9 @@ extends Node
 ## SCRIPT ERROR: Assertion failed on the first broken behavior.
 
 func _ready() -> void:
-	# A stray real save file in slot 1 (from manual/live testing on this
-	# machine, or a previous run of this test) would otherwise get loaded
+	# Never read, overwrite, or delete the player's real user:// save slots.
+	SaveManager.set_storage_root_for_tests("user://automated_tests")
+	# A leftover test save file in slot 1 (from a previous run) would get loaded
 	# into `main` below and silently invalidate every assertion that
 	# follows. Main no longer auto-loads without a session, so begin one
 	# first - the same thing the title screen does when a slot is picked.
@@ -157,8 +158,12 @@ func _ready() -> void:
 
 	var energy_before_ambient_active := GameState.energy
 	player._physics_process(player.AMBIENT_DRAIN_INTERVAL + 1.0)
-	assert(GameState.energy == energy_before_ambient_active - player.AMBIENT_DRAIN_AMOUNT, "ambient energy drain should run once the dam/pond exists")
-	print("OK: energy drains on its own once the dam is finished")
+	assert(GameState.energy == energy_before_ambient_active, "ambient energy drain should not run while the player is idle")
+	Input.action_press("move_right")
+	player._physics_process(player.AMBIENT_DRAIN_INTERVAL + 1.0)
+	Input.action_release("move_right")
+	assert(GameState.energy == energy_before_ambient_active - player.AMBIENT_DRAIN_AMOUNT, "ambient energy drain should run while moving once the dam/pond exists")
+	print("OK: energy drains during active movement once the dam is finished, but not while idle")
 
 	# --- HUD toast + edge indicators (threat visibility) ---
 	assert(hud.toast_label.visible and hud.toast_background.visible, "dam_completed should have shown a toast")
@@ -347,14 +352,20 @@ func _ready() -> void:
 	# same shape the real game runs in.
 	main.reparent(get_tree().root)
 	get_tree().current_scene = main
-	SaveManager.save_game()
+	assert(SaveManager.save_game(), "save_game() should report a successful write")
 	get_tree().current_scene = self
 	main.reparent(self)
 	assert(SaveManager.has_save(1), "save_game() should have written a save file to the active session's slot")
 	assert(not SaveManager.has_save(2), "save_game() must not touch other slots")
+	main.reparent(get_tree().root)
+	get_tree().current_scene = main
+	assert(SaveManager.save_game(), "save_game() should atomically replace an existing save")
+	get_tree().current_scene = self
+	main.reparent(self)
 	print("OK: save_game() writes a save file to the active session's slot only")
 
 	assert(SaveManager.peek_slot(1)["wood"] == saved_data["wood"], "peek_slot() should read back what was saved, without starting a session")
+	assert(SaveManager.peek_slot(1)["save_version"] == SaveManager.SAVE_VERSION, "saved data should include its format version")
 	print("OK: peek_slot() reads a slot's data without loading it into a scene")
 
 	# --- Title screen save-slot rows. title_screen.gd itself just wires a

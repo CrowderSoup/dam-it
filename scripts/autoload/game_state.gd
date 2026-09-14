@@ -221,12 +221,24 @@ func restore_energy_fully() -> void:
 ## early would save a still-half-restored scene over the real save data).
 ## Call announce_loaded_state() once Main has finished restoring everything.
 func load_from_save(data: Dictionary) -> void:
-	wood = data.get("wood", 0)
-	stone = data.get("stone", 0)
-	berries = data.get("berries", 0)
-	lodge_stage = data.get("lodge_stage", 0)
-	energy = data.get("energy", ENERGY_MAX)
-	pouch_tier = data.get("pouch_tier", 0)
+	pouch_tier = _saved_int(data, "pouch_tier", 0, 0, POUCH_MAX_TIER)
+	wood = _saved_int(data, "wood", 0, 0, wood_capacity())
+	stone = _saved_int(data, "stone", 0, 0, stone_capacity())
+	berries = _saved_int(data, "berries", 0, 0, 999999)
+	lodge_stage = _saved_int(data, "lodge_stage", 0, 0, LODGE_MAX_STAGE)
+	energy = _saved_float(data, "energy", ENERGY_MAX, 0.0, ENERGY_MAX)
+
+func _saved_int(data: Dictionary, key: String, default_value: int, minimum: int, maximum: int) -> int:
+	var value: Variant = data.get(key, default_value)
+	if value is int or value is float:
+		return clampi(int(value), minimum, maximum)
+	return default_value
+
+func _saved_float(data: Dictionary, key: String, default_value: float, minimum: float, maximum: float) -> float:
+	var value: Variant = data.get(key, default_value)
+	if value is int or value is float:
+		return clampf(float(value), minimum, maximum)
+	return default_value
 
 ## Dam-slot state is scene-shaped, not GameState-shaped, so Main restores
 ## that directly and reports back the resulting count here (silently, see
