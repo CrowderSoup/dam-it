@@ -47,9 +47,27 @@ func can_build() -> bool:
 func can_repair() -> bool:
 	return built and leaking
 
+## See interaction_option.gd. can_build()/can_repair() are mutually
+## exclusive by construction (a slot is either not built, built and
+## leaking, or built and fine), so there's never a priority question here -
+## null once a slot is built and intact, since there's nothing left to do.
+func get_interaction() -> InteractionOption:
+	var cost := {"wood": GameState.WOOD_PER_DAM_PIECE, "stone": GameState.STONE_PER_DAM_PIECE}
+	var available := GameState.can_afford_dam_piece()
+	var reason := "" if available else "Not enough wood or stone"
+	if can_repair():
+		return InteractionOption.new("Repair Dam Piece", repair, available, reason, cost)
+	if can_build():
+		return InteractionOption.new("Build Dam Piece", build, available, reason, cost)
+	return null
+
+## The affordability check used to live only in Player (the group-based
+## dispatch that get_interaction() replaces) - now build()/repair() guard
+## their own cost the same way chop()/mine() always have.
 func build() -> void:
-	if not can_build():
+	if not can_build() or not GameState.can_afford_dam_piece():
 		return
+	GameState.spend_resources_on_dam_piece()
 	Sfx.play_build()
 	Fx.burst(global_position, Color(0.6, 0.6, 0.65), 12)
 	_place_piece()
@@ -65,8 +83,9 @@ func start_leaking() -> void:
 	leak_changed.emit()
 
 func repair() -> void:
-	if not can_repair():
+	if not can_repair() or not GameState.can_afford_dam_piece():
 		return
+	GameState.spend_resources_on_repair()
 	leaking = false
 	if _piece:
 		_piece.set_leaking(false)

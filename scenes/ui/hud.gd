@@ -2,6 +2,7 @@ extends CanvasLayer
 
 const HINT_DURATION := 6.0
 const TOAST_DURATION := 6.0
+const FAILURE_TOAST_DURATION := 2.5
 
 @onready var energy_label: Label = $BottomMargin/ItemsHBox/EnergyGroup/EnergyLabel
 @onready var wood_label: Label = $BottomMargin/ItemsHBox/WoodGroup/WoodLabel
@@ -15,6 +16,8 @@ const TOAST_DURATION := 6.0
 @onready var hint_background: Panel = $HintBackground
 @onready var storm_indicator: Control = $StormIndicator
 @onready var raccoon_indicator: Control = $RaccoonIndicator
+@onready var action_prompt_label: Label = $ActionPromptLabel
+@onready var action_prompt_background: Panel = $ActionPromptBackground
 
 var _toast_generation := 0
 
@@ -35,6 +38,8 @@ func _ready() -> void:
 	_on_lodge_stage_changed(GameState.lodge_stage)
 	_on_energy_changed(GameState.energy)
 	hint_label.text = _opening_hint()
+	action_prompt_label.hide()
+	action_prompt_background.hide()
 	var hide_hint := func():
 		hint_label.hide()
 		hint_background.hide()
@@ -80,6 +85,38 @@ func show_toast(text: String, duration: float = TOAST_DURATION) -> void:
 			toast_background.hide()
 	)
 
+## Shows (or hides, for null) the persistent "what would pressing interact
+## do right now" prompt - see interaction_option.gd and
+## Player.interaction_option_changed. Grayed out and annotated with why when
+## the action wouldn't currently succeed, so the player learns the reason
+## before they even press the button rather than only after.
+func set_action_prompt(option: InteractionOption) -> void:
+	if option == null:
+		action_prompt_label.hide()
+		action_prompt_background.hide()
+		return
+	var text := "[%s] %s" % [InputSetup.interact_prompt(), option.label]
+	var cost_text := option.cost_text()
+	if not cost_text.is_empty():
+		text += " (%s)" % cost_text
+	if not option.available and not option.reason.is_empty():
+		text += " - %s" % option.reason
+	action_prompt_label.text = text
+	if option.available:
+		action_prompt_label.remove_theme_color_override("font_color")
+	else:
+		action_prompt_label.add_theme_color_override("font_color", Palette.ENERGY_LOW)
+	action_prompt_label.show()
+	action_prompt_background.show()
+
+## A short, non-modal notice that the just-attempted interaction didn't
+## succeed - see Player.interaction_failed. Shares the toast mechanism (and
+## its "replacing a still-showing one just extends it" behavior) but with a
+## much shorter default duration, since this is reacting to a button press
+## rather than an ambient event.
+func show_failure(reason: String) -> void:
+	show_toast(reason, FAILURE_TOAST_DURATION)
+
 func _on_energy_changed(amount: float) -> void:
 	energy_label.text = str(int(round(amount)))
 	if GameState.is_tired():
@@ -101,8 +138,7 @@ func _on_pouch_upgraded(_tier: int) -> void:
 	_on_stone_changed(GameState.stone)
 
 func _on_pouch_full(kind: String) -> void:
-	var noun: String = "Wood" if kind == "wood" else "Stone"
-	show_toast("%s pouch is full! Build something or upgrade your pouch at the Lodge." % noun, 3.0)
+	show_toast(GameState.pouch_full_message(kind), 3.0)
 
 func _on_berries_changed(amount: int) -> void:
 	berries_label.text = str(amount)

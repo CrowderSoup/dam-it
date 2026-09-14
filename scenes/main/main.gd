@@ -35,6 +35,8 @@ var _raccoon_timer: Timer
 
 func _ready() -> void:
 	hud.set_camera(camera)
+	player.interaction_option_changed.connect(hud.set_action_prompt)
+	player.interaction_failed.connect(hud.show_failure)
 	for slot in dam_slots.get_children():
 		slot.leak_changed.connect(_update_storm_indicator)
 	raccoon.despawned.connect(_on_raccoon_despawned)
