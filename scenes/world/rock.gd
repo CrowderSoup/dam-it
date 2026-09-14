@@ -1,22 +1,20 @@
-extends StaticBody2D
+extends Harvestable
 ## A mineable rock. Yields stone over a couple hits, then respawns.
 
 const STONE_YIELD := 1
 const HITS_TO_BREAK := 2
-const RESPAWN_TIME := 10.0
 
 var hits_taken: int = 0
-var broken: bool = false
-var highlighted: bool = false
 
 func _ready() -> void:
+	respawn_time = 10.0
 	add_to_group("rocks")
 	# The InteractArea (not this StaticBody2D) is what Player's overlap
 	# check actually finds - see Player._resolve_target().
 	$InteractArea.add_to_group("rock_areas")
 
 func _draw() -> void:
-	if broken:
+	if depleted:
 		DrawUtil.shadow(self, Vector2(0, 6), Vector2(6, 2))
 		var rubble := PackedVector2Array([
 			Vector2(-5, 3), Vector2(-2, -2), Vector2(3, -3), Vector2(5, 2), Vector2(0, 4),
@@ -45,14 +43,8 @@ func _draw() -> void:
 	draw_line(Vector2(0, -3), Vector2(3, 4), Palette.STONE_DARK, 1.0)
 	draw_circle(Vector2(4, -2), 2.2, Color(0.4, 0.55, 0.3, 0.8))
 
-func set_highlighted(value: bool) -> void:
-	if highlighted == value:
-		return
-	highlighted = value
-	queue_redraw()
-
 func mine() -> void:
-	if broken:
+	if depleted:
 		return
 	if not GameState.has_stone_room():
 		GameState.pouch_full.emit("stone")
@@ -78,17 +70,12 @@ func _shake() -> void:
 	tween.tween_property(self, "scale", Vector2.ONE, 0.1)
 
 func _break() -> void:
-	broken = true
-	set_highlighted(false)
 	$CollisionShape2D.set_deferred("disabled", true)
 	$InteractArea/CollisionShape2D.set_deferred("disabled", true)
-	queue_redraw()
-	await get_tree().create_timer(RESPAWN_TIME).timeout
-	_respawn()
+	_deplete()
 
-func _respawn() -> void:
-	broken = false
+func _on_respawn() -> void:
 	hits_taken = 0
 	$CollisionShape2D.disabled = false
 	$InteractArea/CollisionShape2D.disabled = false
-	queue_redraw()
+	super._on_respawn()
