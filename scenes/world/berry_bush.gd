@@ -12,6 +12,12 @@ func _ready() -> void:
 	respawn_time = 12.0
 	add_to_group("berry_bushes")
 
+## See interaction_option.gd. Null while regrowing.
+func get_interaction() -> InteractionOption:
+	if not can_harvest():
+		return null
+	return InteractionOption.new("Harvest Berries", harvest, true)
+
 func harvest() -> void:
 	if not can_harvest():
 		return

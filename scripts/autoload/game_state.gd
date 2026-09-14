@@ -74,6 +74,13 @@ func has_wood_room() -> bool:
 func has_stone_room() -> bool:
 	return stone < stone_capacity()
 
+## Shared wording for a full pouch, used both by the pouch_full signal's HUD
+## toast and by Tree/Rock's get_interaction() failure reason, so a chop/mine
+## attempted through Player and one called directly always read the same.
+func pouch_full_message(kind: String) -> String:
+	var noun: String = "Wood" if kind == "wood" else "Stone"
+	return "%s pouch is full! Build something or upgrade your pouch at the Lodge." % noun
+
 ## Called by each DamSlot on _ready() so the total is derived from the
 ## scene instead of duplicated as a magic number.
 func register_dam_slot() -> void:

@@ -25,8 +25,23 @@ func _ready() -> void:
 func can_build() -> bool:
 	return visible and not built
 
-func build() -> void:
+## See interaction_option.gd. Null before the spot is revealed or after it's
+## already built - nothing left to do here either way.
+func get_interaction() -> InteractionOption:
 	if not can_build():
+		return null
+	var available := GameState.can_afford(WOOD_COST, STONE_COST)
+	var reason := "" if available else "Not enough wood or stone"
+	return InteractionOption.new("Build " + _kind_label(), build, available, reason, {"wood": WOOD_COST, "stone": STONE_COST})
+
+func _kind_label() -> String:
+	return "Flower Bed" if kind == Kind.FLOWER_BED else "Bench"
+
+## The affordability check used to live only in Player (the group-based
+## dispatch that get_interaction() replaces) - now build() guards its own
+## cost the same way chop()/mine() always have.
+func build() -> void:
+	if not can_build() or not GameState.can_afford(WOOD_COST, STONE_COST):
 		return
 	GameState.spend(WOOD_COST, STONE_COST)
 	Sfx.play_build()

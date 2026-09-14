@@ -35,6 +35,15 @@ func _draw() -> void:
 	DrawUtil.outlined_circle(self, Vector2(0, -18), 15.0, Palette.LEAF_MID, 1.5)
 	draw_circle(Vector2(-5, -22), 5.0, Palette.LEAF_LIGHT)
 
+## See interaction_option.gd. Null while felled - a respawning tree isn't a
+## nearby interactable worth prompting for, the same way it draws without a
+## highlight ring (see _draw()).
+func get_interaction() -> InteractionOption:
+	if depleted:
+		return null
+	var room := GameState.has_wood_room()
+	return InteractionOption.new("Chop", chop, room, "" if room else GameState.pouch_full_message("wood"))
+
 func chop() -> void:
 	if depleted:
 		return

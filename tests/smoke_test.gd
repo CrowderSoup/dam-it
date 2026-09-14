@@ -51,6 +51,14 @@ func _ready() -> void:
 	tree1.set_highlighted(false)
 	print("OK: tree highlighting toggles")
 
+	# --- Shared interaction contract (see interaction_option.gd) ---
+	var tree_option: InteractionOption = tree1.get_interaction()
+	assert(tree_option != null and tree_option.label == "Chop" and tree_option.available, "a fresh tree should offer an available Chop action")
+	assert(tree_option.reason.is_empty(), "an available action should carry no failure reason")
+	var rock_option: InteractionOption = rock1.get_interaction()
+	assert(rock_option != null and rock_option.label == "Mine" and rock_option.available, "a fresh rock should offer an available Mine action")
+	print("OK: Tree/Rock.get_interaction() offer available Chop/Mine actions before any hits")
+
 	var energy_before_chop := GameState.energy
 	for i in 3:
 		tree1.chop()
@@ -58,6 +66,7 @@ func _ready() -> void:
 	tree1.chop()
 	assert(GameState.wood == 3, "chopping a felled tree should not yield more wood")
 	assert(GameState.energy == energy_before_chop, "chopping before the dam/pond exists should not spend energy")
+	assert(tree1.get_interaction() == null, "a felled tree should offer no interaction while it's respawning")
 	print("OK: chopping a tree 3 times yields wood and fells it; felled trees give no more")
 
 	var energy_before_mine := GameState.energy
@@ -67,6 +76,7 @@ func _ready() -> void:
 	rock1.mine()
 	assert(GameState.stone == 2, "mining a broken rock should not yield more stone")
 	assert(GameState.energy == energy_before_mine, "mining before the dam/pond exists should not spend energy")
+	assert(rock1.get_interaction() == null, "a broken rock should offer no interaction while it's respawning")
 	print("OK: mining a rock 2 times yields stone and breaks it; broken rocks give no more")
 
 	# --- Energy / tired mechanic ---
@@ -84,12 +94,15 @@ func _ready() -> void:
 
 	assert(berry_bush1.can_harvest(), "a fresh berry bush should be harvestable")
 	assert(player._resolve_target(berry_bush1) == berry_bush1)
+	var bush_option: InteractionOption = berry_bush1.get_interaction()
+	assert(bush_option != null and bush_option.label == "Harvest Berries" and bush_option.available, "a fresh berry bush should offer an available Harvest Berries action")
 	var berries_before_harvest := GameState.berries
 	var energy_before_harvest := GameState.energy
 	berry_bush1.harvest()
 	assert(GameState.berries == berries_before_harvest + BerryBush.HARVEST_AMOUNT, "harvesting should add HARVEST_AMOUNT berries")
 	assert(GameState.energy == energy_before_harvest, "harvesting berries should not restore energy - that's cattails/lilies now")
 	assert(not berry_bush1.can_harvest(), "a just-harvested bush should not be harvestable again until it respawns")
+	assert(berry_bush1.get_interaction() == null, "a just-harvested bush should offer no interaction while it regrows")
 	berry_bush1.harvest()
 	assert(GameState.berries == berries_before_harvest + BerryBush.HARVEST_AMOUNT, "harvesting a picked bush should be a no-op")
 	print("OK: harvesting a berry bush stockpiles berries once, then blocks re-harvesting until it respawns")
@@ -108,11 +121,14 @@ func _ready() -> void:
 
 	assert(GameState.can_afford_dam_piece())
 	assert(dam_slot1.can_build())
+	var slot_option: InteractionOption = dam_slot1.get_interaction()
+	assert(slot_option != null and slot_option.label == "Build Dam Piece" and slot_option.available, "a fresh dam slot should offer an available Build Dam Piece action")
+	assert(slot_option.cost_text() == "2 Wood, 1 Stone", "the dam-piece cost should show as 2 Wood, 1 Stone, got: %s" % slot_option.cost_text())
 	var energy_before_build := GameState.energy
-	GameState.spend_resources_on_dam_piece()
 	dam_slot1.build()
 	assert(GameState.dam_pieces_built == 1 and not dam_slot1.can_build())
 	assert(GameState.energy == energy_before_build, "building dam pieces before the pond exists should not spend energy")
+	assert(dam_slot1.get_interaction() == null, "a built, intact dam slot should offer no interaction")
 	print("OK: building a dam piece spends resources and marks the slot built, without spending energy")
 
 	assert(is_instance_valid(river_water), "river_water should exist before completion")
@@ -128,7 +144,6 @@ func _ready() -> void:
 		var slot: Area2D = main.get_node("DamSlots/%s" % slot_name)
 		GameState.add_wood(2)
 		GameState.add_stone(1)
-		GameState.spend_resources_on_dam_piece()
 		slot.build()
 	assert(completed_flag[0], "dam_completed should fire once all 5 slots are built")
 	print("OK: dam_completed fires once all slots are built")
@@ -147,11 +162,14 @@ func _ready() -> void:
 	assert(cattail1.visible, "pond plants should appear once the dam/pond is complete")
 	assert(cattail1.can_eat(), "a fresh pond plant should be eatable")
 	assert(player._resolve_target(cattail1) == cattail1)
+	var cattail_option: InteractionOption = cattail1.get_interaction()
+	assert(cattail_option != null and cattail_option.label == "Eat" and cattail_option.available, "a fresh pond plant should offer an available Eat action")
 	GameState.spend_energy(50.0)
 	var energy_before_pond_eat := GameState.energy
 	cattail1.eat()
 	assert(GameState.energy == energy_before_pond_eat + PondPlant.ENERGY_RESTORE, "eating a pond plant should restore ENERGY_RESTORE energy")
 	assert(not cattail1.can_eat(), "a just-eaten pond plant should not be eatable again until it regrows")
+	assert(cattail1.get_interaction() == null, "a just-eaten pond plant should offer no interaction while it regrows")
 	cattail1.eat()
 	assert(GameState.energy == energy_before_pond_eat + PondPlant.ENERGY_RESTORE, "eating an already-picked pond plant should be a no-op")
 	print("OK: eating a pond plant restores energy once, then blocks re-eating until it regrows")
@@ -190,13 +208,25 @@ func _ready() -> void:
 	# pointed at a real leak - not just testing the HUD API in isolation.
 	assert(hud.storm_indicator.target == dam_slot1, "leak_changed should have pointed the storm indicator at the leaking slot")
 
+	var wood_before_starve := GameState.wood
+	var stone_before_starve := GameState.stone
+	GameState.wood = 0
+	GameState.stone = 0
+	var leaking_broke_option: InteractionOption = dam_slot1.get_interaction()
+	assert(leaking_broke_option != null and leaking_broke_option.label == "Repair Dam Piece" and not leaking_broke_option.available, "a leaking slot should still offer Repair, just unavailable without resources")
+	assert(leaking_broke_option.reason == "Not enough wood or stone")
+	GameState.wood = wood_before_starve
+	GameState.stone = stone_before_starve
+	print("OK: DamSlot.get_interaction() explains insufficient resources for an unaffordable repair")
+
 	GameState.add_wood(5)
 	GameState.add_stone(5)
 	var built_before_repair := GameState.dam_pieces_built
 	var repair_completed_flag := [false]
 	GameState.dam_completed.connect(func(): repair_completed_flag[0] = true)
 	assert(GameState.can_afford_dam_piece())
-	GameState.spend_resources_on_repair()
+	var repair_option: InteractionOption = dam_slot1.get_interaction()
+	assert(repair_option != null and repair_option.label == "Repair Dam Piece" and repair_option.available, "an affordable leak should offer an available Repair Dam Piece action")
 	dam_slot1.repair()
 	assert(not dam_slot1.leaking and not dam_slot1.can_repair(), "repair() should clear the leak")
 	assert(GameState.dam_pieces_built == built_before_repair, "repairing must not change the built-piece count")
@@ -206,6 +236,7 @@ func _ready() -> void:
 
 	# --- Scavenger: feeding it berries vs. steal-and-flee ---
 	assert(not raccoon.can_feed(), "raccoon should be inactive until spawned")
+	assert(raccoon.get_interaction() == null, "an inactive raccoon should offer no interaction")
 	raccoon.spawn_at(Vector2(300, 300))
 	hud.point_to_raccoon(raccoon)
 	GameState.remove_berries(GameState.berries)
@@ -213,9 +244,14 @@ func _ready() -> void:
 	assert(not raccoon.can_feed(), "feeding should require at least one berry in stock")
 	assert(raccoon.visible, "spawn_at() should show the raccoon even without berries to feed it")
 	assert(player._resolve_target(raccoon) == raccoon)
+	var broke_raccoon_option: InteractionOption = raccoon.get_interaction()
+	assert(broke_raccoon_option != null and broke_raccoon_option.label == "Feed" and not broke_raccoon_option.available, "a spawned raccoon with no berries in stock should offer an unavailable Feed action")
+	assert(broke_raccoon_option.reason == "No berries to feed it")
 
 	GameState.add_berries(1)
 	assert(raccoon.can_feed(), "feeding should be possible once a berry is in stock")
+	var fed_raccoon_option: InteractionOption = raccoon.get_interaction()
+	assert(fed_raccoon_option != null and fed_raccoon_option.available, "a raccoon should offer an available Feed action once a berry is in stock")
 	raccoon.feed()
 	assert(GameState.berries == 0, "feed() should spend the berry")
 	assert(not raccoon.can_feed() and not raccoon.visible, "feed() should despawn the raccoon with no theft")
@@ -231,6 +267,31 @@ func _ready() -> void:
 	assert(not raccoon.can_feed(), "the raccoon should despawn after stealing")
 	print("OK: an unshooed raccoon steals a small amount of wood/stone then despawns")
 
+	# --- Player._try_interact() drives the shared contract end to end ---
+	var prompts: Array = []
+	player.interaction_option_changed.connect(func(option): prompts.append(option))
+	var failures: Array = []
+	player.interaction_failed.connect(func(reason): failures.append(reason))
+
+	# An out-of-the-way spot with nothing else nearby, so the raccoon is
+	# unambiguously the only interaction target in range.
+	player.global_position = Vector2(50, 50)
+	raccoon.spawn_at(player.global_position)
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	player._update_highlight()
+	assert(not prompts.is_empty() and prompts.back() != null and prompts.back().label == "Feed", "Player should broadcast the live Feed prompt while standing next to the raccoon")
+
+	player._try_interact()
+	assert(failures.size() == 1 and failures[0] == "No berries to feed it", "pressing interact on a berry-less raccoon should report why it failed")
+	assert(raccoon.visible, "a failed feed attempt should not despawn the raccoon")
+
+	GameState.add_berries(1)
+	player._try_interact()
+	assert(failures.size() == 1, "a successful interaction should not report a failure")
+	assert(not raccoon.visible, "pressing interact with a berry in stock should feed and despawn the raccoon")
+	print("OK: Player._try_interact() performs the resolved action and reports failures via signals")
+
 	GameState.wood = 0
 	assert(GameState.remove_wood(3) == 0, "remove_wood should clamp to what's actually available")
 	assert(GameState.wood == 0, "wood should never go negative")
@@ -245,11 +306,47 @@ func _ready() -> void:
 	assert(frog.visible, "frog should appear once lodge reaches stage 1")
 	print("OK: advancing the lodge spends resources, and the frog appears at stage 1")
 
+	# advance() now guards its own affordability (it used to trust Player to
+	# have already checked can_afford_lodge_stage() first) - top up before
+	# each of the remaining two stages (add_wood()/add_stone() clamp to the
+	# pouch's capacity, so this has to happen per-stage rather than as one
+	# big lump sum) so this still walks all the way to LODGE_MAX_STAGE
+	# instead of silently stalling on the second/third hit.
+	GameState.add_wood(10)
+	GameState.add_stone(10)
 	lodge.advance()
+	GameState.add_wood(10)
+	GameState.add_stone(10)
 	lodge.advance()
 	assert(GameState.lodge_stage == GameState.LODGE_MAX_STAGE)
 	assert(not lodge.can_advance(), "lodge should not advance past max stage")
 	print("OK: lodge reaches max stage and stops accepting further advances")
+
+	# --- Lodge.get_interaction() fallback messaging: a maxed, fully-rested,
+	# resource-starved Lodge should still say something (why the next best
+	# amenity - upgrading the pouch - isn't available right now) instead of
+	# the old silent no-op. ---
+	var lodge_wood_backup := GameState.wood
+	var lodge_stone_backup := GameState.stone
+	GameState.wood = 0
+	GameState.stone = 0
+	GameState.restore_energy_fully()
+	var idle_lodge_option: InteractionOption = lodge.get_interaction()
+	assert(idle_lodge_option != null and idle_lodge_option.label == "Upgrade Pouch" and not idle_lodge_option.available, "a maxed, well-rested, resource-starved lodge should fall back to an unavailable Upgrade Pouch with a reason")
+	assert(idle_lodge_option.reason == "Not enough wood or stone")
+	GameState.wood = lodge_wood_backup
+	GameState.stone = lodge_stone_backup
+
+	# And once every amenity really is exhausted (pouch maxed out too),
+	# resting is the last thing left to offer - shown as unavailable with a
+	# reason once the beaver isn't tired, rather than nothing at all.
+	var backup_pouch_tier := GameState.pouch_tier
+	GameState.pouch_tier = GameState.POUCH_MAX_TIER
+	var fully_idle_option: InteractionOption = lodge.get_interaction()
+	assert(fully_idle_option != null and fully_idle_option.label == "Rest" and not fully_idle_option.available, "a lodge with nothing left to build/upgrade should fall back to an unavailable Rest with a reason")
+	assert(fully_idle_option.reason == "Not tired right now")
+	GameState.pouch_tier = backup_pouch_tier
+	print("OK: Lodge.get_interaction() explains why nothing succeeds once its amenities run out, instead of staying silent")
 
 	# --- Resting at the finished Lodge ---
 	GameState.restore_energy_fully()
@@ -257,6 +354,8 @@ func _ready() -> void:
 	GameState.spend_energy(80.0)
 	assert(lodge.can_rest(), "a finished lodge should offer resting once energy is below max")
 	assert(player._resolve_target(lodge) == lodge)
+	var rest_option: InteractionOption = lodge.get_interaction()
+	assert(rest_option != null and rest_option.label == "Rest" and rest_option.available, "a tired, finished lodge should offer an available Rest action")
 	lodge.rest()
 	assert(GameState.energy == GameState.ENERGY_MAX, "resting at the lodge should fully refill energy")
 	assert(not lodge.can_rest(), "a freshly-rested lodge should not offer resting again immediately")
@@ -288,6 +387,9 @@ func _ready() -> void:
 
 	assert(GameState.can_afford_pouch_upgrade(), "a full pouch (10/10) should afford the first upgrade (6 wood/3 stone)")
 	assert(lodge.can_upgrade_pouch(), "a maxed lodge should offer a pouch upgrade when one is affordable")
+	var upgrade_option: InteractionOption = lodge.get_interaction()
+	assert(upgrade_option != null and upgrade_option.label == "Upgrade Pouch" and upgrade_option.available, "an affordable pouch upgrade should take priority once the lodge doesn't need resting")
+	assert(upgrade_option.cost_text() == "6 Wood, 3 Stone", "the tier-0 upgrade cost should show as 6 Wood, 3 Stone, got: %s" % upgrade_option.cost_text())
 	lodge.upgrade_pouch()
 	assert(GameState.pouch_tier == 1, "upgrade_pouch() should raise the pouch tier")
 	assert(GameState.wood_capacity() == GameState.POUCH_BASE_CAPACITY + GameState.POUCH_CAPACITY_PER_TIER, "wood capacity should grow by one tier's worth")
@@ -301,13 +403,27 @@ func _ready() -> void:
 	assert(not butterfly.visible, "butterfly should stay hidden until its garden spot is built")
 	assert(player._resolve_target(flower_spot) == flower_spot)
 
+	var garden_wood_backup := GameState.wood
+	var garden_stone_backup := GameState.stone
+	GameState.wood = 0
+	GameState.stone = 0
+	var broke_garden_option: InteractionOption = flower_spot.get_interaction()
+	assert(broke_garden_option != null and broke_garden_option.label == "Build Flower Bed" and not broke_garden_option.available, "a revealed-but-unaffordable garden spot should still show its Build action, just unavailable")
+	assert(broke_garden_option.reason == "Not enough wood or stone")
+	GameState.wood = garden_wood_backup
+	GameState.stone = garden_stone_backup
+
 	GameState.add_wood(10)
 	GameState.add_stone(10)
 	assert(flower_spot.can_build() and GameState.can_afford(GardenSpot.WOOD_COST, GardenSpot.STONE_COST))
+	var garden_option: InteractionOption = flower_spot.get_interaction()
+	assert(garden_option != null and garden_option.available, "an affordable, revealed garden spot should offer an available Build action")
 	flower_spot.build()
 	assert(flower_spot.built and not flower_spot.can_build())
 	assert(butterfly.visible, "building the flower bed should reveal the butterfly")
+	assert(flower_spot.get_interaction() == null, "a built garden spot has nothing left to interact with")
 	print("OK: garden spots unlock with the lodge, and building one reveals its critter")
+	print("OK: GardenSpot.get_interaction() explains insufficient resources before it's affordable")
 
 	# "restart" is intentionally keyboard-only (see the safe-controls test
 	# block below) - a gamepad can only reach new-game through the paused
@@ -372,6 +488,37 @@ func _ready() -> void:
 	assert(new_game_signaled[0], "confirming should emit new_game_requested")
 	assert(not game_menu.visible and not get_tree().paused, "confirming should close the menu and unpause")
 	print("OK: request_new_game() reaches new_game_requested only through an explicit confirmation, and cancelling preserves progress")
+
+	# --- Input-device-aware action prompt (InputSetup) ---
+	assert(not InputSetup.uses_gamepad(), "should default to the keyboard prompt before any joypad input")
+	assert(InputSetup.interact_prompt() == "E", "keyboard prompt should show E for interact")
+	var joy_button_event := InputEventJoypadButton.new()
+	joy_button_event.button_index = JOY_BUTTON_A
+	InputSetup._input(joy_button_event)
+	assert(InputSetup.uses_gamepad(), "a joypad button event should switch the prompt to gamepad")
+	assert(InputSetup.interact_prompt() == "A", "gamepad prompt should show A for interact")
+	var joy_drift_event := InputEventJoypadMotion.new()
+	joy_drift_event.axis = JOY_AXIS_LEFT_X
+	joy_drift_event.axis_value = 0.1
+	InputSetup._input(joy_drift_event)
+	assert(InputSetup.uses_gamepad(), "tiny analog drift below the deadzone shouldn't flip the prompt on its own")
+	var key_event := InputEventKey.new()
+	key_event.physical_keycode = KEY_E
+	InputSetup._input(key_event)
+	assert(not InputSetup.uses_gamepad(), "a keyboard event should switch the prompt back to keyboard")
+	print("OK: InputSetup tracks the active input device and reports the matching interact prompt glyph")
+
+	# --- HUD renders the live action prompt from Player's contract ---
+	hud.set_action_prompt(null)
+	assert(not hud.action_prompt_label.visible, "a null option should hide the action prompt")
+	var demo_option := InteractionOption.new("Chop", func(): pass, true)
+	hud.set_action_prompt(demo_option)
+	assert(hud.action_prompt_label.visible and hud.action_prompt_label.text == "[E] Chop", "an available option should show as \"[E] <label>\" with no extra annotation")
+	var demo_cost_option := InteractionOption.new("Build Dam Piece", func(): pass, false, "Not enough wood or stone", {"wood": 2, "stone": 1})
+	hud.set_action_prompt(demo_cost_option)
+	assert(hud.action_prompt_label.text == "[E] Build Dam Piece (2 Wood, 1 Stone) - Not enough wood or stone", "an unavailable option should show its cost and reason, got: %s" % hud.action_prompt_label.text)
+	hud.set_action_prompt(null)
+	print("OK: HUD.set_action_prompt() renders label/cost/reason and hides for a null option")
 
 	# --- Save / load (slot-based) ---
 	var dam_slot2: Area2D = main.get_node("DamSlots/DamSlot2")
