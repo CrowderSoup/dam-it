@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" path="res://scenes/world/dam_slot.tscn" id="4"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="5"]
 [ext_resource type="PackedScene" path="res://scenes/ui/game_menu.tscn" id="16"]
+[ext_resource type="PackedScene" path="res://scenes/ui/dialogue_box.tscn" id="17"]
 [ext_resource type="PackedScene" path="res://scenes/world/rock.tscn" id="7"]
 [ext_resource type="PackedScene" path="res://scenes/world/grass_patch.tscn" id="8"]
 [ext_resource type="PackedScene" path="res://scenes/world/lodge.tscn" id="9"]
@@ -228,3 +229,5 @@ position = Vector2(200, 200)
 [node name="HUD" parent="." instance=ExtResource("5")]
 
 [node name="GameMenu" parent="." instance=ExtResource("16")]
+
+[node name="DialogueBox" parent="." instance=ExtResource("17")]

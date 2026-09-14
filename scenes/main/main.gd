@@ -28,6 +28,7 @@ const RACCOON_SPAWN_POINTS := [
 @onready var camera: Camera2D = $Player/Camera2D
 @onready var hud: CanvasLayer = $HUD
 @onready var game_menu: CanvasLayer = $GameMenu
+@onready var dialogue_box: CanvasLayer = $DialogueBox
 
 var _challenges_active := false
 var _storm_timer: Timer
@@ -44,16 +45,39 @@ func _ready() -> void:
 	GameState.dam_completed.connect(_on_dam_completed)
 	GameState.dam_completed.connect(_start_challenges)
 	game_menu.new_game_requested.connect(_start_new_game)
+	# A dialogue pauses the tree itself (see dialogue_box.gd), same as
+	# GameMenu - but GameMenu stays PROCESS_MODE_ALWAYS so it can still open
+	# while paused. Without this, Escape/Start during a conversation would
+	# pop the pause menu on top of it instead of leaving dialogue input
+	# (advance/choose) as the only thing "menu" and friends can reach.
+	ActOneController.dialogue_started.connect(_on_dialogue_started)
+	ActOneController.dialogue_ended.connect(_on_dialogue_ended)
 	SaveManager.load_into(self)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("restart"):
 		game_menu.request_new_game()
 
+func _on_dialogue_started(_dialogue_id: String) -> void:
+	game_menu.process_mode = Node.PROCESS_MODE_DISABLED
+
+func _on_dialogue_ended(_dialogue_id: String) -> void:
+	# game_menu.tscn sets GameMenu's own process_mode to ALWAYS (see its
+	# docstring) so it can open while paused - restore that, not the
+	# CanvasLayer default of INHERIT, or Escape/Start would stop reaching it
+	# once a dialogue has been opened and closed.
+	game_menu.process_mode = Node.PROCESS_MODE_ALWAYS
+
 ## Shared by the "restart" shortcut and the game menu's "New Game" button.
 func _start_new_game() -> void:
 	SaveManager.delete_save(SaveManager.current_slot)
 	GameState.reset()
+	# ActOneController is an autoload, so its story flags/objectives/active
+	# dialogue would otherwise survive reload_current_scene() into the fresh
+	# session below - e.g. a start_dialogue() call after restart would hit
+	# the "already active" assert in act_one_controller.gd if a dialogue was
+	# still open when New Game was confirmed.
+	ActOneController.reset()
 	get_tree().reload_current_scene()
 
 func _on_dam_completed() -> void:
