@@ -11,9 +11,13 @@ the `ActOneController` autoload that runs them, and the worked fixture in
 [Dialogue style](dialogue-style.md) and [Cast](cast.md) - this document is
 about the data shape, not the writing voice.
 
-There is no dialogue/objective UI yet (see roadmap item "Add a dialogue
-presentation..." and issue #18). `ActOneController` only tracks state and
-emits signals; it never touches a scene, node, or UI control.
+`ActOneController` itself only tracks state and emits signals; it never
+touches a scene, node, or UI control. The dialogue presentation layer
+(issue #18) lives separately at `scenes/ui/dialogue_box.gd`/`.tscn` (plus
+`dialogue_portrait.gd` for the per-speaker portrait) - it renders purely
+from `ActOneController`'s signals/getters and calls back only through
+`choose()`/`advance_dialogue()`. There is still no objective/journal UI
+(that's issue #16).
 
 ## Why Resources
 
@@ -129,10 +133,13 @@ registered in `project.godot` alongside `GameState`. It owns Act I's story
 flags and objective progress - orchestration that used to have nowhere to
 live except `GameState` (which stays focused on resources/dam/Lodge/energy).
 
-Content is not auto-loaded; nothing currently calls `load_content()` outside
-of `tests/story_test.gd`. Wiring a resident's interact() to actually offer
-`start_dialogue()`, and hooking real Act I content into scene startup, is
-follow-up work for later issues (#16/#17), not part of this data layer.
+Content is not auto-loaded; nothing currently calls `load_content()` during
+real gameplay (only `tests/story_test.gd` and `tests/dialogue_ui_test.gd`
+do, to exercise the schema/UI against the Moss fixture). Wiring a
+resident's interact() to actually offer `start_dialogue()`, and hooking
+real Act I content into scene startup, is follow-up work for later issues
+(#16/#17) - #18 built the presentation/input layer any such caller can
+already drive today by calling `start_dialogue()`.
 
 Key API:
 
@@ -163,4 +170,6 @@ objective) and `dialogue_moss_intro.tres` (Moss's introduction - see
 starts the gathering objective via a `StoryEffect`. `tests/story_test.gd`
 loads both, plays the dialogue end to end including a choice, and drives the
 objective to completion by adding wood through `GameState` - proving the
-schema and controller work together without any UI.
+schema and controller work together without any UI. `tests/dialogue_ui_test.gd`
+plays the same fixture end to end again, this time through the real
+`DialogueBox` UI and its keyboard/mouse/gamepad input paths.

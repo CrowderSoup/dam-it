@@ -41,6 +41,10 @@ godot --path .
   rest or upgrade your resource pouch at a finished Lodge
 - `R` / gamepad Start — reset ALL progress (dam + Lodge + pouch) and start over
 
+During a conversation, the same interact key/button (or a mouse click)
+advances a line or confirms whichever response is highlighted; arrow keys,
+the d-pad, or the left stick move the highlight between responses.
+
 ## Current demo loop: "Grow Your Pond"
 
 Progress is persistent now (no more replay-by-restarting) - the dam is a
@@ -152,7 +156,10 @@ scenes/
               decorations (rocks)
   ui/       - title screen and HUD: icon-based counts along the bottom,
               a toast banner for announcements, and edge_indicator.gd
-              (the off-screen threat arrows)
+              (the off-screen threat arrows); dialogue_box.gd/.tscn
+              presents ActOneController's dialogue runtime (speaker,
+              portrait, text, response choices) - see
+              docs/design/dialogue-schema.md
 scripts/
   autoload/ - GameState (progress/signals for both the dam and the Lodge),
               InputSetup (key/gamepad bindings, registered in code instead
@@ -231,18 +238,25 @@ godot --headless --export-release "Web" builds/web/index.html
 
 There's a headless regression test at `tests/smoke_test.gd` (no real
 framework like GUT/GoDotTest set up - just plain `assert()`s against the
-actual game objects). Run it after making logic changes:
+actual game objects), plus two companions covering the data-driven story
+layer: `tests/story_test.gd` (ActOneController's dialogue/objective runtime,
+no UI) and `tests/dialogue_ui_test.gd` (the dialogue box UI on top of it -
+see docs/design/dialogue-schema.md). Run them after making logic changes:
 
 ```
 godot --headless --editor --path . --quit # populate a fresh checkout's import cache
 godot --headless --path . tests/smoke_test.tscn
+godot --headless --path . tests/story_test.tscn
+godot --headless --path . tests/dialogue_ui_test.tscn
 ```
 
-It instantiates `main.tscn`, drives the real Tree/Rock/DamSlot/GameState
-objects directly (chop, mine, build, complete, reset, save, load), and
-prints `ALL SMOKE TESTS PASSED` on success or hits a `SCRIPT ERROR:
-Assertion failed` at the first broken behavior. Extend this file as new
-mechanics are added, rather than writing one-off scratch tests each time.
+`smoke_test.gd` instantiates `main.tscn`, drives the real Tree/Rock/DamSlot/
+GameState objects directly (chop, mine, build, complete, reset, save,
+load), and prints `ALL SMOKE TESTS PASSED` on success or hits a `SCRIPT
+ERROR: Assertion failed` at the first broken behavior. Extend this file as
+new mechanics are added, rather than writing one-off scratch tests each
+time. The other two suites follow the same convention and print their own
+`ALL ... TESTS PASSED` banner.
 
 The suite switches `SaveManager` to the isolated `user://automated_tests`
 directory before touching any files, so it cannot read, overwrite, or delete
