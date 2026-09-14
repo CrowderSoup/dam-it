@@ -200,10 +200,14 @@ Design index: [1.0 design documentation](docs/design/README.md).
 
 #### Production planning
 
-- [ ] Convert Milestone 1 into repository issues with owners or a clear next
+- [x] Convert Milestone 1 into repository issues with owners or a clear next
   action.
-- [ ] Establish a repeatable external playtest method and feedback form.
-- [ ] Record baseline completion time and friction points for the current demo.
+- [x] Establish a repeatable external playtest method and feedback form.
+- [x] Record a provisional baseline and friction points for the current demo;
+  obtain the first valid human completion time through the asynchronous method.
+
+Production practices and baseline records:
+[Milestone 0 production planning](docs/production/README.md).
 
 **Exit criteria:** the pitch, story synopsis, scope envelope, cast, region list,
 and Act I content list can fit in a short design brief and do not contradict one
