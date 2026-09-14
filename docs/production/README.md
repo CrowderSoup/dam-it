@@ -9,6 +9,8 @@ to move *Dam it!* through its roadmap milestones.
   a tester after a session.
 - [Current demo baseline](current-demo-baseline.md) records the starting point
   against which the Act I vertical slice will be evaluated.
+- [Dam economy notes](dam-economy-notes.md) records the before/after
+  resource-action budget for the issue #19 gathering/dam retune.
 
 Milestone 1 implementation work is tracked in the
 [Act I narrative vertical slice milestone](https://github.com/CrowderSoup/dam-it/milestone/1).

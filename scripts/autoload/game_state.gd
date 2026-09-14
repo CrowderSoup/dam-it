@@ -16,6 +16,14 @@ signal pouch_upgraded(tier: int)
 ## for that resource - "wood" or "stone". HUD listens to surface a toast;
 ## nothing else needs to react.
 signal pouch_full(kind: String)
+## Emitted once, the first time the player reads the water at a RiverGauge
+## (see river_gauge.gd) - the first dam's observation step from issue #19.
+## HUD listens to surface what was learned. Deliberately not part of the
+## save format (see load_from_save()/reset()): it costs nothing and takes
+## one interact, so a reloaded session that hasn't built the keystone slot
+## yet just asks the player to read the water again rather than needing its
+## own save field.
+signal water_observed
 
 const WOOD_PER_DAM_PIECE := 2
 const STONE_PER_DAM_PIECE := 1
@@ -61,6 +69,9 @@ var dam_pieces_built: int = 0
 var lodge_stage: int = 0
 var energy: float = ENERGY_MAX
 var pouch_tier: int = 0
+## Whether the player has read the water at the dam site's RiverGauge yet -
+## see water_observed and DamSlot.is_keystone/_needs_reading().
+var water_read: bool = false
 
 func wood_capacity() -> int:
 	return POUCH_BASE_CAPACITY + pouch_tier * POUCH_CAPACITY_PER_TIER
@@ -124,6 +135,14 @@ func remove_berries(amount: int) -> int:
 	berries -= removed
 	berries_changed.emit(berries)
 	return removed
+
+## Idempotent - a second read (shouldn't normally happen, since RiverGauge
+## offers nothing once read) is just a no-op rather than re-announcing it.
+func read_water() -> void:
+	if water_read:
+		return
+	water_read = true
+	water_observed.emit()
 
 func can_afford_dam_piece() -> bool:
 	return wood >= WOOD_PER_DAM_PIECE and stone >= STONE_PER_DAM_PIECE
@@ -278,6 +297,7 @@ func reset() -> void:
 	lodge_stage = 0
 	energy = ENERGY_MAX
 	pouch_tier = 0
+	water_read = false
 	wood_changed.emit(wood)
 	stone_changed.emit(stone)
 	berries_changed.emit(berries)

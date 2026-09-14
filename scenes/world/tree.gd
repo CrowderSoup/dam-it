@@ -1,13 +1,27 @@
 extends Harvestable
 ## A choppable tree. Yields wood over a few hits, then respawns.
+##
+## Deliberately no `class_name Tree` - that collides with Godot's built-in
+## Tree control (the list/tree-view UI node), so external references to
+## these constants (see tests/smoke_test.gd) preload this script by path
+## instead.
+##
+## WOOD_YIELD was doubled (see issue #19's economy retune) so the same
+## dam/Lodge/garden costs take about half the chop hits to gather - the
+## repeated-harvesting complaint in docs/production/current-demo-baseline.md
+## was about hit *count* and travel, not the costs themselves, so the costs
+## stayed put and yield-per-hit went up instead. respawn_time was trimmed to
+## match - with fewer hits needed overall, a felled tree also needs to be
+## back in service sooner for the rare case a player leans on just one or
+## two trees.
 
-const WOOD_YIELD := 1
+const WOOD_YIELD := 2
 const HITS_TO_FELL := 3
 
 var hits_taken: int = 0
 
 func _ready() -> void:
-	respawn_time = 8.0
+	respawn_time = 6.0
 	add_to_group("trees")
 	# The InteractArea (not this StaticBody2D) is what Player's overlap
 	# check actually finds, so it needs its own group to be resolved back

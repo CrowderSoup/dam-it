@@ -84,6 +84,91 @@ func _ready() -> void:
 	assert(completed_events == ["gather_starter_wood"], "an already-completed objective should not re-fire objective_completed")
 	print("OK: reaching the target wood amount completes the objective exactly once")
 
+	# --- Save/load: mid-objective and mid-dialogue boundaries (issue #8) ---
+	# See ActOneController.get_save_data()/load_from_save() and
+	# docs/design/dialogue-schema.md#save-load.
+	GameState.reset()
+	ActOneController.reset()
+	ActOneController.load_content(objectives, dialogues)
+
+	# Mid-objective: active, with partial progress, no dialogue active.
+	ActOneController.start_dialogue("moss_intro")
+	ActOneController.advance_dialogue()
+	ActOneController.choose("practical_start_together")
+	ActOneController.advance_dialogue()  # closing line starts gather_starter_wood
+	ActOneController.advance_dialogue()  # past the last line - ends the dialogue
+	assert(ActOneController.get_active_dialogue_id() == "", "the dialogue should have ended before this boundary")
+	assert(ActOneController.get_objective_status("gather_starter_wood") == "active")
+	GameState.add_wood(3)
+	assert(ActOneController.get_objective_progress("gather_starter_wood") == 3)
+
+	var mid_objective_save: Dictionary = ActOneController.get_save_data()
+	assert(mid_objective_save["flags"]["met_moss"] == true, "the flag set by the earlier choice should be in the save data")
+	assert(mid_objective_save["objectives"]["gather_starter_wood"] == {"status": "active", "current": 3})
+	assert(mid_objective_save["active_dialogue_id"] == "", "the dialogue had already ended before this save")
+
+	ActOneController.reset()
+	assert(not ActOneController.has_objective("gather_starter_wood"), "reset() should clear registered content too")
+	ActOneController.load_content(objectives, dialogues)  # a fresh session re-registers content before restoring
+	ActOneController.load_from_save(mid_objective_save)
+	assert(ActOneController.get_flag("met_moss"), "loading should restore the flag")
+	assert(ActOneController.get_objective_status("gather_starter_wood") == "active")
+	assert(ActOneController.get_objective_progress("gather_starter_wood") == 3, "loading should restore mid-objective progress")
+	assert(ActOneController.get_active_dialogue_id() == "", "no dialogue was active when this was saved")
+	print("OK: save/load restores flags and mid-objective progress")
+
+	# Major objective boundary: completed.
+	GameState.add_wood(3)
+	assert(ActOneController.get_objective_status("gather_starter_wood") == "completed")
+	var completed_objective_save: Dictionary = ActOneController.get_save_data()
+	assert(completed_objective_save["objectives"]["gather_starter_wood"]["status"] == "completed")
+	ActOneController.reset()
+	ActOneController.load_content(objectives, dialogues)
+	ActOneController.load_from_save(completed_objective_save)
+	assert(ActOneController.get_objective_status("gather_starter_wood") == "completed", "loading should restore a completed objective")
+	print("OK: save/load restores a completed-objective boundary")
+
+	# Mid-dialogue boundary: saved on the line with the three response
+	# choices, before any choice has been made.
+	GameState.reset()
+	ActOneController.reset()
+	ActOneController.load_content(objectives, dialogues)
+	ActOneController.start_dialogue("moss_intro")
+	ActOneController.advance_dialogue()
+	var mid_dialogue_line := ActOneController.get_current_line()
+	assert(mid_dialogue_line.choices.size() == 3, "should be sitting on the choice line before saving")
+
+	var mid_dialogue_save: Dictionary = ActOneController.get_save_data()
+	assert(mid_dialogue_save["active_dialogue_id"] == "moss_intro")
+	assert(mid_dialogue_save["active_dialogue_line"] == 1)
+	assert(not mid_dialogue_save["flags"].get("met_moss", false), "no choice has been made yet at this boundary")
+
+	ActOneController.reset()
+	ActOneController.load_content(objectives, dialogues)
+	ActOneController.load_from_save(mid_dialogue_save)
+	assert(ActOneController.get_active_dialogue_id() == "moss_intro", "loading should resume the active dialogue")
+	assert(ActOneController.get_current_line().text == mid_dialogue_line.text, "loading should resume on the exact saved line")
+	assert(ActOneController.get_current_line().choices.size() == 3)
+	# Confirm the resumed dialogue is genuinely interactive, not just
+	# cosmetically restored.
+	ActOneController.choose("playful_lucky_you")
+	assert(ActOneController.get_flag("met_moss"), "choosing after a mid-dialogue load should still apply its effects")
+	print("OK: save/load resumes mid-dialogue at the exact saved line, and it's still interactive")
+
+	# --- Unknown ids in saved data are dropped safely, not crashed on ---
+	ActOneController.reset()
+	ActOneController.load_content(objectives, dialogues)
+	ActOneController.load_from_save({
+		"flags": {"met_moss": true},
+		"objectives": {"an_objective_that_was_removed": {"status": "active", "current": 5}},
+		"active_dialogue_id": "a_dialogue_that_was_removed",
+		"active_dialogue_line": 0,
+	})
+	assert(ActOneController.get_flag("met_moss"), "a known flag should still restore")
+	assert(ActOneController.get_objective_status("gather_starter_wood") == "inactive", "an untouched known objective should keep its default state")
+	assert(ActOneController.get_active_dialogue_id() == "", "an unknown dialogue id should fall back to no active dialogue instead of crashing")
+	print("OK: load_from_save() drops unknown objective/dialogue ids safely instead of crashing")
+
 	# --- Malformed content fails loudly instead of silently no-op-ing ---
 	ActOneController.reset()
 

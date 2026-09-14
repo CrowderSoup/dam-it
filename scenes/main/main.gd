@@ -185,10 +185,20 @@ func get_save_data() -> Dictionary:
 		"garden_spots_built": garden_spots_built,
 		"player_x": player.global_position.x,
 		"player_y": player.global_position.y,
+		# Story flags/objective progress/mid-dialogue boundary - version 2 of
+		# the save format (see docs/design/dialogue-schema.md#save-load).
+		# ActOneController owns the semantics of what's in here; Main just
+		# slots it into the payload alongside its own scene-shaped state.
+		"story": ActOneController.get_save_data(),
 	}
 
 func apply_save_data(data: Dictionary) -> void:
 	GameState.load_from_save(data)
+	# Content (objectives/dialogues) must already be registered via
+	# ActOneController.load_content() by whatever loads it for this scene -
+	# not wired into Main yet (see dialogue-schema.md's ActOneController
+	# section) - before this can restore anything beyond an empty default.
+	ActOneController.load_from_save(_saved_dictionary(data, "story"))
 
 	var built_count := 0
 	var slots_built := _saved_dictionary(data, "dam_slots_built")
