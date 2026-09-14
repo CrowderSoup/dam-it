@@ -51,10 +51,3 @@ func _on_new_game_pressed() -> void:
 func _on_confirm_new_game() -> void:
 	close()
 	new_game_requested.emit()
-
-## get_tree().quit() doesn't emit close_requested (that's only for the OS
-## window's own close button), so it wouldn't trigger SaveManager's usual
-## autosave-on-close - save explicitly first instead.
-func _on_quit_pressed() -> void:
-	SaveManager.save_game()
-	get_tree().quit()

@@ -21,6 +21,3 @@ func _focus_first_available() -> void:
 func _on_slot_chosen(slot_index: int) -> void:
 	SaveManager.begin_session(slot_index)
 	get_tree().change_scene_to_file("res://scenes/main/main.tscn")
-
-func _on_quit_pressed() -> void:
-	get_tree().quit()

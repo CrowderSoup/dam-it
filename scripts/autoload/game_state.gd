@@ -90,7 +90,9 @@ func spend_resources_on_dam_piece() -> void:
 	stone_changed.emit(stone)
 	dam_pieces_built += 1
 	dam_progress_changed.emit(dam_pieces_built, dam_pieces_total)
-	spend_energy(BUILD_ENERGY_COST)
+	# No energy cost here, unlike the other spend_resources_on_*() calls below:
+	# this is the initial dam build, before the pond (and any food source)
+	# exists - see the matching comment on Player/tree.gd/rock.gd.
 	if dam_pieces_total > 0 and dam_pieces_built >= dam_pieces_total:
 		dam_completed.emit()
 

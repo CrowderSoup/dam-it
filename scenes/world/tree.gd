@@ -48,7 +48,11 @@ func chop() -> void:
 		return
 	hits_taken += 1
 	GameState.add_wood(WOOD_YIELD)
-	GameState.spend_energy(GameState.CHOP_ENERGY_COST)
+	# No pond, no upkeep: see the matching comment on Player - energy stays
+	# untouched until the dam/pond exists, so gathering for the initial build
+	# never runs the beaver out of steam before there's any way to refuel.
+	if GameState.is_dam_complete():
+		GameState.spend_energy(GameState.CHOP_ENERGY_COST)
 	Sfx.play_chop()
 	Fx.burst(global_position, Color(0.55, 0.4, 0.22), 8)
 	_shake()

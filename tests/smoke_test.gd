@@ -56,7 +56,7 @@ func _ready() -> void:
 	assert(GameState.wood == 3 and tree1.felled, "expected 3 wood, tree felled after 3 hits")
 	tree1.chop()
 	assert(GameState.wood == 3, "chopping a felled tree should not yield more wood")
-	assert(GameState.energy == energy_before_chop - 3 * GameState.CHOP_ENERGY_COST, "3 successful chops should spend CHOP_ENERGY_COST each")
+	assert(GameState.energy == energy_before_chop, "chopping before the dam/pond exists should not spend energy")
 	print("OK: chopping a tree 3 times yields wood and fells it; felled trees give no more")
 
 	var energy_before_mine := GameState.energy
@@ -65,7 +65,7 @@ func _ready() -> void:
 	assert(GameState.stone == 2 and rock1.broken, "expected 2 stone, rock broken after 2 hits")
 	rock1.mine()
 	assert(GameState.stone == 2, "mining a broken rock should not yield more stone")
-	assert(GameState.energy == energy_before_mine - 2 * GameState.MINE_ENERGY_COST, "2 successful mines should spend MINE_ENERGY_COST each")
+	assert(GameState.energy == energy_before_mine, "mining before the dam/pond exists should not spend energy")
 	print("OK: mining a rock 2 times yields stone and breaks it; broken rocks give no more")
 
 	# --- Energy / tired mechanic ---
@@ -107,10 +107,12 @@ func _ready() -> void:
 
 	assert(GameState.can_afford_dam_piece())
 	assert(dam_slot1.can_build())
+	var energy_before_build := GameState.energy
 	GameState.spend_resources_on_dam_piece()
 	dam_slot1.build()
 	assert(GameState.dam_pieces_built == 1 and not dam_slot1.can_build())
-	print("OK: building a dam piece spends resources and marks the slot built")
+	assert(GameState.energy == energy_before_build, "building dam pieces before the pond exists should not spend energy")
+	print("OK: building a dam piece spends resources and marks the slot built, without spending energy")
 
 	assert(is_instance_valid(river_water), "river_water should exist before completion")
 	player.global_position = dam_slot1.global_position

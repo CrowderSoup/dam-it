@@ -56,7 +56,11 @@ func mine() -> void:
 		return
 	hits_taken += 1
 	GameState.add_stone(STONE_YIELD)
-	GameState.spend_energy(GameState.MINE_ENERGY_COST)
+	# No pond, no upkeep: see the matching comment on Player - energy stays
+	# untouched until the dam/pond exists, so gathering for the initial build
+	# never runs the beaver out of steam before there's any way to refuel.
+	if GameState.is_dam_complete():
+		GameState.spend_energy(GameState.MINE_ENERGY_COST)
 	Sfx.play_mine()
 	Fx.burst(global_position, Color(0.6, 0.6, 0.62), 6)
 	_shake()

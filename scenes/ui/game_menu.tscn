@@ -39,9 +39,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -120.0
-offset_top = -155.0
+offset_top = -135.0
 offset_right = 120.0
-offset_bottom = 155.0
+offset_bottom = 135.0
 theme_override_styles/panel = SubResource("1")
 
 [node name="CloseButton" type="Button" parent="Panel"]
@@ -81,10 +81,6 @@ text = "Save Game"
 layout_mode = 2
 text = "New Game"
 
-[node name="QuitButton" type="Button" parent="Panel/VBoxContainer"]
-layout_mode = 2
-text = "Quit Game"
-
 [node name="SaveFeedback" type="Label" parent="Panel/VBoxContainer"]
 visible = false
 layout_mode = 2
@@ -102,5 +98,4 @@ dialog_text = "Start a new game? This will erase your current progress."
 [connection signal="pressed" from="Panel/VBoxContainer/ResumeButton" to="." method="_on_resume_pressed"]
 [connection signal="pressed" from="Panel/VBoxContainer/SaveButton" to="." method="_on_save_pressed"]
 [connection signal="pressed" from="Panel/VBoxContainer/NewGameButton" to="." method="_on_new_game_pressed"]
-[connection signal="pressed" from="Panel/VBoxContainer/QuitButton" to="." method="_on_quit_pressed"]
 [connection signal="confirmed" from="ConfirmNewGame" to="." method="_on_confirm_new_game"]
