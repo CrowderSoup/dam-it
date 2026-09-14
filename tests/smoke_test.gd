@@ -561,6 +561,57 @@ func _ready() -> void:
 	assert(SaveManager.peek_slot(1)["save_version"] == SaveManager.SAVE_VERSION, "saved data should include its format version")
 	print("OK: peek_slot() reads a slot's data without loading it into a scene")
 
+	assert(saved_data["story"] == {"flags": {}, "objectives": {}, "active_dialogue_id": "", "active_dialogue_line": -1}, "get_save_data() should include an (empty, since no story content is loaded here) story section - see story_test.gd for real story save/load coverage")
+	print("OK: get_save_data() includes the version 2 story section")
+
+	# --- Save version migration (issue #8): a version-1 file (from before
+	# the "story" section existed) should read back upgraded to the current
+	# version, keeping its existing fields, instead of losing data or
+	# crashing. Slot 3 is otherwise untouched by this file. ---
+	var legacy_v1_data := {
+		"save_version": 1,
+		"wood": 4,
+		"stone": 2,
+		"berries": 1,
+		"energy": 55.0,
+		"lodge_stage": 1,
+		"pouch_tier": 0,
+		"dam_slots_built": {"DamSlot1": true},
+		"dam_slots_leaking": {},
+		"garden_spots_built": {},
+		"player_x": 100.0,
+		"player_y": 200.0,
+	}
+	var legacy_path: String = SaveManager._slot_path(3)
+	var legacy_file := FileAccess.open(legacy_path, FileAccess.WRITE)
+	assert(legacy_file != null, "could not open slot 3 for the migration test")
+	legacy_file.store_string(JSON.stringify(legacy_v1_data))
+	legacy_file.close()
+
+	var migrated_data: Dictionary = SaveManager.peek_slot(3)
+	assert(migrated_data["save_version"] == SaveManager.SAVE_VERSION, "a version-1 save should be migrated to the current save version on read")
+	assert(migrated_data["wood"] == 4 and migrated_data["lodge_stage"] == 1, "migration should preserve pre-existing fields untouched")
+	assert(migrated_data["dam_slots_built"]["DamSlot1"] == true, "migration should preserve pre-existing dam-slot state untouched")
+	assert(migrated_data["story"] == {"flags": {}, "objectives": {}, "active_dialogue_id": "", "active_dialogue_line": -1}, "migrating a version-1 save should introduce the story section at its empty default")
+	print("OK: SaveManager migrates a version-1 save to the current version, preserving its data and adding an empty default story section")
+
+	# A save from a version this build has no migration path for is treated
+	# as unreadable rather than guessed at - the same documented fallback
+	# covers a genuinely newer save (rejected outright, as before) and one
+	# with no recognizable version at all (nothing to migrate *from*).
+	var future_file := FileAccess.open(legacy_path, FileAccess.WRITE)
+	future_file.store_string(JSON.stringify({"save_version": SaveManager.SAVE_VERSION + 1, "wood": 1}))
+	future_file.close()
+	assert(SaveManager.peek_slot(3).is_empty(), "a save from a newer game version should be rejected, not migrated")
+
+	var unversioned_file := FileAccess.open(legacy_path, FileAccess.WRITE)
+	unversioned_file.store_string(JSON.stringify({"wood": 1}))  # no save_version key at all
+	unversioned_file.close()
+	assert(SaveManager.peek_slot(3).is_empty(), "a save with no registered migration path should be treated as unreadable, not guessed at")
+
+	SaveManager.delete_save(3)
+	print("OK: saves with no valid migration path (too new, or unversioned) are rejected rather than guessed at")
+
 	# --- Title screen save-slot rows. title_screen.gd itself just wires a
 	# row's slot_chosen signal to change_scene_to_file(), which we don't
 	# want to trigger mid-test - so exercise the row directly. Slot 1 is
