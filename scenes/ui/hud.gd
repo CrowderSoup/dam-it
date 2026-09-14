@@ -1,8 +1,29 @@
 extends CanvasLayer
+## Also owns the staged tutorial banner (see _show_tutorial()) that replaced
+## the old single "opening hint" banner, and the compact current-objective
+## display that surfaces ActOneController's state (see
+## docs/design/dialogue-schema.md for that data model) - see
+## _refresh_objective_display(). The full history behind that objective
+## (completed + current, in plain language) lives in the Journal
+## (scenes/ui/journal.gd); clicking this HUD's objective banner, or pressing
+## the "journal" action, opens it - see journal_requested below, wired up by
+## Main.
 
-const HINT_DURATION := 6.0
+## Emitted when the player clicks the current-objective banner, asking
+## whoever owns the Journal (Main) to open it - the mouse half of "keyboard,
+## mouse, and gamepad can open... the journal" (the "journal" action covers
+## the other two).
+signal journal_requested
+
+const TUTORIAL_DURATION := 6.0
 const TOAST_DURATION := 6.0
 const FAILURE_TOAST_DURATION := 2.5
+
+## Staged tutorial ids - see _show_tutorial()'s call sites for when each one
+## becomes relevant, and _tutorial_text() for its copy.
+const TUTORIAL_MOVE := "move"
+const TUTORIAL_INTERACT := "interact"
+const TUTORIAL_JOURNAL := "journal"
 
 @onready var energy_label: Label = $BottomMargin/ItemsHBox/EnergyGroup/EnergyLabel
 @onready var wood_label: Label = $BottomMargin/ItemsHBox/WoodGroup/WoodLabel
@@ -12,14 +33,18 @@ const FAILURE_TOAST_DURATION := 2.5
 @onready var lodge_label: Label = $BottomMargin/ItemsHBox/LodgeGroup/LodgeLabel
 @onready var toast_label: Label = $ToastLabel
 @onready var toast_background: Panel = $ToastBackground
-@onready var hint_label: Label = $HintLabel
-@onready var hint_background: Panel = $HintBackground
+@onready var tutorial_label: Label = $TutorialLabel
+@onready var tutorial_background: Panel = $TutorialBackground
+@onready var objective_label: Label = $ObjectiveLabel
+@onready var objective_background: Panel = $ObjectiveBackground
 @onready var storm_indicator: Control = $StormIndicator
 @onready var raccoon_indicator: Control = $RaccoonIndicator
 @onready var action_prompt_label: Label = $ActionPromptLabel
 @onready var action_prompt_background: Panel = $ActionPromptBackground
 
 var _toast_generation := 0
+var _tutorial_generation := 0
+var _current_tutorial_id := ""
 
 func _ready() -> void:
 	GameState.wood_changed.connect(_on_wood_changed)
@@ -31,28 +56,37 @@ func _ready() -> void:
 	GameState.energy_changed.connect(_on_energy_changed)
 	GameState.pouch_upgraded.connect(_on_pouch_upgraded)
 	GameState.pouch_full.connect(_on_pouch_full)
+	ActOneController.objective_started.connect(_on_objective_changed)
+	ActOneController.objective_progress_changed.connect(_on_objective_progress_changed)
+	ActOneController.objective_completed.connect(_on_objective_changed)
 	_on_wood_changed(GameState.wood)
 	_on_stone_changed(GameState.stone)
 	_on_berries_changed(GameState.berries)
 	_on_dam_progress_changed(GameState.dam_pieces_built, GameState.dam_pieces_total)
 	_on_lodge_stage_changed(GameState.lodge_stage)
 	_on_energy_changed(GameState.energy)
-	hint_label.text = _opening_hint()
+	_refresh_objective_display()
 	action_prompt_label.hide()
 	action_prompt_background.hide()
-	var hide_hint := func():
-		hint_label.hide()
-		hint_background.hide()
-	get_tree().create_timer(HINT_DURATION).timeout.connect(hide_hint)
+	tutorial_label.hide()
+	tutorial_background.hide()
+	tutorial_background.gui_input.connect(_on_tutorial_gui_input)
+	objective_background.gui_input.connect(_on_objective_gui_input)
+	_show_tutorial(TUTORIAL_MOVE)
 
-## A connected joypad at startup is the only signal we have about which
-## input method the player intends to use before they've pressed anything -
-## good enough for a hint that only shows for a few seconds. Full bindings
-## stay reviewable afterward via the pause menu's Controls button.
-func _opening_hint() -> String:
-	if Input.get_connected_joypads().size() > 0:
-		return "D-pad / left stick to move · A to chop, mine, build, harvest berries & feed raccoons · Start/Back for controls"
-	return "WASD / arrows to move · E to chop, mine, build, harvest berries & feed raccoons · Esc for controls"
+## Dismisses whatever tutorial is currently showing the moment the player
+## actually does the thing it was teaching - without consuming the event, so
+## the same keypress still reaches Player/Journal normally. Movement,
+## interaction, and opening the journal each cover their own tutorial; this
+## also catches the (rare) case where a later tutorial overwrote an earlier
+## one the player never got to act on.
+func _unhandled_input(event: InputEvent) -> void:
+	if _current_tutorial_id.is_empty():
+		return
+	if event.is_action_pressed("move_up") or event.is_action_pressed("move_down") \
+			or event.is_action_pressed("move_left") or event.is_action_pressed("move_right") \
+			or event.is_action_pressed("interact") or event.is_action_pressed("journal"):
+		_dismiss_tutorial()
 
 func set_camera(camera: Camera2D) -> void:
 	storm_indicator.set_camera(camera)
@@ -95,6 +129,10 @@ func set_action_prompt(option: InteractionOption) -> void:
 		action_prompt_label.hide()
 		action_prompt_background.hide()
 		return
+	# The first time interacting with anything becomes possible is "the
+	# moment" the interact tutorial is relevant - a fresh player is standing
+	# next to their first tree/rock/etc. right now, prompt in hand.
+	_show_tutorial(TUTORIAL_INTERACT)
 	var text := "[%s] %s" % [InputSetup.interact_prompt(), option.label]
 	var cost_text := option.cost_text()
 	if not cost_text.is_empty():
@@ -161,3 +199,87 @@ func _on_dam_completed() -> void:
 	# lodge_stage_changed normally refreshes it - without this it would keep
 	# reading "Locked" until the player's first Lodge interaction.
 	_on_lodge_stage_changed(GameState.lodge_stage)
+
+## --- Current-objective display -------------------------------------------
+## A compact, always-visible readout of ActOneController.get_current_
+## objective_id() - the full completed+current history lives in the Journal
+## (scenes/ui/journal.gd); clicking this banner or pressing "journal" opens
+## it. Deliberately small and corner-anchored (see ObjectiveBackground's
+## position in hud.tscn) so it states the goal without obscuring play.
+
+func _on_objective_changed(_id: String) -> void:
+	_refresh_objective_display()
+	# A brand new objective existing is "the moment" the journal becomes
+	# relevant - there's now something worth reviewing in it.
+	_show_tutorial(TUTORIAL_JOURNAL)
+
+func _on_objective_progress_changed(_id: String, _current: int, _target: int) -> void:
+	_refresh_objective_display()
+
+func _refresh_objective_display() -> void:
+	var id := ActOneController.get_current_objective_id()
+	if id.is_empty():
+		objective_label.hide()
+		objective_background.hide()
+		return
+	var objective: ObjectiveDefinition = ActOneController.get_objective(id)
+	var status := ActOneController.get_objective_status(id)
+	var text := objective.title
+	if status == "completed":
+		text = "✓ " + text
+	elif objective.completion_type == ObjectiveDefinition.CompletionType.RESOURCE_AT_LEAST:
+		text += " (%d/%d)" % [ActOneController.get_objective_progress(id), objective.target_amount]
+	objective_label.text = text
+	objective_label.show()
+	objective_background.show()
+
+func _on_objective_gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		journal_requested.emit()
+
+## --- Staged tutorials ------------------------------------------------------
+## Replaces the old single "opening hint" banner with a handful of short,
+## dismissible prompts that each surface once, right as their action becomes
+## relevant (see the call sites of _show_tutorial() above and in
+## set_action_prompt()) - and never again once GameState marks them seen,
+## including after loading a save (see GameState.seen_tutorials).
+
+func _tutorial_text(id: String) -> String:
+	var gamepad := InputSetup.uses_gamepad()
+	match id:
+		TUTORIAL_MOVE:
+			return "D-pad / left stick to move" if gamepad else "WASD / arrows to move"
+		TUTORIAL_INTERACT:
+			return "%s to chop, mine, build, and more" % ("A" if gamepad else "E")
+		TUTORIAL_JOURNAL:
+			return "%s to open your journal and see your objective" % ("Y" if gamepad else "J")
+		_:
+			return ""
+
+## No-op if `id` was already seen (or is already the one showing) - safe to
+## call from a signal handler that might fire many times.
+func _show_tutorial(id: String) -> void:
+	if GameState.has_seen_tutorial(id) or _current_tutorial_id == id:
+		return
+	_current_tutorial_id = id
+	_tutorial_generation += 1
+	var my_generation := _tutorial_generation
+	tutorial_label.text = _tutorial_text(id)
+	tutorial_label.show()
+	tutorial_background.show()
+	get_tree().create_timer(TUTORIAL_DURATION).timeout.connect(func():
+		if my_generation == _tutorial_generation:
+			_dismiss_tutorial()
+	)
+
+func _dismiss_tutorial() -> void:
+	if _current_tutorial_id.is_empty():
+		return
+	GameState.mark_tutorial_seen(_current_tutorial_id)
+	_current_tutorial_id = ""
+	tutorial_label.hide()
+	tutorial_background.hide()
+
+func _on_tutorial_gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		_dismiss_tutorial()
