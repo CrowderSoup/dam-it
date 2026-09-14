@@ -3,6 +3,9 @@
 A cozy top-down builder game where you play as a beaver gathering wood and
 stone to build a dam across a river. Built with Godot 4 (GDScript).
 
+See [ROADMAP.md](ROADMAP.md) for the plan to grow the current demo into a
+small, complete narrative title.
+
 **[Play it in your browser](https://crowdersoup.github.io/dam-it/)** — no
 download needed. Every push to `main` rebuilds and redeploys this
 automatically (see [Web build & deploy](#web-build--deploy) below).
