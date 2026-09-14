@@ -442,6 +442,24 @@ func _ready() -> void:
 	assert(not SaveManager.has_save(1))
 	print("OK: delete_save() removes a slot's save file")
 
+	# --- Invalid/out-of-range save values are safe and bounded ---
+	GameState.load_from_save({
+		"wood": 999,
+		"stone": -4,
+		"berries": -3,
+		"lodge_stage": 999,
+		"energy": 999,
+		"pouch_tier": 99,
+	})
+	assert(GameState.pouch_tier == GameState.POUCH_MAX_TIER, "saved pouch tier should clamp to the supported maximum")
+	assert(GameState.wood == GameState.wood_capacity(), "saved wood should clamp to the restored pouch capacity")
+	assert(GameState.stone == 0 and GameState.berries == 0, "saved resources should not load below zero")
+	assert(GameState.lodge_stage == GameState.LODGE_MAX_STAGE and GameState.energy == GameState.ENERGY_MAX, "saved progress and energy should clamp to valid maxima")
+	GameState.load_from_save({"pouch_tier": "invalid", "wood": "invalid", "energy": "invalid"})
+	assert(GameState.pouch_tier == 0 and GameState.wood == 0, "wrongly typed pouch/resource values should use safe defaults")
+	assert(GameState.energy == GameState.ENERGY_MAX, "wrongly typed energy should use its safe default")
+	print("OK: malformed and out-of-range save values fall back or clamp safely")
+
 	GameState.reset()
 	assert(GameState.wood == 0 and GameState.stone == 0)
 	assert(GameState.dam_pieces_built == 0)
