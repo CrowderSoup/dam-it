@@ -48,16 +48,19 @@ means to an end, not the whole game:
 
 1. A title screen greets you; press any key/click/gamepad button to start.
 2. Walk up to a tree (it highlights when you're in range) and press
-   interact repeatedly to chop it down (3 hits, 1 wood each, with a little
+   interact repeatedly to chop it down (3 hits, 2 wood each, with a little
    shake, wood-chip burst, and sound per hit). Felled trees respawn after
-   8 seconds.
-3. Walk up to a rock and interact to mine it (2 hits, 1 stone each). Mined
-   rocks respawn after 10 seconds.
+   6 seconds.
+3. Walk up to a rock and interact to mine it (2 hits, 2 stone each). Mined
+   rocks respawn after 7 seconds.
 4. The river winds across the map (not a straight line), and wading
    through it slows you down until the dam is finished. Walk to one of the
    5 dam slots sitting along the river's crossing point (also highlights
    in range) and press interact to place a dam piece (costs 2 wood +
-   1 stone).
+   1 stone). The center slot sits in the river's strongest current and
+   won't take a piece until you've read the water - walk up to the reed
+   gauge post on the near bank and interact to read it (free, instant, and
+   points out which gap needs bracing) before building there.
 5. Once all 5 slots are filled: the slowdown goes away (dam's done, cross
    freely), a real pond-shaped body of water grows in behind the dam
    (fading in, not just a rectangle getting taller), there's a completion

@@ -6,10 +6,13 @@ extends Harvestable
 ## bush regrows its berries after a short cooldown, the same way trees/rocks
 ## respawn.
 
-const HARVEST_AMOUNT := 2
+## Bumped alongside Tree/Rock's yield increase (see issue #19's economy
+## retune) so a berry-stocking trip needs fewer visits too, and respawn was
+## trimmed to match.
+const HARVEST_AMOUNT := 3
 
 func _ready() -> void:
-	respawn_time = 12.0
+	respawn_time = 9.0
 	add_to_group("berry_bushes")
 
 ## See interaction_option.gd. Null while regrowing.
