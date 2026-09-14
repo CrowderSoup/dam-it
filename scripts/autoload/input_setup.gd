@@ -17,7 +17,7 @@ func _ready() -> void:
 	_add_joy_button("move_left", JOY_BUTTON_DPAD_LEFT)
 	_add_joy_button("move_right", JOY_BUTTON_DPAD_RIGHT)
 	_add_joy_button("interact", JOY_BUTTON_A)
-	_add_joy_button("restart", JOY_BUTTON_START)
+	_add_joy_button("menu", JOY_BUTTON_START)
 	_add_joy_button("menu", JOY_BUTTON_BACK)
 
 	_add_joy_axis("move_up", JOY_AXIS_LEFT_Y, -1.0)

@@ -34,10 +34,20 @@ func _ready() -> void:
 	_on_dam_progress_changed(GameState.dam_pieces_built, GameState.dam_pieces_total)
 	_on_lodge_stage_changed(GameState.lodge_stage)
 	_on_energy_changed(GameState.energy)
+	hint_label.text = _opening_hint()
 	var hide_hint := func():
 		hint_label.hide()
 		hint_background.hide()
 	get_tree().create_timer(HINT_DURATION).timeout.connect(hide_hint)
+
+## A connected joypad at startup is the only signal we have about which
+## input method the player intends to use before they've pressed anything -
+## good enough for a hint that only shows for a few seconds. Full bindings
+## stay reviewable afterward via the pause menu's Controls button.
+func _opening_hint() -> String:
+	if Input.get_connected_joypads().size() > 0:
+		return "D-pad / left stick to move · A to chop, mine, build, harvest berries & feed raccoons · Start/Back for controls"
+	return "WASD / arrows to move · E to chop, mine, build, harvest berries & feed raccoons · Esc for controls"
 
 func set_camera(camera: Camera2D) -> void:
 	storm_indicator.set_camera(camera)

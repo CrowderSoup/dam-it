@@ -81,6 +81,10 @@ text = "Save Game"
 layout_mode = 2
 text = "New Game"
 
+[node name="ControlsButton" type="Button" parent="Panel/VBoxContainer"]
+layout_mode = 2
+text = "Controls"
+
 [node name="SaveFeedback" type="Label" parent="Panel/VBoxContainer"]
 visible = false
 layout_mode = 2
@@ -94,8 +98,17 @@ initial_position = 1
 size = Vector2i(320, 120)
 dialog_text = "Start a new game? This will erase your current progress."
 
+[node name="ControlsDialog" type="AcceptDialog" parent="."]
+title = "Controls"
+initial_position = 1
+size = Vector2i(360, 200)
+dialog_text = "Keyboard: WASD/Arrows move, E/Space interact, Esc pause, R new game (confirms first)
+
+Gamepad: D-pad/Left Stick move, A interact, Start/Back pause"
+
 [connection signal="pressed" from="Panel/CloseButton" to="." method="_on_resume_pressed"]
 [connection signal="pressed" from="Panel/VBoxContainer/ResumeButton" to="." method="_on_resume_pressed"]
 [connection signal="pressed" from="Panel/VBoxContainer/SaveButton" to="." method="_on_save_pressed"]
 [connection signal="pressed" from="Panel/VBoxContainer/NewGameButton" to="." method="_on_new_game_pressed"]
+[connection signal="pressed" from="Panel/VBoxContainer/ControlsButton" to="." method="_on_controls_pressed"]
 [connection signal="confirmed" from="ConfirmNewGame" to="." method="_on_confirm_new_game"]
