@@ -34,6 +34,13 @@ var _flags: Dictionary = {}            # flag name -> bool
 var _active_dialogue_id: String = ""
 var _active_line_index: int = -1
 
+## The most recently started objective - what a HUD's "current objective"
+## display should call out. Set only by start_objective() (never cleared by
+## completing it), so the display keeps showing the just-finished objective
+## until a new one actually starts, rather than going blank the instant it
+## completes. See get_current_objective_id().
+var _current_objective_id: String = ""
+
 func _ready() -> void:
 	GameState.wood_changed.connect(_on_resource_changed.bind("wood"))
 	GameState.stone_changed.connect(_on_resource_changed.bind("stone"))
@@ -113,6 +120,7 @@ func reset() -> void:
 	_flags.clear()
 	_active_dialogue_id = ""
 	_active_line_index = -1
+	_current_objective_id = ""
 
 ## --- Flags -----------------------------------------------------------------
 
@@ -136,12 +144,40 @@ func get_objective_status(id: String) -> String:
 func get_objective_progress(id: String) -> int:
 	return _objective_state.get(id, {}).get("current", 0)
 
+## The objective a "current objective" display (HUD, journal) should call
+## out right now - the most recently started one, kept even after it
+## completes until a new objective starts. Empty string if none has started
+## yet.
+func get_current_objective_id() -> String:
+	return _current_objective_id
+
+## Every registered objective's plain-language summary, in registration
+## order, for a journal/history UI to render without reaching into private
+## state. Includes objectives that haven't started yet (status "inactive") -
+## callers that only want to list what the player has actually seen should
+## filter those out themselves.
+func get_objective_summaries() -> Array[Dictionary]:
+	var summaries: Array[Dictionary] = []
+	for id in _objectives.keys():
+		var objective: ObjectiveDefinition = _objectives[id]
+		var state: Dictionary = _objective_state[id]
+		summaries.append({
+			"id": id,
+			"title": objective.title,
+			"description": objective.description,
+			"status": state["status"],
+			"current": state["current"],
+			"target": objective.target_amount,
+		})
+	return summaries
+
 func start_objective(id: String) -> void:
 	assert(_objectives.has(id), "start_objective() on unknown objective '%s'" % id)
 	var state: Dictionary = _objective_state[id]
 	if state["status"] != "inactive":
 		return
 	state["status"] = "active"
+	_current_objective_id = id
 	objective_started.emit(id)
 	# The tracked resource might already meet the target (e.g. the player
 	# gathered wood before this objective existed) - check right away
