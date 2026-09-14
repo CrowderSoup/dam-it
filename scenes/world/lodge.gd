@@ -38,8 +38,36 @@ func set_highlighted(value: bool) -> void:
 func can_advance() -> bool:
 	return visible and GameState.lodge_stage < GameState.LODGE_MAX_STAGE
 
+## See interaction_option.gd. Mirrors the old Player._try_interact()
+## priority exactly (advance beats resting, but only if affordable; a tired
+## beaver falls back to resting rather than getting stuck; upgrading the
+## pouch is the last resort) and then adds informative, non-priority
+## fallbacks for the "nothing succeeded" cases the old code left silent:
+## an unaffordable advance/upgrade, or a fully-built, fully-rested,
+## fully-upgraded Lodge with nothing left to offer right now.
+func get_interaction() -> InteractionOption:
+	if not visible:
+		return null
+	if can_advance():
+		var stage_cost: Dictionary = GameState.LODGE_STAGE_COSTS[GameState.lodge_stage]
+		if GameState.can_afford_lodge_stage():
+			return InteractionOption.new("Advance Lodge", advance, true, "", stage_cost)
+	if can_rest():
+		return InteractionOption.new("Rest", rest, true)
+	if can_upgrade_pouch():
+		var upgrade_cost: Dictionary = GameState.POUCH_UPGRADE_COSTS[GameState.pouch_tier]
+		return InteractionOption.new("Upgrade Pouch", upgrade_pouch, true, "", upgrade_cost)
+	if can_advance():
+		return InteractionOption.new("Advance Lodge", advance, false, "Not enough wood or stone", GameState.LODGE_STAGE_COSTS[GameState.lodge_stage])
+	if GameState.pouch_tier < GameState.POUCH_MAX_TIER:
+		return InteractionOption.new("Upgrade Pouch", upgrade_pouch, false, "Not enough wood or stone", GameState.POUCH_UPGRADE_COSTS[GameState.pouch_tier])
+	return InteractionOption.new("Rest", rest, false, "Not tired right now")
+
+## The affordability check used to live only in Player (the group-based
+## dispatch that get_interaction() replaces) - now advance() guards its own
+## cost the same way chop()/mine() always have.
 func advance() -> void:
-	if not can_advance():
+	if not can_advance() or not GameState.can_afford_lodge_stage():
 		return
 	GameState.advance_lodge_stage()
 	Sfx.play_build()

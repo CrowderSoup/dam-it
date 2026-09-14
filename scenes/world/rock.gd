@@ -43,6 +43,14 @@ func _draw() -> void:
 	draw_line(Vector2(0, -3), Vector2(3, 4), Palette.STONE_DARK, 1.0)
 	draw_circle(Vector2(4, -2), 2.2, Color(0.4, 0.55, 0.3, 0.8))
 
+## See interaction_option.gd. Null while broken - see the matching comment
+## on Tree.get_interaction().
+func get_interaction() -> InteractionOption:
+	if depleted:
+		return null
+	var room := GameState.has_stone_room()
+	return InteractionOption.new("Mine", mine, room, "" if room else GameState.pouch_full_message("stone"))
+
 func mine() -> void:
 	if depleted:
 		return

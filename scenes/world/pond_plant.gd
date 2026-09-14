@@ -23,6 +23,12 @@ func _ready() -> void:
 func can_eat() -> bool:
 	return visible and can_harvest()
 
+## See interaction_option.gd. Null before the pond exists or while regrowing.
+func get_interaction() -> InteractionOption:
+	if not can_eat():
+		return null
+	return InteractionOption.new("Eat", eat, true)
+
 func eat() -> void:
 	if not can_eat():
 		return
