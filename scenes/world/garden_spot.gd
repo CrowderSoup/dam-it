@@ -1,5 +1,5 @@
 class_name GardenSpot
-extends Area2D
+extends Interactable
 ## A cosmetic garden decoration, buildable once the Lodge is complete. No
 ## further stages once built - the payoff is purely a prettier pond and a
 ## critter moving in, giving leftover wood/stone somewhere to go after the
@@ -15,32 +15,12 @@ const STONE_COST := 2
 @export var critter_path: NodePath
 
 var built: bool = false
-var highlighted: bool = false
 
 func _ready() -> void:
 	add_to_group("garden_spots")
-	monitorable = false
+	set("monitorable", false)
 	hide()
 	GameState.lodge_completed.connect(reveal)
-
-## Shows the garden spot with a little pop-in, if it isn't already visible.
-## Called either by the lodge_completed signal or directly on a save load
-## where the Lodge was already complete.
-func reveal() -> void:
-	if visible:
-		return
-	monitorable = true
-	show()
-	scale = Vector2.ZERO
-	var tween := create_tween()
-	tween.tween_property(self, "scale", Vector2.ONE, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	queue_redraw()
-
-func set_highlighted(value: bool) -> void:
-	if highlighted == value:
-		return
-	highlighted = value
-	queue_redraw()
 
 func can_build() -> bool:
 	return visible and not built

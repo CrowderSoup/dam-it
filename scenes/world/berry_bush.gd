@@ -1,5 +1,5 @@
 class_name BerryBush
-extends Area2D
+extends Harvestable
 ## A berry bush - interact to harvest a handful of berries, which don't feed
 ## the beaver directly anymore (see PondPlant for that). Berries are instead
 ## stockpiled to feed raccoons and shoo them off (see Raccoon.feed()). The
@@ -7,35 +7,18 @@ extends Area2D
 ## respawn.
 
 const HARVEST_AMOUNT := 2
-const RESPAWN_TIME := 12.0
-
-var picked: bool = false
-var highlighted: bool = false
 
 func _ready() -> void:
+	respawn_time = 12.0
 	add_to_group("berry_bushes")
-
-func can_harvest() -> bool:
-	return not picked
 
 func harvest() -> void:
 	if not can_harvest():
 		return
-	picked = true
-	set_highlighted(false)
 	GameState.add_berries(HARVEST_AMOUNT)
 	Sfx.play_harvest()
 	Fx.burst(global_position, Palette.BERRY, 8)
-	queue_redraw()
-	await get_tree().create_timer(RESPAWN_TIME).timeout
-	picked = false
-	queue_redraw()
-
-func set_highlighted(value: bool) -> void:
-	if highlighted == value:
-		return
-	highlighted = value
-	queue_redraw()
+	_deplete()
 
 func _draw() -> void:
 	DrawUtil.shadow(self, Vector2(0, 8), Vector2(11, 3))
@@ -44,7 +27,7 @@ func _draw() -> void:
 	DrawUtil.outlined_circle(self, Vector2(-7, 2), 8.0, Palette.BUSH_DARK, 1.5)
 	DrawUtil.outlined_circle(self, Vector2(7, 2), 8.0, Palette.BUSH_DARK, 1.5)
 	DrawUtil.outlined_circle(self, Vector2(0, -5), 9.5, Palette.BUSH_LIGHT, 1.5)
-	if not picked:
+	if not depleted:
 		draw_circle(Vector2(-4, -3), 1.6, Palette.BERRY)
 		draw_circle(Vector2(3, 1), 1.6, Palette.BERRY)
 		draw_circle(Vector2(-1, -8), 1.6, Palette.BERRY)

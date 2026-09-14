@@ -54,7 +54,7 @@ func _ready() -> void:
 	var energy_before_chop := GameState.energy
 	for i in 3:
 		tree1.chop()
-	assert(GameState.wood == 3 and tree1.felled, "expected 3 wood, tree felled after 3 hits")
+	assert(GameState.wood == 3 and tree1.depleted, "expected 3 wood, tree felled after 3 hits")
 	tree1.chop()
 	assert(GameState.wood == 3, "chopping a felled tree should not yield more wood")
 	assert(GameState.energy == energy_before_chop, "chopping before the dam/pond exists should not spend energy")
@@ -63,7 +63,7 @@ func _ready() -> void:
 	var energy_before_mine := GameState.energy
 	for i in 2:
 		rock1.mine()
-	assert(GameState.stone == 2 and rock1.broken, "expected 2 stone, rock broken after 2 hits")
+	assert(GameState.stone == 2 and rock1.depleted, "expected 2 stone, rock broken after 2 hits")
 	rock1.mine()
 	assert(GameState.stone == 2, "mining a broken rock should not yield more stone")
 	assert(GameState.energy == energy_before_mine, "mining before the dam/pond exists should not spend energy")
@@ -273,12 +273,12 @@ func _ready() -> void:
 
 	var pouch_full_events := []
 	GameState.pouch_full.connect(func(kind): pouch_full_events.append(kind))
-	tree1.felled = false
+	tree1.depleted = false
 	tree1.hits_taken = 0
 	tree1.chop()
 	assert(GameState.wood == GameState.POUCH_BASE_CAPACITY, "chopping with a full wood pouch should not add more wood")
 	assert(tree1.hits_taken == 0, "chopping with a full pouch should not register a hit, so nothing is wasted")
-	rock1.broken = false
+	rock1.depleted = false
 	rock1.hits_taken = 0
 	rock1.mine()
 	assert(GameState.stone == GameState.POUCH_BASE_CAPACITY, "mining with a full stone pouch should not add more stone")
