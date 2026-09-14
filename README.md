@@ -1,13 +1,18 @@
 # Dam it!
 
 A cozy top-down builder game where you play as a beaver gathering wood and
-stone to build a dam across a river. Built with Godot 4 (GDScript),
-targeting native Linux for now.
+stone to build a dam across a river. Built with Godot 4 (GDScript).
+
+**[Play it in your browser](https://crowdersoup.github.io/dam-it/)** — no
+download needed. Every push to `main` rebuilds and redeploys this
+automatically (see [Web build & deploy](#web-build--deploy) below).
 
 ## Requirements
 
 - Godot 4.7+ (installed on this machine via AUR `godot-bin`)
-- Linux only for the moment — no export presets for other platforms yet.
+- Native builds are Linux-only for the moment — no desktop export presets
+  for Windows/macOS yet. The Web export (see below) covers cross-platform
+  distribution in the meantime.
 
 ## Running the demo
 
@@ -166,7 +171,8 @@ code doesn't care about the visuals or how the sounds are generated.
   cycle, no per-frame animation, just the existing facing/bob/shake juice.
 - The river only slows you down (wading), it never blocks movement, so
   there's no risk of getting stuck on either bank.
-- No export presets for other platforms yet.
+- No desktop export presets (Windows/macOS/Linux) yet - just the Web
+  export.
 - Gamepad movement is 4-directional (bound to the left stick as digital
   push, not full analog), matching the existing discrete movement model.
 - Once both garden spots are built, ongoing play is just fending off
@@ -184,6 +190,35 @@ code doesn't care about the visuals or how the sounds are generated.
   the next storm/raccoon, don't persist across a save (they just reset);
   only *current* leaks and built state are saved. This only matters if you
   quit within seconds of one of those events.
+
+## Web build & deploy
+
+`.github/workflows/deploy-web.yml` builds the Godot Web (HTML5) export
+and publishes it to GitHub Pages on every push to `main` (or manually via
+"Run workflow" in the Actions tab). It runs in the
+[`barichello/godot-ci`](https://github.com/abarichello/godot-ci) Docker
+image, which bundles matching export templates for the pinned Godot
+version (`GODOT_VERSION` in the workflow — keep this in sync with the
+engine version in `project.godot`/`export_presets.cfg`), so no template
+download step is needed.
+
+The export preset itself lives in `export_presets.cfg` (committed, unlike
+most Godot projects' `.gitignore`). It uses `variant/thread_support=false`
+(the Godot 4.3+ default), which avoids the `SharedArrayBuffer`/COOP-COEP
+cross-origin-isolation headers that Web exports otherwise need and that
+GitHub Pages doesn't send — that's what makes plain GitHub Pages hosting
+work here at all.
+
+One-time repo setup: in **Settings → Pages**, set "Build and deployment →
+Source" to **GitHub Actions**. After that, the workflow owns deploys.
+
+To export the same build locally (e.g. to sanity-check before pushing),
+install the matching Web export templates via the editor's Export
+dialog, then:
+
+```
+godot --headless --export-release "Web" builds/web/index.html
+```
 
 ## Development notes
 
