@@ -41,8 +41,8 @@ func _on_resume_pressed() -> void:
 	close()
 
 func _on_save_pressed() -> void:
-	SaveManager.save_game()
-	save_feedback.text = "Game saved!"
+	var saved := SaveManager.save_game()
+	save_feedback.text = "Game saved!" if saved else "Could not save game."
 	save_feedback.show()
 
 func _on_new_game_pressed() -> void:

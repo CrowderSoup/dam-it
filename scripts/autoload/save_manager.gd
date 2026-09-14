@@ -25,6 +25,10 @@ extends Node
 
 const SLOT_COUNT := 3
 const AUTOSAVE_INTERVAL := 15.0
+const SAVE_VERSION := 1
+
+## Tests override this so they can never touch a player's real slots.
+var storage_root := "user://"
 
 ## Which slot the current play session reads/writes. -1 means no session
 ## is active yet (the title screen, before a slot is picked).
@@ -41,18 +45,37 @@ func _ready() -> void:
 	GameState.dam_completed.connect(func(): save_game())
 
 func _slot_path(slot: int) -> String:
-	return "user://savegame_slot_%d.json" % slot
+	return storage_root.path_join("savegame_slot_%d.json" % slot)
+
+func _temporary_slot_path(slot: int) -> String:
+	return _slot_path(slot) + ".tmp"
+
+func set_storage_root_for_tests(path: String) -> void:
+	storage_root = path
+	var error := DirAccess.make_dir_recursive_absolute(storage_root)
+	assert(error == OK or error == ERR_ALREADY_EXISTS, "Could not create test save directory: %s" % storage_root)
+
+func _is_valid_slot(slot: int) -> bool:
+	return slot >= 1 and slot <= SLOT_COUNT
 
 func has_save(slot: int) -> bool:
-	return FileAccess.file_exists(_slot_path(slot))
+	return _is_valid_slot(slot) and FileAccess.file_exists(_slot_path(slot))
 
 func delete_save(slot: int) -> void:
+	if not _is_valid_slot(slot):
+		push_error("Invalid save slot: %d" % slot)
+		return
 	if has_save(slot):
-		DirAccess.remove_absolute(_slot_path(slot))
+		var error := DirAccess.remove_absolute(_slot_path(slot))
+		if error != OK:
+			push_error("Could not delete save slot %d: error %d" % [slot, error])
 
 ## Called by the title screen once the player picks a slot, before
 ## switching to Main - load_into()/save_game() are no-ops until this runs.
 func begin_session(slot: int) -> void:
+	if not _is_valid_slot(slot):
+		push_error("Invalid save slot: %d" % slot)
+		return
 	current_slot = slot
 
 ## Reads a slot's saved data without starting a session or touching a live
@@ -67,30 +90,46 @@ func peek_slot(slot: int) -> Dictionary:
 	var text := file.get_as_text()
 	file.close()
 	var parsed: Variant = JSON.parse_string(text)
-	return parsed if parsed is Dictionary else {}
+	if not parsed is Dictionary:
+		push_error("Save slot %d contains invalid JSON" % slot)
+		return {}
+	var data: Dictionary = parsed
+	var version: Variant = data.get("save_version", 0)
+	if not version is float and not version is int:
+		push_error("Save slot %d has an invalid format version" % slot)
+		return {}
+	if int(version) > SAVE_VERSION:
+		push_error("Save slot %d was created by a newer game version" % slot)
+		return {}
+	return data
 
-func save_game() -> void:
+func save_game() -> bool:
 	if current_slot < 0:
-		return
+		return false
 	var main := get_tree().current_scene
 	if main == null or not main.has_method("get_save_data"):
-		return
+		return false
 	var data: Dictionary = main.get_save_data()
-	var file := FileAccess.open(_slot_path(current_slot), FileAccess.WRITE)
-	if file:
-		file.store_string(JSON.stringify(data))
-		file.close()
+	data["save_version"] = SAVE_VERSION
+	var temporary_path := _temporary_slot_path(current_slot)
+	var file := FileAccess.open(temporary_path, FileAccess.WRITE)
+	if file == null:
+		push_error("Could not open temporary save file: error %d" % FileAccess.get_open_error())
+		return false
+	file.store_string(JSON.stringify(data))
+	file.flush()
+	file.close()
+	var error := DirAccess.rename_absolute(temporary_path, _slot_path(current_slot))
+	if error != OK:
+		push_error("Could not commit save slot %d: error %d" % [current_slot, error])
+		return false
+	return true
 
 ## Applies the active session's slot to `main` if it has a save. No-op if
 ## the slot is empty (fresh game) or no session has begun yet.
 func load_into(main: Node) -> void:
 	if current_slot < 0 or not has_save(current_slot):
 		return
-	var file := FileAccess.open(_slot_path(current_slot), FileAccess.READ)
-	if file == null:
-		return
-	var text := file.get_as_text()
-	file.close()
-	var parsed: Variant = JSON.parse_string(text)
-	if parsed is Dictionary and main.has_method("apply_save_data"):
-		main.apply_save_data(parsed)
+	var data := peek_slot(current_slot)
+	if not data.is_empty() and main.has_method("apply_save_data"):
+		main.apply_save_data(data)

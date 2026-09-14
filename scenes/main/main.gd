@@ -165,8 +165,8 @@ func apply_save_data(data: Dictionary) -> void:
 	GameState.load_from_save(data)
 
 	var built_count := 0
-	var slots_built: Dictionary = data.get("dam_slots_built", {})
-	var slots_leaking: Dictionary = data.get("dam_slots_leaking", {})
+	var slots_built := _saved_dictionary(data, "dam_slots_built")
+	var slots_leaking := _saved_dictionary(data, "dam_slots_leaking")
 	for slot in dam_slots.get_children():
 		if slots_built.get(slot.name, false):
 			slot.set_built_silently(true)
@@ -183,20 +183,30 @@ func apply_save_data(data: Dictionary) -> void:
 		_start_challenges()
 
 	if GameState.lodge_stage >= GameState.LODGE_MAX_STAGE:
-		var spots_built: Dictionary = data.get("garden_spots_built", {})
+		var spots_built := _saved_dictionary(data, "garden_spots_built")
 		for spot in garden_spots.get_children():
 			spot.reveal()
 			if spots_built.get(spot.name, false):
 				spot.set_built_silently(true)
 
-	if data.has("player_x") and data.has("player_y"):
-		player.global_position = Vector2(data["player_x"], data["player_y"])
+	var saved_x: Variant = data.get("player_x")
+	var saved_y: Variant = data.get("player_y")
+	if (saved_x is int or saved_x is float) and (saved_y is int or saved_y is float):
+		var saved_position := Vector2(float(saved_x), float(saved_y))
+		player.global_position = Vector2(
+			clampf(saved_position.x, player.WORLD_BOUNDS.position.x, player.WORLD_BOUNDS.end.x),
+			clampf(saved_position.y, player.WORLD_BOUNDS.position.y, player.WORLD_BOUNDS.end.y)
+		)
 
 	# Only now that dam slots, the lodge, garden spots, and the river are
 	# all fully restored is it safe to let anything (HUD, critters,
 	# SaveManager's autosave-on-signal) react to the change - see
 	# GameState.load_from_save().
 	GameState.announce_loaded_state()
+
+func _saved_dictionary(data: Dictionary, key: String) -> Dictionary:
+	var value: Variant = data.get(key, {})
+	return value if value is Dictionary else {}
 
 ## Same end state as the _on_dam_completed() tween, applied instantly since
 ## this is restoring a save rather than reacting to it happening live.

@@ -35,8 +35,8 @@ godot --path .
   tree, mine a nearby rock, build a dam piece at a nearby empty slot if you
   have enough wood + stone, harvest a berry bush, eat from a cattail/lily
   patch growing in the pond, feed a berry to a raccoon to shoo it off, or
-  rest at a finished Lodge
-- `R` / gamepad Start — reset ALL progress (dam + Lodge) and start over
+  rest or upgrade your resource pouch at a finished Lodge
+- `R` / gamepad Start — reset ALL progress (dam + Lodge + pouch) and start over
 
 ## Current demo loop: "Grow Your Pond"
 
@@ -70,11 +70,16 @@ means to an end, not the whole game:
    no further stages. Building one reveals its own critter (a butterfly
    for the flower bed, a rabbit for the bench), giving leftover resources
    somewhere to go once the Lodge itself is finished.
-8. Progress **saves automatically** (periodically, when the dam is
+8. Once the Lodge is complete and your energy is full, interact with it to
+   upgrade your resource pouch. Wood and stone each start with a capacity of
+   10; three upgrades raise both capacities to 15, 20, and 25. The upgrades
+   cost 6 wood + 3 stone, 10 wood + 6 stone, and 14 wood + 9 stone.
+9. Progress **saves automatically** (periodically, when the dam is
    completed, and when you close the window) and reloads next time you
    start the game - close it and come back later, your pond is still
-   there. `R` any time to reset everything (dam + Lodge + garden spots +
-   critters) and start over from scratch, deleting the save.
+   there. Pouch upgrades persist too. `R` any time to reset everything (dam +
+   Lodge + pouch + garden spots + critters) and start over from scratch,
+   deleting the save.
 
 ## "Storms & Scavengers": ongoing upkeep after the dam is done
 
@@ -150,8 +155,8 @@ scripts/
               InputSetup (key/gamepad bindings, registered in code instead
               of hand-edited project.godot resource literals), Sfx
               (procedurally generated sound effects - no audio assets), Fx
-              (one-shot particle bursts), SaveManager (reads/writes
-              user://savegame.json; Main owns the actual save data via
+              (one-shot particle bursts), SaveManager (reads/writes three
+              user://savegame_slot_N.json files; Main owns the save data via
               get_save_data()/apply_save_data())
 ```
 
@@ -185,9 +190,8 @@ code doesn't care about the visuals or how the sounds are generated.
 - The river/pond shape is one fixed, hand-authored layout (a winding
   polygon + an organic pond blob at the dam site) - not randomized or
   regenerated per game. Every new game and every reset looks the same.
-- One save slot, no save UI - it's an implicit "your one pond" save, not a
-  menu with multiple slots. Felled trees/mined rocks, and the countdown to
-  the next storm/raccoon, don't persist across a save (they just reset);
+- Felled trees/mined rocks, and the countdown to the next storm/raccoon,
+  don't persist across a save (they just reset);
   only *current* leaks and built state are saved. This only matters if you
   quit within seconds of one of those events.
 
@@ -227,6 +231,7 @@ framework like GUT/GoDotTest set up - just plain `assert()`s against the
 actual game objects). Run it after making logic changes:
 
 ```
+godot --headless --editor --path . --quit # populate a fresh checkout's import cache
 godot --headless --path . tests/smoke_test.tscn
 ```
 
@@ -236,9 +241,9 @@ prints `ALL SMOKE TESTS PASSED` on success or hits a `SCRIPT ERROR:
 Assertion failed` at the first broken behavior. Extend this file as new
 mechanics are added, rather than writing one-off scratch tests each time.
 
-The test deletes any real save file up front (`SaveManager.delete_save()`)
-so a leftover save from manual testing can't silently invalidate its
-assertions - keep that call if you add more tests that touch GameState via
-a fresh `main.tscn` instance. The save file itself lives at
-`user://savegame.json`, which Godot maps to
-`~/.local/share/godot/app_userdata/Dam it!/savegame.json` on Linux.
+The suite switches `SaveManager` to the isolated `user://automated_tests`
+directory before touching any files, so it cannot read, overwrite, or delete
+the player's three normal save slots. Keep that override at the start of any
+future test entry point that exercises persistence. Normal saves live at
+`user://savegame_slot_N.json`, which Godot maps beneath
+`~/.local/share/godot/app_userdata/Dam it!/` on Linux.
