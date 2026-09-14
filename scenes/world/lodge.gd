@@ -58,9 +58,23 @@ func rest() -> void:
 	Sfx.play_rest()
 	Fx.burst(global_position, Color(0.95, 0.9, 0.6), 12)
 
+## A third finished-Lodge amenity alongside rest() - only reachable once
+## resting isn't (i.e. not tired), so a single E press never has to choose
+## between the two. Widens the beaver's carry pouch; see
+## GameState.purchase_pouch_upgrade().
+func can_upgrade_pouch() -> bool:
+	return visible and GameState.lodge_stage >= GameState.LODGE_MAX_STAGE and GameState.can_afford_pouch_upgrade()
+
+func upgrade_pouch() -> void:
+	if not can_upgrade_pouch():
+		return
+	GameState.purchase_pouch_upgrade()
+	Sfx.play_build()
+	Fx.burst(global_position, Color(0.6, 0.8, 0.5), 12)
+
 func _draw() -> void:
 	DrawUtil.shadow(self, Vector2(0, 15), Vector2(24, 5))
-	if highlighted and (can_advance() or can_rest()):
+	if highlighted and (can_advance() or can_rest() or can_upgrade_pouch()):
 		draw_arc(Vector2(0, -10), 34, 0, TAU, 32, Palette.HIGHLIGHT_RING, 2.5)
 
 	var stage := GameState.lodge_stage

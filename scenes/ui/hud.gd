@@ -26,6 +26,8 @@ func _ready() -> void:
 	GameState.dam_completed.connect(_on_dam_completed)
 	GameState.lodge_stage_changed.connect(_on_lodge_stage_changed)
 	GameState.energy_changed.connect(_on_energy_changed)
+	GameState.pouch_upgraded.connect(_on_pouch_upgraded)
+	GameState.pouch_full.connect(_on_pouch_full)
 	_on_wood_changed(GameState.wood)
 	_on_stone_changed(GameState.stone)
 	_on_berries_changed(GameState.berries)
@@ -76,10 +78,21 @@ func _on_energy_changed(amount: float) -> void:
 		energy_label.remove_theme_color_override("font_color")
 
 func _on_wood_changed(amount: int) -> void:
-	wood_label.text = str(amount)
+	wood_label.text = "%d/%d" % [amount, GameState.wood_capacity()]
 
 func _on_stone_changed(amount: int) -> void:
-	stone_label.text = str(amount)
+	stone_label.text = "%d/%d" % [amount, GameState.stone_capacity()]
+
+## The pouch capacity changed (an upgrade, or a load that restores one) -
+## the wood/stone labels' "/cap" half is stale until re-rendered, even
+## though the carried amounts themselves didn't change.
+func _on_pouch_upgraded(_tier: int) -> void:
+	_on_wood_changed(GameState.wood)
+	_on_stone_changed(GameState.stone)
+
+func _on_pouch_full(kind: String) -> void:
+	var noun: String = "Wood" if kind == "wood" else "Stone"
+	show_toast("%s pouch is full! Build something or upgrade your pouch at the Lodge." % noun, 3.0)
 
 func _on_berries_changed(amount: int) -> void:
 	berries_label.text = str(amount)

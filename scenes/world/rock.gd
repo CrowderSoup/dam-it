@@ -54,6 +54,9 @@ func set_highlighted(value: bool) -> void:
 func mine() -> void:
 	if broken:
 		return
+	if not GameState.has_stone_room():
+		GameState.pouch_full.emit("stone")
+		return
 	hits_taken += 1
 	GameState.add_stone(STONE_YIELD)
 	# No pond, no upkeep: see the matching comment on Player - energy stays

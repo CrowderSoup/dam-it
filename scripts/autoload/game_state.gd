@@ -11,9 +11,30 @@ signal lodge_stage_changed(stage: int)
 signal lodge_completed
 signal energy_changed(new_amount: float)
 signal berries_changed(new_amount: int)
+signal pouch_upgraded(tier: int)
+## Emitted when a chop/mine is blocked because the pouch has no room left
+## for that resource - "wood" or "stone". HUD listens to surface a toast;
+## nothing else needs to react.
+signal pouch_full(kind: String)
 
 const WOOD_PER_DAM_PIECE := 2
 const STONE_PER_DAM_PIECE := 1
+
+## How much wood/stone the beaver's pouch can hold at once, before any
+## upgrades - gathering past this does nothing until some is spent or the
+## pouch is upgraded (see POUCH_UPGRADE_COSTS below, bought at a finished
+## Lodge - Lodge.can_upgrade_pouch()).
+const POUCH_BASE_CAPACITY := 10
+const POUCH_CAPACITY_PER_TIER := 5
+const POUCH_MAX_TIER := 3
+## Index 0 is the cost of upgrading FROM tier 0 TO tier 1, etc. Each cost is
+## always affordable at the capacity it's bought at (10/15/20), so an
+## upgrade is never out of reach because of the very cap it raises.
+const POUCH_UPGRADE_COSTS := [
+	{"wood": 6, "stone": 3},
+	{"wood": 10, "stone": 6},
+	{"wood": 14, "stone": 9},
+]
 
 ## Index 0 is the cost of advancing FROM stage 0 TO stage 1, etc.
 const LODGE_STAGE_COSTS := [
@@ -39,6 +60,19 @@ var dam_pieces_total: int = 0
 var dam_pieces_built: int = 0
 var lodge_stage: int = 0
 var energy: float = ENERGY_MAX
+var pouch_tier: int = 0
+
+func wood_capacity() -> int:
+	return POUCH_BASE_CAPACITY + pouch_tier * POUCH_CAPACITY_PER_TIER
+
+func stone_capacity() -> int:
+	return POUCH_BASE_CAPACITY + pouch_tier * POUCH_CAPACITY_PER_TIER
+
+func has_wood_room() -> bool:
+	return wood < wood_capacity()
+
+func has_stone_room() -> bool:
+	return stone < stone_capacity()
 
 ## Called by each DamSlot on _ready() so the total is derived from the
 ## scene instead of duplicated as a magic number.
@@ -46,12 +80,16 @@ func register_dam_slot() -> void:
 	dam_pieces_total += 1
 	dam_progress_changed.emit(dam_pieces_built, dam_pieces_total)
 
+## Clamped to the pouch capacity - callers that need to know whether a
+## gather actually happened (tree.gd/rock.gd, which gate chop()/mine() on
+## has_wood_room()/has_stone_room() instead) can ignore the small excess
+## this discards, since it only ever fires from an already-checked hit.
 func add_wood(amount: int) -> void:
-	wood += amount
+	wood = mini(wood + amount, wood_capacity())
 	wood_changed.emit(wood)
 
 func add_stone(amount: int) -> void:
-	stone += amount
+	stone = mini(stone + amount, stone_capacity())
 	stone_changed.emit(stone)
 
 ## Clamped removal for the raccoon's raids - never goes below zero. Returns
@@ -138,6 +176,24 @@ func advance_lodge_stage() -> void:
 	if lodge_stage >= LODGE_MAX_STAGE:
 		lodge_completed.emit()
 
+func can_afford_pouch_upgrade() -> bool:
+	if pouch_tier >= POUCH_MAX_TIER:
+		return false
+	var cost: Dictionary = POUCH_UPGRADE_COSTS[pouch_tier]
+	return wood >= cost["wood"] and stone >= cost["stone"]
+
+func purchase_pouch_upgrade() -> void:
+	if not can_afford_pouch_upgrade():
+		return
+	var cost: Dictionary = POUCH_UPGRADE_COSTS[pouch_tier]
+	wood -= cost["wood"]
+	stone -= cost["stone"]
+	wood_changed.emit(wood)
+	stone_changed.emit(stone)
+	pouch_tier += 1
+	pouch_upgraded.emit(pouch_tier)
+	spend_energy(BUILD_ENERGY_COST)
+
 ## The pond doesn't exist, and nothing threatens the beaver, until every dam
 ## slot is built. Player uses this to hold off ambient energy drain until
 ## then - see the AMBIENT_DRAIN comment on Player.
@@ -170,6 +226,7 @@ func load_from_save(data: Dictionary) -> void:
 	berries = data.get("berries", 0)
 	lodge_stage = data.get("lodge_stage", 0)
 	energy = data.get("energy", ENERGY_MAX)
+	pouch_tier = data.get("pouch_tier", 0)
 
 ## Dam-slot state is scene-shaped, not GameState-shaped, so Main restores
 ## that directly and reports back the resulting count here (silently, see
@@ -188,9 +245,10 @@ func announce_loaded_state() -> void:
 	dam_progress_changed.emit(dam_pieces_built, dam_pieces_total)
 	lodge_stage_changed.emit(lodge_stage)
 	energy_changed.emit(energy)
+	pouch_upgraded.emit(pouch_tier)
 
-## Resets all progress (dam + Lodge + energy) ahead of a scene reload;
-## dam_pieces_total is rebuilt as the reloaded DamSlot instances
+## Resets all progress (dam + Lodge + energy + pouch) ahead of a scene
+## reload; dam_pieces_total is rebuilt as the reloaded DamSlot instances
 ## re-register themselves.
 func reset() -> void:
 	wood = 0
@@ -200,9 +258,11 @@ func reset() -> void:
 	dam_pieces_built = 0
 	lodge_stage = 0
 	energy = ENERGY_MAX
+	pouch_tier = 0
 	wood_changed.emit(wood)
 	stone_changed.emit(stone)
 	berries_changed.emit(berries)
 	dam_progress_changed.emit(dam_pieces_built, dam_pieces_total)
 	lodge_stage_changed.emit(lodge_stage)
 	energy_changed.emit(energy)
+	pouch_upgraded.emit(pouch_tier)
