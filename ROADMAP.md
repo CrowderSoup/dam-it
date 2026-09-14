@@ -220,8 +220,8 @@ together in a polished 30–45 minute chapter.
 
 #### Narrative foundation
 
-- [ ] Add a dialogue presentation that supports keyboard, mouse, and gamepad.
-- [ ] Add named speakers, portraits or expressive poses, and concise branching
+- [x] Add a dialogue presentation that supports keyboard, mouse, and gamepad.
+- [x] Add named speakers, portraits or expressive poses, and concise branching
   acknowledgements where useful.
 - [x] Add data-driven dialogue and objective definitions so writing does not
   require editing gameplay scripts.

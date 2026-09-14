@@ -24,8 +24,10 @@ func _ready() -> void:
 
 	var player: CharacterBody2D = main.get_node("Player")
 	var tree1: StaticBody2D = main.get_node("Trees/Tree1")
-	var rock1: StaticBody2D = main.get_node("Rocks/Rock1")
+	var rock1: Rock = main.get_node("Rocks/Rock1")
 	var dam_slot1: Area2D = main.get_node("DamSlots/DamSlot1")
+	var dam_slot3: Area2D = main.get_node("DamSlots/DamSlot3")
+	var river_gauge: RiverGauge = main.get_node("RiverGauge")
 	var river_water: Area2D = main.get_node("RiverWater")
 	var lodge: Area2D = main.get_node("Lodge")
 	var frog: Node2D = main.get_node("Critters/Frog")
@@ -62,9 +64,13 @@ func _ready() -> void:
 	var energy_before_chop := GameState.energy
 	for i in 3:
 		tree1.chop()
-	assert(GameState.wood == 3 and tree1.depleted, "expected 3 wood, tree felled after 3 hits")
+	# Tree has no class_name (it would collide with Godot's built-in Tree
+	# control), so its constants are reached via a plain script preload.
+	var tree_script := preload("res://scenes/world/tree.gd")
+	var wood_per_tree: int = tree_script.HITS_TO_FELL * tree_script.WOOD_YIELD
+	assert(GameState.wood == wood_per_tree and tree1.depleted, "expected %d wood, tree felled after 3 hits" % wood_per_tree)
 	tree1.chop()
-	assert(GameState.wood == 3, "chopping a felled tree should not yield more wood")
+	assert(GameState.wood == wood_per_tree, "chopping a felled tree should not yield more wood")
 	assert(GameState.energy == energy_before_chop, "chopping before the dam/pond exists should not spend energy")
 	assert(tree1.get_interaction() == null, "a felled tree should offer no interaction while it's respawning")
 	print("OK: chopping a tree 3 times yields wood and fells it; felled trees give no more")
@@ -72,9 +78,10 @@ func _ready() -> void:
 	var energy_before_mine := GameState.energy
 	for i in 2:
 		rock1.mine()
-	assert(GameState.stone == 2 and rock1.depleted, "expected 2 stone, rock broken after 2 hits")
+	var stone_per_rock := Rock.HITS_TO_BREAK * Rock.STONE_YIELD
+	assert(GameState.stone == stone_per_rock and rock1.depleted, "expected %d stone, rock broken after 2 hits" % stone_per_rock)
 	rock1.mine()
-	assert(GameState.stone == 2, "mining a broken rock should not yield more stone")
+	assert(GameState.stone == stone_per_rock, "mining a broken rock should not yield more stone")
 	assert(GameState.energy == energy_before_mine, "mining before the dam/pond exists should not spend energy")
 	assert(rock1.get_interaction() == null, "a broken rock should offer no interaction while it's respawning")
 	print("OK: mining a rock 2 times yields stone and breaks it; broken rocks give no more")
@@ -140,11 +147,45 @@ func _ready() -> void:
 
 	var completed_flag := [false]
 	GameState.dam_completed.connect(func(): completed_flag[0] = true)
-	for slot_name in ["DamSlot2", "DamSlot3", "DamSlot4", "DamSlot5"]:
+	for slot_name in ["DamSlot2", "DamSlot4", "DamSlot5"]:
 		var slot: Area2D = main.get_node("DamSlots/%s" % slot_name)
 		GameState.add_wood(2)
 		GameState.add_stone(1)
 		slot.build()
+	print("OK: the four non-keystone slots build normally")
+
+	# --- Observation step: DamSlot3 is the keystone slot (see main.tscn) -
+	# it sits in the river's strongest current and refuses to build until
+	# the player reads the water at the nearby RiverGauge (issue #19). ---
+	assert(not GameState.water_read, "water should not be read yet on a fresh game")
+	GameState.add_wood(2)
+	GameState.add_stone(1)
+	assert(GameState.can_afford_dam_piece(), "the keystone slot should be affordable, just not yet buildable")
+	var blocked_option: InteractionOption = dam_slot3.get_interaction()
+	assert(blocked_option != null and blocked_option.label == "Build Dam Piece" and not blocked_option.available, "the keystone slot should offer Build Dam Piece, unavailable until the water is read")
+	assert(blocked_option.reason == "The current runs strongest through this gap - read the water first")
+	dam_slot3.build()
+	assert(not dam_slot3.built, "building the keystone slot before reading the water should be a no-op")
+	print("OK: the keystone dam slot refuses to build before the water is read")
+
+	var gauge_option: InteractionOption = river_gauge.get_interaction()
+	assert(gauge_option != null and gauge_option.label == "Read the Water" and gauge_option.available, "the river gauge should offer an available Read the Water action before it's been read")
+	var water_observed_events: Array = []
+	GameState.water_observed.connect(func(): water_observed_events.append(true))
+	river_gauge.read_water()
+	assert(GameState.water_read, "read_water() should flip GameState.water_read")
+	assert(water_observed_events.size() == 1, "reading the water should emit water_observed exactly once")
+	assert(river_gauge.get_interaction() == null, "a read river gauge should offer no further interaction")
+	river_gauge.read_water()
+	assert(water_observed_events.size() == 1, "reading an already-read gauge should not re-emit water_observed")
+	print("OK: reading the water at the river gauge is a one-time, always-available observation step")
+
+	var ready_option: InteractionOption = dam_slot3.get_interaction()
+	assert(ready_option != null and ready_option.label == "Build Dam Piece" and ready_option.available, "the keystone slot should offer an available Build Dam Piece once the water has been read")
+	dam_slot3.build()
+	assert(dam_slot3.built, "the keystone slot should build normally once the water has been read")
+	print("OK: the keystone dam slot builds normally once the water has been read")
+
 	assert(completed_flag[0], "dam_completed should fire once all 5 slots are built")
 	print("OK: dam_completed fires once all slots are built")
 
@@ -561,6 +602,67 @@ func _ready() -> void:
 	assert(SaveManager.peek_slot(1)["save_version"] == SaveManager.SAVE_VERSION, "saved data should include its format version")
 	print("OK: peek_slot() reads a slot's data without loading it into a scene")
 
+	# Main now bootstraps Act I's first objective on _ready() (see
+	# _setup_act1_objective() in main.gd, issue #16), so the story section is
+	# no longer empty - but exactly how much wood has been gathered by this
+	# point (and therefore whether the objective has already completed) is
+	# incidental to everything chopped/built earlier in this test, not worth
+	# pinning down here. See story_test.gd for real story save/load coverage.
+	var story_data: Dictionary = saved_data["story"]
+	assert(story_data["flags"] == {}, "no flags should be set without any dialogue having run")
+	assert(story_data["active_dialogue_id"] == "" and story_data["active_dialogue_line"] == -1, "no dialogue is active outside of dialogue_ui_test.gd")
+	assert(story_data["objectives"].keys() == ["gather_starter_wood"], "Main's bootstrapped fixture objective should be the only one registered")
+	assert(story_data["objectives"]["gather_starter_wood"]["status"] in ["active", "completed"], "the bootstrapped objective should have started")
+	print("OK: get_save_data() includes the version 2 story section, reflecting Main's bootstrapped objective")
+
+	# --- Save version migration (issue #8): a version-1 file (from before
+	# the "story" section existed) should read back upgraded to the current
+	# version, keeping its existing fields, instead of losing data or
+	# crashing. Slot 3 is otherwise untouched by this file. ---
+	var legacy_v1_data := {
+		"save_version": 1,
+		"wood": 4,
+		"stone": 2,
+		"berries": 1,
+		"energy": 55.0,
+		"lodge_stage": 1,
+		"pouch_tier": 0,
+		"dam_slots_built": {"DamSlot1": true},
+		"dam_slots_leaking": {},
+		"garden_spots_built": {},
+		"player_x": 100.0,
+		"player_y": 200.0,
+	}
+	var legacy_path: String = SaveManager._slot_path(3)
+	var legacy_file := FileAccess.open(legacy_path, FileAccess.WRITE)
+	assert(legacy_file != null, "could not open slot 3 for the migration test")
+	legacy_file.store_string(JSON.stringify(legacy_v1_data))
+	legacy_file.close()
+
+	var migrated_data: Dictionary = SaveManager.peek_slot(3)
+	assert(migrated_data["save_version"] == SaveManager.SAVE_VERSION, "a version-1 save should be migrated to the current save version on read")
+	assert(migrated_data["wood"] == 4 and migrated_data["lodge_stage"] == 1, "migration should preserve pre-existing fields untouched")
+	assert(migrated_data["dam_slots_built"]["DamSlot1"] == true, "migration should preserve pre-existing dam-slot state untouched")
+	assert(migrated_data["story"] == {"flags": {}, "objectives": {}, "active_dialogue_id": "", "active_dialogue_line": -1}, "migrating a version-1 save should introduce the story section at its empty default")
+	print("OK: SaveManager migrates a version-1 save to the current version, preserving its data and adding an empty default story section")
+
+	# A save from a version this build has no migration path for is treated
+	# as unreadable rather than guessed at - the same documented fallback
+	# covers a genuinely newer save (rejected outright, as before) and one
+	# with no recognizable version at all (nothing to migrate *from*).
+	var future_file := FileAccess.open(legacy_path, FileAccess.WRITE)
+	future_file.store_string(JSON.stringify({"save_version": SaveManager.SAVE_VERSION + 1, "wood": 1}))
+	future_file.close()
+	assert(SaveManager.peek_slot(3).is_empty(), "a save from a newer game version should be rejected, not migrated")
+
+	var unversioned_file := FileAccess.open(legacy_path, FileAccess.WRITE)
+	unversioned_file.store_string(JSON.stringify({"wood": 1}))  # no save_version key at all
+	unversioned_file.close()
+	assert(SaveManager.peek_slot(3).is_empty(), "a save with no registered migration path should be treated as unreadable, not guessed at")
+
+	SaveManager.delete_save(3)
+	print("OK: saves with no valid migration path (too new, or unversioned) are rejected rather than guessed at")
+
 	# --- Title screen save-slot rows. title_screen.gd itself just wires a
 	# row's slot_chosen signal to change_scene_to_file(), which we don't
 	# want to trigger mid-test - so exercise the row directly. Slot 1 is
@@ -658,7 +760,8 @@ func _ready() -> void:
 	assert(GameState.dam_pieces_built == 0)
 	assert(GameState.lodge_stage == 0)
 	assert(GameState.pouch_tier == 0, "reset() should zero the pouch tier")
-	print("OK: GameState.reset() zeroes progress including lodge_stage and pouch_tier")
+	assert(not GameState.water_read, "reset() should clear water_read so a new game asks the water to be read again")
+	print("OK: GameState.reset() zeroes progress including lodge_stage, pouch_tier, and water_read")
 
 	# Let the lodge-advance Fx.burst() timers run their course before quitting.
 	await get_tree().create_timer(1.0).timeout

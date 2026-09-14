@@ -36,6 +36,7 @@ jobs:
           godot --headless --editor --path . --quit
           timeout 60s godot --headless --path . tests/smoke_test.tscn
           timeout 60s godot --headless --path . tests/story_test.tscn
+          timeout 60s godot --headless --path . tests/dialogue_ui_test.tscn
           timeout 60s godot --headless --path . tests/journal_test.tscn
 
   export:

@@ -46,6 +46,10 @@ godot --path .
   close with `J` again, Escape, gamepad B, or the journal's close button.
   Clicking the HUD's current-objective banner (top right) opens it too.
 
+During a conversation, the same interact key/button (or a mouse click)
+advances a line or confirms whichever response is highlighted; arrow keys,
+the d-pad, or the left stick move the highlight between responses.
+
 ## Current demo loop: "Grow Your Pond"
 
 Progress is persistent now (no more replay-by-restarting) - the dam is a
@@ -53,16 +57,19 @@ means to an end, not the whole game:
 
 1. A title screen greets you; press any key/click/gamepad button to start.
 2. Walk up to a tree (it highlights when you're in range) and press
-   interact repeatedly to chop it down (3 hits, 1 wood each, with a little
+   interact repeatedly to chop it down (3 hits, 2 wood each, with a little
    shake, wood-chip burst, and sound per hit). Felled trees respawn after
-   8 seconds.
-3. Walk up to a rock and interact to mine it (2 hits, 1 stone each). Mined
-   rocks respawn after 10 seconds.
+   6 seconds.
+3. Walk up to a rock and interact to mine it (2 hits, 2 stone each). Mined
+   rocks respawn after 7 seconds.
 4. The river winds across the map (not a straight line), and wading
    through it slows you down until the dam is finished. Walk to one of the
    5 dam slots sitting along the river's crossing point (also highlights
    in range) and press interact to place a dam piece (costs 2 wood +
-   1 stone).
+   1 stone). The center slot sits in the river's strongest current and
+   won't take a piece until you've read the water - walk up to the reed
+   gauge post on the near bank and interact to read it (free, instant, and
+   points out which gap needs bracing) before building there.
 5. Once all 5 slots are filled: the slowdown goes away (dam's done, cross
    freely), a real pond-shaped body of water grows in behind the dam
    (fading in, not just a rectangle getting taller), there's a completion
@@ -158,8 +165,11 @@ scenes/
   ui/       - title screen and HUD: icon-based counts along the bottom, a
               toast banner for announcements, edge_indicator.gd (the
               off-screen threat arrows), the current-objective banner and
-              staged tutorial banner (top corners), the pause game_menu, and
-              journal.gd/journal.tscn (the openable objective journal)
+              staged tutorial banner (top corners), the pause game_menu,
+              journal.gd/journal.tscn (the openable objective journal), and
+              dialogue_box.gd/.tscn (presents ActOneController's dialogue
+              runtime - speaker, portrait, text, response choices) - see
+              docs/design/dialogue-schema.md
 scripts/
   autoload/ - GameState (progress/signals for both the dam and the Lodge,
               plus which staged tutorials the player has already dismissed -
@@ -242,31 +252,31 @@ godot --headless --export-release "Web" builds/web/index.html
 
 ## Development notes
 
-There are headless regression tests (no real framework like GUT/GoDotTest
-set up - just plain `assert()`s against the actual game objects). Run them
-after making logic changes:
+There's a headless regression test at `tests/smoke_test.gd` (no real
+framework like GUT/GoDotTest set up - just plain `assert()`s against the
+actual game objects), plus three companions covering the data-driven story
+layer and its UI: `tests/story_test.gd` (ActOneController's dialogue/
+objective runtime, no UI), `tests/dialogue_ui_test.gd` (the dialogue box UI
+on top of it - see docs/design/dialogue-schema.md), and
+`tests/journal_test.gd` (the current-objective HUD display, the Journal
+(`scenes/ui/journal.gd`), and staged tutorials' "seen" tracking
+(`GameState.seen_tutorials`)). Run them after making logic changes:
 
 ```
 godot --headless --editor --path . --quit # populate a fresh checkout's import cache
 godot --headless --path . tests/smoke_test.tscn
 godot --headless --path . tests/story_test.tscn
+godot --headless --path . tests/dialogue_ui_test.tscn
 godot --headless --path . tests/journal_test.tscn
 ```
 
-- `tests/smoke_test.gd` instantiates `main.tscn`, drives the real
-  Tree/Rock/DamSlot/GameState objects directly (chop, mine, build, complete,
-  reset, save, load), and prints `ALL SMOKE TESTS PASSED` on success.
-- `tests/story_test.gd` covers the data-driven dialogue/objective foundation
-  (`ActOneController` + `scripts/story/`) - see
-  [docs/design/dialogue-schema.md](docs/design/dialogue-schema.md).
-- `tests/journal_test.gd` covers the current-objective HUD display, the
-  Journal (`scenes/ui/journal.gd`), and staged tutorials' "seen" tracking
-  (`GameState.seen_tutorials`).
-
-Each prints its own `ALL ... TESTS PASSED` on success, or hits a
-`SCRIPT ERROR: Assertion failed` at the first broken behavior. Extend the
-matching file as new mechanics are added, rather than writing one-off
-scratch tests each time.
+`smoke_test.gd` instantiates `main.tscn`, drives the real Tree/Rock/DamSlot/
+GameState objects directly (chop, mine, build, complete, reset, save,
+load), and prints `ALL SMOKE TESTS PASSED` on success or hits a `SCRIPT
+ERROR: Assertion failed` at the first broken behavior. Extend the matching
+file as new mechanics are added, rather than writing one-off scratch tests
+each time. The other three suites follow the same convention and print
+their own `ALL ... TESTS PASSED` banner.
 
 The suite switches `SaveManager` to the isolated `user://automated_tests`
 directory before touching any files, so it cannot read, overwrite, or delete

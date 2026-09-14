@@ -59,6 +59,7 @@ func _ready() -> void:
 	ActOneController.objective_started.connect(_on_objective_changed)
 	ActOneController.objective_progress_changed.connect(_on_objective_progress_changed)
 	ActOneController.objective_completed.connect(_on_objective_changed)
+	GameState.water_observed.connect(_on_water_observed)
 	_on_wood_changed(GameState.wood)
 	_on_stone_changed(GameState.stone)
 	_on_berries_changed(GameState.berries)
@@ -177,6 +178,9 @@ func _on_pouch_upgraded(_tier: int) -> void:
 
 func _on_pouch_full(kind: String) -> void:
 	show_toast(GameState.pouch_full_message(kind), 3.0)
+
+func _on_water_observed() -> void:
+	show_toast("You read the water: the current runs strongest through the middle gap. Brace that one well.")
 
 func _on_berries_changed(amount: int) -> void:
 	berries_label.text = str(amount)
