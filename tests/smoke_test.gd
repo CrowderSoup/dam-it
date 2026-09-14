@@ -309,6 +309,9 @@ func _ready() -> void:
 	assert(butterfly.visible, "building the flower bed should reveal the butterfly")
 	print("OK: garden spots unlock with the lodge, and building one reveals its critter")
 
+	# "restart" is intentionally keyboard-only (see the safe-controls test
+	# block below) - a gamepad can only reach new-game through the paused
+	# menu's confirmed New Game button, never a single unconfirmed button.
 	for action_name in ["move_up", "move_down", "move_left", "move_right", "interact", "restart", "menu"]:
 		assert(InputMap.has_action(action_name), "missing action: %s" % action_name)
 		var has_physical := false
@@ -324,8 +327,51 @@ func _ready() -> void:
 				has_joy = true
 		assert(has_physical, "%s has no physical_keycode event" % action_name)
 		assert(has_logical, "%s has no keycode event" % action_name)
-		assert(has_joy, "%s has no joypad event" % action_name)
-	print("OK: all actions have physical, logical, and joypad bindings")
+		if action_name == "restart":
+			assert(not has_joy, "restart must not be directly reachable from a gamepad button")
+		else:
+			assert(has_joy, "%s has no joypad event" % action_name)
+	for event in InputMap.action_get_events("menu"):
+		if event is InputEventJoypadButton:
+			assert(event.button_index in [JOY_BUTTON_START, JOY_BUTTON_BACK], "menu should only bind Start/Back, not restart's old Start binding")
+	print("OK: all actions have physical, logical bindings; restart is keyboard-only and menu owns gamepad Start/Back")
+
+	# --- Safe controls: the "restart" shortcut (keyboard R) never destroys
+	# progress on its own - it only ever reaches game_menu's existing
+	# confirmation dialog, same as clicking "New Game" would. ---
+	var game_menu: CanvasLayer = main.get_node("GameMenu")
+	assert(not game_menu.visible, "game menu should start closed")
+	# main's own listener would delete the save and reload the scene once
+	# confirmed - disconnect it here so this block can exercise the menu's
+	# confirm/cancel logic itself without tearing down the rest of the test.
+	game_menu.new_game_requested.disconnect(main._start_new_game)
+	var new_game_signaled := [false]
+	game_menu.new_game_requested.connect(func(): new_game_signaled[0] = true)
+	var wood_before_new_game_request := GameState.wood
+
+	game_menu.request_new_game()
+	assert(game_menu.visible, "request_new_game() should open the paused menu behind the confirmation")
+	assert(get_tree().paused, "opening the menu for a new-game request should pause the tree")
+	assert(game_menu.confirm_new_game.visible, "request_new_game() should show the confirmation dialog")
+	assert(game_menu.resume_button.has_focus(), "opening the menu should focus Resume, not Save")
+
+	game_menu.confirm_new_game.hide()
+	assert(not new_game_signaled[0], "dismissing the confirmation must not start a new game")
+	assert(GameState.wood == wood_before_new_game_request, "dismissing the confirmation must leave existing progress untouched")
+	assert(game_menu.visible and get_tree().paused, "dismissing only the confirmation should leave the menu itself open")
+	game_menu.close()
+	assert(not get_tree().paused, "closing the menu should unpause the tree")
+
+	game_menu.request_new_game()
+	# A real click on the dialog's OK button hides the window itself before/
+	# alongside emitting "confirmed" - replicate both since emitting the
+	# signal alone (unlike a real click) would leave the window registered
+	# as root's exclusive child and break the next dialog's popup.
+	game_menu.confirm_new_game.hide()
+	game_menu.confirm_new_game.confirmed.emit()
+	assert(new_game_signaled[0], "confirming should emit new_game_requested")
+	assert(not game_menu.visible and not get_tree().paused, "confirming should close the menu and unpause")
+	print("OK: request_new_game() reaches new_game_requested only through an explicit confirmation, and cancelling preserves progress")
 
 	# --- Save / load (slot-based) ---
 	var dam_slot2: Area2D = main.get_node("DamSlots/DamSlot2")
