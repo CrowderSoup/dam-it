@@ -7,7 +7,8 @@ extends Node2D
 ## storms occasionally weaken a dam piece into a leak, and a raccoon
 ## occasionally shows up to raid the resource pile if not shooed off. Also
 ## keeps the HUD's edge-arrow indicators pointed at whichever of those is
-## currently active.
+## currently active. Also bootstraps Act I's first objective beat into
+## ActOneController - see _setup_act1_objective() below.
 
 const STORM_MIN_INTERVAL := 90.0
 const STORM_MAX_INTERVAL := 150.0
@@ -28,6 +29,7 @@ const RACCOON_SPAWN_POINTS := [
 @onready var camera: Camera2D = $Player/Camera2D
 @onready var hud: CanvasLayer = $HUD
 @onready var game_menu: CanvasLayer = $GameMenu
+@onready var journal: CanvasLayer = $Journal
 @onready var dialogue_box: CanvasLayer = $DialogueBox
 
 var _challenges_active := false
@@ -45,6 +47,9 @@ func _ready() -> void:
 	GameState.dam_completed.connect(_on_dam_completed)
 	GameState.dam_completed.connect(_start_challenges)
 	game_menu.new_game_requested.connect(_start_new_game)
+	game_menu.set_journal(journal)
+	journal.set_game_menu(game_menu)
+	hud.journal_requested.connect(journal.open)
 	# A dialogue pauses the tree itself (see dialogue_box.gd), same as
 	# GameMenu - but GameMenu stays PROCESS_MODE_ALWAYS so it can still open
 	# while paused. Without this, Escape/Start during a conversation would
@@ -53,6 +58,7 @@ func _ready() -> void:
 	ActOneController.dialogue_started.connect(_on_dialogue_started)
 	ActOneController.dialogue_ended.connect(_on_dialogue_ended)
 	SaveManager.load_into(self)
+	_setup_act1_objective()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("restart"):
@@ -79,6 +85,26 @@ func _start_new_game() -> void:
 	# still open when New Game was confirmed.
 	ActOneController.reset()
 	get_tree().reload_current_scene()
+
+## Loads Act I's data-driven content (see docs/design/dialogue-schema.md)
+## into ActOneController and starts its opening objective, so the HUD/
+## journal added by issue #16 have a real objective to show in actual play.
+## Idempotent (load_content() would assert on a duplicate id otherwise) -
+## needed because tests instantiate more than one Main in the same process.
+##
+## Moss's introduction dialogue (data/story/act1/dialogue_moss_intro.tres)
+## is the "real" way this objective is meant to start, once a resident's
+## interact() can offer it and a dialogue UI exists to play it (issues
+## #17/#18) - until then, this starts the objective directly so it isn't
+## stuck behind unbuilt dialogue presentation.
+func _setup_act1_objective() -> void:
+	if not ActOneController.has_objective("gather_starter_wood"):
+		var objective: ObjectiveDefinition = load("res://data/story/act1/objective_gather_starter_wood.tres")
+		var dialogue: DialogueDefinition = load("res://data/story/act1/dialogue_moss_intro.tres")
+		var objectives: Array[ObjectiveDefinition] = [objective]
+		var dialogues: Array[DialogueDefinition] = [dialogue]
+		ActOneController.load_content(objectives, dialogues)
+	ActOneController.start_objective("gather_starter_wood")
 
 func _on_dam_completed() -> void:
 	river_water.queue_free()
@@ -180,6 +206,7 @@ func get_save_data() -> Dictionary:
 		"energy": GameState.energy,
 		"lodge_stage": GameState.lodge_stage,
 		"pouch_tier": GameState.pouch_tier,
+		"seen_tutorials": GameState.seen_tutorials,
 		"dam_slots_built": dam_slots_built,
 		"dam_slots_leaking": dam_slots_leaking,
 		"garden_spots_built": garden_spots_built,

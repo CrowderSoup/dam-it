@@ -46,11 +46,13 @@ func _ready() -> void:
 	var game_menu: CanvasLayer = main.get_node("GameMenu")
 	var player: CharacterBody2D = main.get_node("Player")
 
-	var objective: ObjectiveDefinition = load("res://data/story/act1/objective_gather_starter_wood.tres")
-	var dialogue: DialogueDefinition = load("res://data/story/act1/dialogue_moss_intro.tres")
-	var objectives: Array[ObjectiveDefinition] = [objective]
-	var dialogues: Array[DialogueDefinition] = [dialogue]
-	ActOneController.load_content(objectives, dialogues)
+	# Main's own _ready() already registers the Moss fixture and starts
+	# "gather_starter_wood" (see _setup_act1_objective() in main.gd, issue
+	# #16's stopgap ahead of a resident's interact() really offering this
+	# dialogue) - loading it again here would hit register_*()'s duplicate-id
+	# asserts for no reason.
+	assert(ActOneController.has_objective("gather_starter_wood"), "Main should have already loaded the Act I fixture on _ready()")
+	assert(ActOneController.get_objective_status("gather_starter_wood") == "active", "Main's bootstrap should have already started the objective ahead of any dialogue")
 
 	assert(not dialogue_box.visible, "the dialogue box should start hidden")
 	assert(not get_tree().paused, "the tree should start unpaused")
@@ -112,7 +114,11 @@ func _ready() -> void:
 	click.pressed = true
 	dialogue_box._unhandled_input(click)
 	assert(ActOneController.get_current_line().text.begins_with("Fine."), "a mouse click should advance past the acknowledgement to the closing line")
-	assert(ActOneController.get_objective_status("gather_starter_wood") == "active", "the closing line's effect should have started the gathering objective")
+	# The closing line's own effect also targets "gather_starter_wood" - it's
+	# a no-op here since Main's bootstrap already started it (see the assert
+	# above), but confirms applying it again doesn't corrupt the objective's
+	# state (start_objective() is guarded to only affect an "inactive" one).
+	assert(ActOneController.get_objective_status("gather_starter_wood") == "active", "the objective should still be active after its (idempotent) start-objective effect re-fires")
 	print("OK: a mouse click advances dialogue too")
 
 	# --- Leaving the dialogue: hides the box, unpauses, and re-enables the

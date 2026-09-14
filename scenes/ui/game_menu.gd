@@ -18,17 +18,25 @@ signal new_game_requested
 @onready var confirm_new_game: ConfirmationDialog = $ConfirmNewGame
 @onready var controls_dialog: AcceptDialog = $ControlsDialog
 
+## Set by Main so this menu and the journal (scenes/ui/journal.gd) never
+## stack open on top of each other - see _unhandled_input() below.
+var _journal: CanvasLayer = null
+
 func _ready() -> void:
 	hide()
 	save_feedback.hide()
+
+func set_journal(journal: CanvasLayer) -> void:
+	_journal = journal
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("menu"):
 		if visible:
 			close()
-		else:
+			get_viewport().set_input_as_handled()
+		elif _journal == null or not _journal.visible:
 			open()
-		get_viewport().set_input_as_handled()
+			get_viewport().set_input_as_handled()
 
 func open() -> void:
 	show()

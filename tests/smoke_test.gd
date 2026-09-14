@@ -602,8 +602,18 @@ func _ready() -> void:
 	assert(SaveManager.peek_slot(1)["save_version"] == SaveManager.SAVE_VERSION, "saved data should include its format version")
 	print("OK: peek_slot() reads a slot's data without loading it into a scene")
 
-	assert(saved_data["story"] == {"flags": {}, "objectives": {}, "active_dialogue_id": "", "active_dialogue_line": -1}, "get_save_data() should include an (empty, since no story content is loaded here) story section - see story_test.gd for real story save/load coverage")
-	print("OK: get_save_data() includes the version 2 story section")
+	# Main now bootstraps Act I's first objective on _ready() (see
+	# _setup_act1_objective() in main.gd, issue #16), so the story section is
+	# no longer empty - but exactly how much wood has been gathered by this
+	# point (and therefore whether the objective has already completed) is
+	# incidental to everything chopped/built earlier in this test, not worth
+	# pinning down here. See story_test.gd for real story save/load coverage.
+	var story_data: Dictionary = saved_data["story"]
+	assert(story_data["flags"] == {}, "no flags should be set without any dialogue having run")
+	assert(story_data["active_dialogue_id"] == "" and story_data["active_dialogue_line"] == -1, "no dialogue is active outside of dialogue_ui_test.gd")
+	assert(story_data["objectives"].keys() == ["gather_starter_wood"], "Main's bootstrapped fixture objective should be the only one registered")
+	assert(story_data["objectives"]["gather_starter_wood"]["status"] in ["active", "completed"], "the bootstrapped objective should have started")
+	print("OK: get_save_data() includes the version 2 story section, reflecting Main's bootstrapped objective")
 
 	# --- Save version migration (issue #8): a version-1 file (from before
 	# the "story" section existed) should read back upgraded to the current
