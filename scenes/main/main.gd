@@ -153,6 +153,7 @@ func get_save_data() -> Dictionary:
 		"berries": GameState.berries,
 		"energy": GameState.energy,
 		"lodge_stage": GameState.lodge_stage,
+		"pouch_tier": GameState.pouch_tier,
 		"dam_slots_built": dam_slots_built,
 		"dam_slots_leaking": dam_slots_leaking,
 		"garden_spots_built": garden_spots_built,

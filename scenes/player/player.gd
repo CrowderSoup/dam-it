@@ -108,6 +108,8 @@ func _try_interact() -> void:
 				target.advance()
 			elif target.can_rest():
 				target.rest()
+			elif target.can_upgrade_pouch():
+				target.upgrade_pouch()
 			return
 		if target.is_in_group("garden_spots"):
 			if target.can_build() and GameState.can_afford(GardenSpot.WOOD_COST, GardenSpot.STONE_COST):

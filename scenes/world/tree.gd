@@ -46,6 +46,9 @@ func set_highlighted(value: bool) -> void:
 func chop() -> void:
 	if felled:
 		return
+	if not GameState.has_wood_room():
+		GameState.pouch_full.emit("wood")
+		return
 	hits_taken += 1
 	GameState.add_wood(WOOD_YIELD)
 	# No pond, no upkeep: see the matching comment on Player - energy stays

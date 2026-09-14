@@ -257,6 +257,38 @@ func _ready() -> void:
 	assert(not lodge.can_rest(), "a freshly-rested lodge should not offer resting again immediately")
 	print("OK: resting at a finished lodge fully refills energy")
 
+	# --- Pouch capacity + upgrades ---
+	GameState.wood = 0
+	GameState.stone = 0
+	assert(GameState.pouch_tier == 0 and GameState.wood_capacity() == GameState.POUCH_BASE_CAPACITY, "pouch should start at tier 0 / base capacity")
+	GameState.add_wood(GameState.POUCH_BASE_CAPACITY + 5)
+	GameState.add_stone(GameState.POUCH_BASE_CAPACITY + 5)
+	assert(GameState.wood == GameState.POUCH_BASE_CAPACITY and GameState.stone == GameState.POUCH_BASE_CAPACITY, "add_wood()/add_stone() should clamp at the pouch's capacity")
+	assert(not GameState.has_wood_room() and not GameState.has_stone_room(), "a full pouch should report no room left")
+
+	var pouch_full_events := []
+	GameState.pouch_full.connect(func(kind): pouch_full_events.append(kind))
+	tree1.felled = false
+	tree1.hits_taken = 0
+	tree1.chop()
+	assert(GameState.wood == GameState.POUCH_BASE_CAPACITY, "chopping with a full wood pouch should not add more wood")
+	assert(tree1.hits_taken == 0, "chopping with a full pouch should not register a hit, so nothing is wasted")
+	rock1.broken = false
+	rock1.hits_taken = 0
+	rock1.mine()
+	assert(GameState.stone == GameState.POUCH_BASE_CAPACITY, "mining with a full stone pouch should not add more stone")
+	assert(rock1.hits_taken == 0, "mining with a full pouch should not register a hit either")
+	assert(pouch_full_events == ["wood", "stone"], "a blocked chop/mine should emit pouch_full() so the HUD can toast it")
+	print("OK: a full pouch blocks further chopping/mining until there's room")
+
+	assert(GameState.can_afford_pouch_upgrade(), "a full pouch (10/10) should afford the first upgrade (6 wood/3 stone)")
+	assert(lodge.can_upgrade_pouch(), "a maxed lodge should offer a pouch upgrade when one is affordable")
+	lodge.upgrade_pouch()
+	assert(GameState.pouch_tier == 1, "upgrade_pouch() should raise the pouch tier")
+	assert(GameState.wood_capacity() == GameState.POUCH_BASE_CAPACITY + GameState.POUCH_CAPACITY_PER_TIER, "wood capacity should grow by one tier's worth")
+	assert(GameState.stone_capacity() == GameState.POUCH_BASE_CAPACITY + GameState.POUCH_CAPACITY_PER_TIER, "stone capacity should grow by one tier's worth too")
+	print("OK: upgrading the pouch at a finished lodge raises both wood and stone capacity")
+
 	# --- Garden spots (post-Lodge cosmetic decorations) ---
 	var flower_spot: GardenSpot = main.get_node("GardenSpots/FlowerBedSpot")
 	var butterfly: Node2D = main.get_node("Critters/Butterfly")
@@ -305,6 +337,7 @@ func _ready() -> void:
 	assert(saved_data["berries"] == GameState.berries)
 	assert(saved_data["energy"] == GameState.energy)
 	assert(saved_data["lodge_stage"] == GameState.LODGE_MAX_STAGE)
+	assert(saved_data["pouch_tier"] == GameState.pouch_tier)
 	assert(saved_data["dam_slots_built"]["DamSlot1"] == true)
 	assert(saved_data["dam_slots_leaking"]["DamSlot2"] == true)
 	assert(saved_data["garden_spots_built"]["FlowerBedSpot"] == true)
@@ -378,6 +411,7 @@ func _ready() -> void:
 	assert(GameState.berries == saved_data["berries"], "loading should restore berries")
 	assert(GameState.energy == saved_data["energy"], "loading should restore energy")
 	assert(GameState.lodge_stage == GameState.LODGE_MAX_STAGE, "loading should restore lodge stage")
+	assert(GameState.pouch_tier == saved_data["pouch_tier"], "loading should restore the pouch tier")
 	var restored_slot1: Area2D = main2.get_node("DamSlots/DamSlot1")
 	assert(restored_slot1.built, "loading should restore built dam slots")
 	var restored_slot2: Area2D = main2.get_node("DamSlots/DamSlot2")
@@ -401,7 +435,8 @@ func _ready() -> void:
 	assert(GameState.wood == 0 and GameState.stone == 0)
 	assert(GameState.dam_pieces_built == 0)
 	assert(GameState.lodge_stage == 0)
-	print("OK: GameState.reset() zeroes progress including lodge_stage")
+	assert(GameState.pouch_tier == 0, "reset() should zero the pouch tier")
+	print("OK: GameState.reset() zeroes progress including lodge_stage and pouch_tier")
 
 	# Let the lodge-advance Fx.burst() timers run their course before quitting.
 	await get_tree().create_timer(1.0).timeout
