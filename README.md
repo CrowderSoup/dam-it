@@ -40,6 +40,11 @@ godot --path .
   patch growing in the pond, feed a berry to a raccoon to shoo it off, or
   rest or upgrade your resource pouch at a finished Lodge
 - `R` / gamepad Start — reset ALL progress (dam + Lodge + pouch) and start over
+- `J` / gamepad Y — open/close the journal: your current objective plus a
+  compact history of completed and in-progress ones, in plain language.
+  Browse entries with the arrow keys/d-pad, or click one with the mouse;
+  close with `J` again, Escape, gamepad B, or the journal's close button.
+  Clicking the HUD's current-objective banner (top right) opens it too.
 
 ## Current demo loop: "Grow Your Pond"
 
@@ -150,17 +155,25 @@ scenes/
               (scavenger, fed berries to shoo off), critter
               (frog/duck/fish/butterfly/rabbit), and purely-visual
               decorations (rocks)
-  ui/       - title screen and HUD: icon-based counts along the bottom,
-              a toast banner for announcements, and edge_indicator.gd
-              (the off-screen threat arrows)
+  ui/       - title screen and HUD: icon-based counts along the bottom, a
+              toast banner for announcements, edge_indicator.gd (the
+              off-screen threat arrows), the current-objective banner and
+              staged tutorial banner (top corners), the pause game_menu, and
+              journal.gd/journal.tscn (the openable objective journal)
 scripts/
-  autoload/ - GameState (progress/signals for both the dam and the Lodge),
+  autoload/ - GameState (progress/signals for both the dam and the Lodge,
+              plus which staged tutorials the player has already dismissed -
+              see seen_tutorials), ActOneController (Act I's story flags and
+              objective progress - see docs/design/dialogue-schema.md),
               InputSetup (key/gamepad bindings, registered in code instead
               of hand-edited project.godot resource literals), Sfx
               (procedurally generated sound effects - no audio assets), Fx
               (one-shot particle bursts), SaveManager (reads/writes three
               user://savegame_slot_N.json files; Main owns the save data via
               get_save_data()/apply_save_data())
+  story/    - the data-driven dialogue/objective schema (ObjectiveDefinition,
+              DialogueDefinition, StoryCondition, StoryEffect, ...) that
+              ActOneController runs - see docs/design/dialogue-schema.md
 ```
 
 All art in this demo is hand-drawn vector shapes in `_draw()` (no image
@@ -229,20 +242,31 @@ godot --headless --export-release "Web" builds/web/index.html
 
 ## Development notes
 
-There's a headless regression test at `tests/smoke_test.gd` (no real
-framework like GUT/GoDotTest set up - just plain `assert()`s against the
-actual game objects). Run it after making logic changes:
+There are headless regression tests (no real framework like GUT/GoDotTest
+set up - just plain `assert()`s against the actual game objects). Run them
+after making logic changes:
 
 ```
 godot --headless --editor --path . --quit # populate a fresh checkout's import cache
 godot --headless --path . tests/smoke_test.tscn
+godot --headless --path . tests/story_test.tscn
+godot --headless --path . tests/journal_test.tscn
 ```
 
-It instantiates `main.tscn`, drives the real Tree/Rock/DamSlot/GameState
-objects directly (chop, mine, build, complete, reset, save, load), and
-prints `ALL SMOKE TESTS PASSED` on success or hits a `SCRIPT ERROR:
-Assertion failed` at the first broken behavior. Extend this file as new
-mechanics are added, rather than writing one-off scratch tests each time.
+- `tests/smoke_test.gd` instantiates `main.tscn`, drives the real
+  Tree/Rock/DamSlot/GameState objects directly (chop, mine, build, complete,
+  reset, save, load), and prints `ALL SMOKE TESTS PASSED` on success.
+- `tests/story_test.gd` covers the data-driven dialogue/objective foundation
+  (`ActOneController` + `scripts/story/`) - see
+  [docs/design/dialogue-schema.md](docs/design/dialogue-schema.md).
+- `tests/journal_test.gd` covers the current-objective HUD display, the
+  Journal (`scenes/ui/journal.gd`), and staged tutorials' "seen" tracking
+  (`GameState.seen_tutorials`).
+
+Each prints its own `ALL ... TESTS PASSED` on success, or hits a
+`SCRIPT ERROR: Assertion failed` at the first broken behavior. Extend the
+matching file as new mechanics are added, rather than writing one-off
+scratch tests each time.
 
 The suite switches `SaveManager` to the isolated `user://automated_tests`
 directory before touching any files, so it cannot read, overwrite, or delete
