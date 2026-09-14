@@ -22,10 +22,32 @@ extends Node
 ## so it can't accidentally save a half-restored or just-reset scene over
 ## good data the way lodge_stage_changed or the wood/stone signals could
 ## (those fire during both loading and reset()).
+##
+## Every read runs a saved file's "save_version" through _migrate() before
+## handing it back (see peek_slot()), so a save written by an older build
+## upgrades to the current payload shape before anything else looks at it.
+## SaveManager only owns the version number and dispatching to the right
+## migration function - what actually goes in the payload is still entirely
+## up to Main/GameState/ActOneController (see docs/design/dialogue-schema.md
+## #save-load for the version 2 shape).
 
 const SLOT_COUNT := 3
 const AUTOSAVE_INTERVAL := 15.0
-const SAVE_VERSION := 1
+## Version 2 adds the "story" section (flags/objective progress/the active
+## dialogue+line - see ActOneController.get_save_data() and
+## docs/design/dialogue-schema.md#save-load). Version 1 is every save from
+## before that existed; _migrate_v1_to_v2() upgrades one to the other.
+const SAVE_VERSION := 2
+
+## One explicit, testable function per supported upgrade, keyed by the
+## version it upgrades *from*. Applied in sequence by _migrate() until the
+## data reaches SAVE_VERSION - see peek_slot(). A version with no entry here
+## has no known upgrade path; _migrate() treats that slot as unreadable
+## rather than guessing, the documented player-safe fallback for a save this
+## build genuinely doesn't know how to read.
+const _MIGRATIONS := {
+	1: "_migrate_v1_to_v2",
+}
 
 ## Tests override this so they can never touch a player's real slots.
 var storage_root := "user://"
@@ -101,7 +123,45 @@ func peek_slot(slot: int) -> Dictionary:
 	if int(version) > SAVE_VERSION:
 		push_error("Save slot %d was created by a newer game version" % slot)
 		return {}
+	if int(version) < SAVE_VERSION:
+		data = _migrate(data, int(version))
+		if data.is_empty():
+			push_error("Save slot %d could not be migrated to the current save version" % slot)
+			return {}
 	return data
+
+## Applies each registered migration in turn until `data` reaches
+## SAVE_VERSION, or returns an empty Dictionary (the documented player-safe
+## fallback for "this save can't be read") the moment a version has no
+## migration registered in _MIGRATIONS.
+func _migrate(data: Dictionary, from_version: int) -> Dictionary:
+	var migrated := data
+	var version := from_version
+	while version < SAVE_VERSION:
+		if not _MIGRATIONS.has(version):
+			return {}
+		migrated = call(_MIGRATIONS[version], migrated)
+		version += 1
+	migrated["save_version"] = SAVE_VERSION
+	return migrated
+
+## Version 1 saves predate story flags/objective progress and the
+## mid-dialogue boundary entirely - there was no Act I content for a v1 save
+## to have made progress against, so upgrading it just introduces the
+## "story" section at its empty default (see ActOneController.load_from_save(),
+## which already treats a missing/empty "story" section this way too - this
+## migration exists so the stored payload's shape and its "save_version" tag
+## are explicit and correct, rather than relying on that leniency forever).
+func _migrate_v1_to_v2(data: Dictionary) -> Dictionary:
+	var migrated := data.duplicate(true)
+	if not migrated.has("story"):
+		migrated["story"] = {
+			"flags": {},
+			"objectives": {},
+			"active_dialogue_id": "",
+			"active_dialogue_line": -1,
+		}
+	return migrated
 
 func save_game() -> bool:
 	if current_slot < 0:
