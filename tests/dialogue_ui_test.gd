@@ -44,6 +44,8 @@ func _ready() -> void:
 
 	var dialogue_box: CanvasLayer = main.get_node("DialogueBox")
 	var game_menu: CanvasLayer = main.get_node("GameMenu")
+	var journal: CanvasLayer = main.get_node("Journal")
+	var hud: CanvasLayer = main.get_node("HUD")
 	var player: CharacterBody2D = main.get_node("Player")
 
 	# Main's own _ready() already registers the Moss fixture and starts
@@ -53,6 +55,8 @@ func _ready() -> void:
 	# asserts for no reason.
 	assert(ActOneController.has_objective("gather_starter_wood"), "Main should have already loaded the Act I fixture on _ready()")
 	assert(ActOneController.get_objective_status("gather_starter_wood") == "active", "Main's bootstrap should have already started the objective ahead of any dialogue")
+	assert(hud._current_tutorial_id == hud.TUTORIAL_MOVE, "starting the objective during Main._ready() must not replace the fresh player's movement tutorial")
+	assert(hud.TUTORIAL_JOURNAL in hud._pending_tutorial_ids, "the journal tutorial should wait behind movement help")
 
 	assert(not dialogue_box.visible, "the dialogue box should start hidden")
 	assert(not get_tree().paused, "the tree should start unpaused")
@@ -69,6 +73,7 @@ func _ready() -> void:
 	assert(dialogue_box.visible, "starting a dialogue should show the dialogue box")
 	assert(get_tree().paused, "starting a dialogue should pause the tree, same as GameMenu")
 	assert(game_menu.process_mode == Node.PROCESS_MODE_DISABLED, "GameMenu should be disabled while a dialogue is open")
+	assert(journal.process_mode == Node.PROCESS_MODE_DISABLED, "Journal should be disabled while a dialogue is open")
 	assert(dialogue_box.speaker_label.text == "Moss", "the speaker label should show the capitalized speaker id")
 	assert(dialogue_box.text_label.text.begins_with("You're the beaver"), "the text label should show the current line")
 	assert(dialogue_box.continue_hint.visible and not dialogue_box.choices_container.visible, "a plain line should show the continue hint, not choices")
@@ -127,8 +132,35 @@ func _ready() -> void:
 	assert(not dialogue_box.visible, "the dialogue box should hide once the dialogue ends")
 	assert(not get_tree().paused, "ending a dialogue should unpause the tree")
 	assert(game_menu.process_mode == Node.PROCESS_MODE_ALWAYS, "GameMenu should be re-enabled (back to PROCESS_MODE_ALWAYS) once the dialogue ends")
+	assert(journal.process_mode == Node.PROCESS_MODE_ALWAYS, "Journal should be re-enabled once the dialogue ends")
 	assert(ActOneController.get_active_dialogue_id() == "", "the dialogue should have ended in ActOneController too")
 	print("OK: leaving the dialogue restores normal gameplay/menu input with nothing left focus-trapped")
+
+	# Signal-free save restoration must reconstruct a post-choice
+	# acknowledgement in the DialogueBox instead of leaving the controller
+	# active behind a hidden UI or replaying choice effects.
+	ActOneController.reset()
+	var objective: ObjectiveDefinition = load("res://data/story/act1/objective_gather_starter_wood.tres")
+	var dialogue: DialogueDefinition = load("res://data/story/act1/dialogue_moss_intro.tres")
+	var objectives: Array[ObjectiveDefinition] = [objective]
+	var dialogues: Array[DialogueDefinition] = [dialogue]
+	ActOneController.load_content(objectives, dialogues)
+	ActOneController.start_dialogue("moss_intro")
+	ActOneController.advance_dialogue()
+	ActOneController.choose("practical_start_together")
+	var acknowledgement_save := ActOneController.get_save_data()
+	ActOneController.reset()
+	ActOneController.load_content(objectives, dialogues)
+	ActOneController.load_from_save(acknowledgement_save)
+	dialogue_box.restore_from_state()
+	assert(dialogue_box.visible and get_tree().paused, "restoring active dialogue state should make its UI visible and pause gameplay")
+	assert(dialogue_box.text_label.text == "Practical. I can work with practical.")
+	assert(not dialogue_box.choices_container.visible and dialogue_box.continue_hint.visible, "a restored acknowledgement must not offer its choices again")
+	dialogue_box._unhandled_input(key_e)
+	assert(ActOneController.get_current_line().text.begins_with("Fine."), "the restored acknowledgement should advance normally")
+	dialogue_box._unhandled_input(key_e)
+	assert(not dialogue_box.visible and not get_tree().paused)
+	print("OK: DialogueBox restores the exact saved acknowledgement phase")
 
 	print("ALL DIALOGUE UI TESTS PASSED")
 	get_tree().quit()

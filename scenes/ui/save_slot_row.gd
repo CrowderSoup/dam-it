@@ -40,7 +40,7 @@ func _summarize(data: Dictionary) -> String:
 		if built:
 			dam_built += 1
 	var lodge_stage: int = data.get("lodge_stage", 0)
-	return "Dam %d/%d · Lodge %d/%d" % [dam_built, dam_built_data.size(), lodge_stage, GameState.LODGE_MAX_STAGE]
+	return "Dam %d/%d | Lodge %d/%d" % [dam_built, dam_built_data.size(), lodge_stage, GameState.LODGE_MAX_STAGE]
 
 func _on_continue_pressed() -> void:
 	slot_chosen.emit(slot_index)

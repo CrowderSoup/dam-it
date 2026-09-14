@@ -33,6 +33,10 @@ var _flags: Dictionary = {}            # flag name -> bool
 
 var _active_dialogue_id: String = ""
 var _active_line_index: int = -1
+## The choice whose acknowledgement is currently waiting for confirmation.
+## This is controller state (not just DialogueBox state) so saving after a
+## choice cannot replay its effects or lose the acknowledgement on reload.
+var _active_choice_id: String = ""
 
 ## The most recently started objective - what a HUD's "current objective"
 ## display should call out. Set only by start_objective() (never cleared by
@@ -120,6 +124,7 @@ func reset() -> void:
 	_flags.clear()
 	_active_dialogue_id = ""
 	_active_line_index = -1
+	_active_choice_id = ""
 	_current_objective_id = ""
 
 ## --- Flags -----------------------------------------------------------------
@@ -247,6 +252,20 @@ func _on_resource_changed(new_amount: int, resource_name: String) -> void:
 func get_active_dialogue_id() -> String:
 	return _active_dialogue_id
 
+func get_active_choice_id() -> String:
+	return _active_choice_id
+
+func get_active_choice_acknowledgement() -> String:
+	if _active_choice_id.is_empty():
+		return ""
+	var line := get_current_line()
+	if line == null:
+		return ""
+	for choice in line.choices:
+		if choice.id == _active_choice_id:
+			return choice.acknowledgement
+	return ""
+
 ## The DialogueLine currently on screen, or null if no dialogue is active.
 func get_current_line() -> DialogueLine:
 	if _active_dialogue_id.is_empty() or _active_line_index < 0:
@@ -272,6 +291,7 @@ func start_dialogue(id: String) -> void:
 		return
 	_active_dialogue_id = id
 	_active_line_index = -1
+	_active_choice_id = ""
 	dialogue_started.emit(id)
 	_advance_to_next_visible_line()
 
@@ -282,6 +302,7 @@ func start_dialogue(id: String) -> void:
 func choose(choice_id: String) -> void:
 	var line := get_current_line()
 	assert(line != null, "choose() called with no active dialogue line")
+	assert(_active_choice_id.is_empty(), "choose() called while a choice acknowledgement is still active")
 	var chosen: DialogueChoice = null
 	for choice in line.choices:
 		if choice.id == choice_id:
@@ -290,11 +311,13 @@ func choose(choice_id: String) -> void:
 	assert(chosen != null, "choose('%s') does not match any choice on the current line" % choice_id)
 	for effect in chosen.effects:
 		_apply_effect(effect)
+	_active_choice_id = chosen.id
 	dialogue_choice_made.emit(_active_dialogue_id, chosen.id, chosen.acknowledgement)
 
 ## Moves to the next reachable line, or ends the dialogue if none remain.
 func advance_dialogue() -> void:
 	assert(not _active_dialogue_id.is_empty(), "advance_dialogue() called with no active dialogue")
+	_active_choice_id = ""
 	_advance_to_next_visible_line()
 
 func _advance_to_next_visible_line() -> void:
@@ -304,6 +327,7 @@ func _advance_to_next_visible_line() -> void:
 		var line: DialogueLine = dialogue.lines[next_index]
 		if line.condition == null or line.condition.is_met(_flags, _objective_state):
 			_active_line_index = next_index
+			_active_choice_id = ""
 			for effect in line.effects:
 				_apply_effect(effect)
 			dialogue_line_shown.emit(_active_dialogue_id, _active_line_index)
@@ -312,6 +336,7 @@ func _advance_to_next_visible_line() -> void:
 	var finished_id := _active_dialogue_id
 	_active_dialogue_id = ""
 	_active_line_index = -1
+	_active_choice_id = ""
 	dialogue_ended.emit(finished_id)
 
 ## --- Save / load -------------------------------------------------------------
@@ -335,8 +360,10 @@ func get_save_data() -> Dictionary:
 	return {
 		"flags": _flags.duplicate(),
 		"objectives": objectives_data,
+		"current_objective_id": _current_objective_id,
 		"active_dialogue_id": _active_dialogue_id,
 		"active_dialogue_line": _active_line_index,
+		"active_dialogue_choice": _active_choice_id,
 	}
 
 ## Restores flags/objective progress/the active dialogue+line from a "story"
@@ -348,12 +375,14 @@ func get_save_data() -> Dictionary:
 ## player-safe fallback: the player just sees that flag/objective/dialogue
 ## as never having happened, instead of a crash.
 ##
-## Silent like GameState.load_from_save() - no signals fire here. There's no
-## dialogue/objective UI yet to react to them (see dialogue-schema.md); when
-## one exists (issue #18) it should read state via the getters below once,
-## after loading, the same way HUD does via GameState.announce_loaded_state().
+## Silent like GameState.load_from_save() - no signals fire here. Main asks
+## HUD and DialogueBox to rebuild once after loading, the same pattern HUD
+## uses for GameState.announce_loaded_state().
 func load_from_save(data: Dictionary) -> void:
 	_flags.clear()
+	for id in _objective_state.keys():
+		_objective_state[id] = {"status": "inactive", "current": 0}
+	_current_objective_id = ""
 	var saved_flags: Variant = data.get("flags", {})
 	if saved_flags is Dictionary:
 		for flag_name in saved_flags.keys():
@@ -375,8 +404,21 @@ func load_from_save(data: Dictionary) -> void:
 			if current is int or current is float:
 				_objective_state[id]["current"] = int(current)
 
+	var saved_current_objective: Variant = data.get("current_objective_id", "")
+	if saved_current_objective is String and _objective_state.has(saved_current_objective) \
+			and _objective_state[saved_current_objective]["status"] != "inactive":
+		_current_objective_id = saved_current_objective
+	else:
+		# Version-2 saves written before the journal existed do not have an
+		# explicit current id. Registration order is story order, so the last
+		# objective that had started is the compatible fallback.
+		for id in _objective_state.keys():
+			if _objective_state[id]["status"] != "inactive":
+				_current_objective_id = id
+
 	_active_dialogue_id = ""
 	_active_line_index = -1
+	_active_choice_id = ""
 	var saved_dialogue_id: Variant = data.get("active_dialogue_id", "")
 	if saved_dialogue_id is String and not saved_dialogue_id.is_empty() and _dialogues.has(saved_dialogue_id):
 		var saved_line_index: Variant = data.get("active_dialogue_line", -1)
@@ -385,6 +427,12 @@ func load_from_save(data: Dictionary) -> void:
 		if index >= 0 and index < dialogue.lines.size():
 			_active_dialogue_id = saved_dialogue_id
 			_active_line_index = index
+			var saved_choice_id: Variant = data.get("active_dialogue_choice", "")
+			if saved_choice_id is String and not saved_choice_id.is_empty():
+				for choice in dialogue.lines[index].choices:
+					if choice.id == saved_choice_id:
+						_active_choice_id = saved_choice_id
+						break
 		# else: out-of-range/malformed line index - same player-safe fallback
 		# as an unknown id, drop back to no active dialogue rather than crash.
 

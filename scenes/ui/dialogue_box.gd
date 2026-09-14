@@ -76,6 +76,24 @@ func _on_dialogue_ended(_id: String) -> void:
 	hide()
 	get_tree().paused = false
 
+## Save loading is intentionally signal-free, so Main calls this once after
+## applying a save. Rebuild the visible phase from controller state: either
+## the line/choices, or the acknowledgement of an already-applied choice.
+func restore_from_state() -> void:
+	if ActOneController.get_active_dialogue_id().is_empty():
+		return
+	show()
+	get_tree().paused = true
+	var acknowledgement := ActOneController.get_active_choice_acknowledgement()
+	if acknowledgement.is_empty():
+		_render_current_line()
+	else:
+		_showing_choices = false
+		choices_container.hide()
+		text_label.text = acknowledgement
+		continue_hint.show()
+		_refresh_continue_hint()
+
 func _render_current_line() -> void:
 	var line := ActOneController.get_current_line()
 	if line == null:

@@ -45,6 +45,7 @@ const TUTORIAL_JOURNAL := "journal"
 var _toast_generation := 0
 var _tutorial_generation := 0
 var _current_tutorial_id := ""
+var _pending_tutorial_ids: Array[String] = []
 
 func _ready() -> void:
 	GameState.wood_changed.connect(_on_wood_changed)
@@ -74,6 +75,21 @@ func _ready() -> void:
 	tutorial_background.gui_input.connect(_on_tutorial_gui_input)
 	objective_background.gui_input.connect(_on_objective_gui_input)
 	_show_tutorial(TUTORIAL_MOVE)
+
+## Main calls this after its silent save restore. Child _ready() runs before
+## Main can load GameState/ActOneController, so rebuild tutorial visibility
+## and the objective banner from the restored state rather than leaving a
+## returning player with fresh-game UI.
+func restore_from_state() -> void:
+	_current_tutorial_id = ""
+	_pending_tutorial_ids.clear()
+	_tutorial_generation += 1
+	tutorial_label.hide()
+	tutorial_background.hide()
+	_refresh_objective_display()
+	_show_tutorial(TUTORIAL_MOVE)
+	if not ActOneController.get_current_objective_id().is_empty():
+		_show_tutorial(TUTORIAL_JOURNAL)
 
 ## Dismisses whatever tutorial is currently showing the moment the player
 ## actually does the thing it was teaching - without consuming the event, so
@@ -230,7 +246,7 @@ func _refresh_objective_display() -> void:
 	var status := ActOneController.get_objective_status(id)
 	var text := objective.title
 	if status == "completed":
-		text = "✓ " + text
+		text = "[Done] " + text
 	elif objective.completion_type == ObjectiveDefinition.CompletionType.RESOURCE_AT_LEAST:
 		text += " (%d/%d)" % [ActOneController.get_objective_progress(id), objective.target_amount]
 	objective_label.text = text
@@ -260,10 +276,16 @@ func _tutorial_text(id: String) -> String:
 		_:
 			return ""
 
-## No-op if `id` was already seen (or is already the one showing) - safe to
-## call from a signal handler that might fire many times.
+## No-op if `id` was already seen or queued. A newly relevant tutorial waits
+## behind the one already on screen instead of replacing it: Main starts the
+## first objective during its own _ready(), just after this HUD presents the
+## movement tutorial, so replacement would make a fresh player skip movement
+## help entirely.
 func _show_tutorial(id: String) -> void:
-	if GameState.has_seen_tutorial(id) or _current_tutorial_id == id:
+	if GameState.has_seen_tutorial(id) or _current_tutorial_id == id or id in _pending_tutorial_ids:
+		return
+	if not _current_tutorial_id.is_empty():
+		_pending_tutorial_ids.append(id)
 		return
 	_current_tutorial_id = id
 	_tutorial_generation += 1
@@ -283,6 +305,14 @@ func _dismiss_tutorial() -> void:
 	_current_tutorial_id = ""
 	tutorial_label.hide()
 	tutorial_background.hide()
+	_show_next_tutorial()
+
+func _show_next_tutorial() -> void:
+	while not _pending_tutorial_ids.is_empty():
+		var next_id: String = _pending_tutorial_ids.pop_front()
+		if not GameState.has_seen_tutorial(next_id):
+			_show_tutorial(next_id)
+			return
 
 func _on_tutorial_gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:

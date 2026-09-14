@@ -84,8 +84,8 @@ func _ready() -> void:
 	GameState.add_wood(2)
 	assert(hud.objective_label.text == "Gather More Wood (2/5)", "objective_progress_changed should refresh the HUD label, got: %s" % hud.objective_label.text)
 	GameState.add_wood(3)
-	assert(hud.objective_label.text == "✓ Gather More Wood", "a completed objective should show a checkmark and drop its progress numbers, got: %s" % hud.objective_label.text)
-	print("OK: HUD's objective label tracks live progress and flips to a checkmark on completion")
+	assert(hud.objective_label.text == "[Done] Gather More Wood", "a completed objective should use the Web-safe done marker and drop its progress numbers, got: %s" % hud.objective_label.text)
+	print("OK: HUD's objective label tracks live progress and uses a Web-safe completion marker")
 
 	ActOneController.reset()
 	hud._refresh_objective_display()
@@ -120,10 +120,10 @@ func _ready() -> void:
 	assert(get_tree().paused, "opening the journal should pause the tree")
 	assert(journal.list.item_count == 2, "the journal should list the active and completed objectives but skip the one that never started, got %d items" % journal.list.item_count)
 	assert(journal.list.get_item_text(0).ends_with("Currently Active"), "got: %s" % journal.list.get_item_text(0))
-	assert(journal.list.get_item_text(0).begins_with("●"), "an active objective's entry should be marked, not checkmarked")
+	assert(journal.list.get_item_text(0).begins_with("> "), "an active objective's entry should have an ASCII marker")
 	assert(journal.list.get_item_text(1).ends_with("Already Done"), "got: %s" % journal.list.get_item_text(1))
-	assert(journal.list.get_item_text(1).begins_with("✓"), "a completed objective's entry should be checkmark-prefixed")
-	print("OK: the journal lists every started objective in plain language, skipping ones that never started")
+	assert(journal.list.get_item_text(1).begins_with("[Done] "), "a completed objective's entry should have an ASCII done marker")
+	print("OK: the journal uses Web-safe ASCII markers and skips objectives that never started")
 
 	journal.list.select(1)
 	journal._on_item_selected(1)
@@ -219,6 +219,17 @@ func _ready() -> void:
 	assert(GameState.has_seen_tutorial(hud3.TUTORIAL_INTERACT))
 	print("OK: performing the taught action dismisses its tutorial (without consuming the input) and marks it seen")
 
+	# The longest current interaction reason must wrap inside its panel rather
+	# than escaping the 640px viewport (issue #32's second screenshot).
+	var long_option := InteractionOption.new("Chop", func(): pass, false, GameState.pouch_full_message("wood"))
+	hud3.set_action_prompt(long_option)
+	await get_tree().process_frame
+	var viewport_rect := Rect2(Vector2.ZERO, Vector2(640, 360))
+	assert(viewport_rect.encloses(hud3.action_prompt_background.get_rect()), "the action-prompt panel must stay inside the base viewport")
+	assert(viewport_rect.encloses(hud3.action_prompt_label.get_rect()), "the wrapped action-prompt label must stay inside the base viewport")
+	assert(hud3.action_prompt_label.autowrap_mode != TextServer.AUTOWRAP_OFF, "longer future prompts must wrap instead of drawing beyond their panel")
+	print("OK: long action prompts stay inside a bounded, wrapping panel")
+
 	# The journal tutorial appears the moment the player's first objective starts.
 	assert(not GameState.has_seen_tutorial(hud3.TUTORIAL_JOURNAL))
 	var trigger_objective := ObjectiveDefinition.new()
@@ -230,6 +241,13 @@ func _ready() -> void:
 	ActOneController.start_objective("test_journal_tutorial_trigger")
 	assert(hud3.tutorial_label.visible and hud3.tutorial_label.text.findn("journal") != -1, "starting the first objective should surface the journal tutorial, got: %s" % hud3.tutorial_label.text)
 	print("OK: the journal tutorial appears the moment the first objective starts")
+
+	# A second tutorial becoming relevant cannot replace the one being read.
+	var queued_test_tutorial := "queued_test"
+	hud3._show_tutorial(queued_test_tutorial)
+	assert(hud3._current_tutorial_id == hud3.TUTORIAL_JOURNAL, "a visible tutorial should remain on screen until dismissed")
+	assert(queued_test_tutorial in hud3._pending_tutorial_ids, "the later tutorial should wait in sequence")
+	print("OK: simultaneous tutorial triggers queue instead of overwriting fresh-player guidance")
 
 	print("ALL JOURNAL TESTS PASSED")
 	get_tree().quit()

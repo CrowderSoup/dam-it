@@ -101,12 +101,15 @@ dialog_text = "Start a new game? This will erase your current progress."
 [node name="ControlsDialog" type="AcceptDialog" parent="."]
 title = "Controls"
 initial_position = 1
-size = Vector2i(360, 200)
-dialog_text = "Keyboard: WASD/Arrows move, E/Space interact, Esc pause, R new game (confirms first)
+size = Vector2i(420, 300)
+dialog_text = "Keyboard: Move WASD/Arrows; interact E/Space;
+pause Esc; new game R (asks first).
 
-Gamepad: D-pad/Left Stick move, A interact, Start/Back pause
+Gamepad: Move D-pad/Left Stick; interact A;
+pause Start/Back.
 
-In conversation: interact/click advances or confirms a highlighted response; arrows/D-pad/stick change which response is highlighted"
+Conversation: Interact/click advances or confirms;
+Arrows/D-pad/Stick choose a response."
 
 [connection signal="pressed" from="Panel/CloseButton" to="." method="_on_resume_pressed"]
 [connection signal="pressed" from="Panel/VBoxContainer/ResumeButton" to="." method="_on_resume_pressed"]
