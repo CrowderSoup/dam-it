@@ -278,6 +278,80 @@ func _advance_to_next_visible_line() -> void:
 	_active_line_index = -1
 	dialogue_ended.emit(finished_id)
 
+## --- Save / load -------------------------------------------------------------
+## Serializes the "story" section of the version 2 campaign save payload -
+## see docs/design/dialogue-schema.md#save-load. Main.get_save_data()/
+## apply_save_data() own assembling/dispatching the full payload; this is
+## just ActOneController's own slice of it, the same split GameState uses
+## for its own load_from_save().
+
+## Flags/objective progress/the active dialogue+line, ready to drop under a
+## "story" key in the save payload. The active dialogue's line index is the
+## mid-dialogue boundary: a save always lands on a fully-applied line (never
+## mid-effect, since choose()/_advance_to_next_visible_line() apply a line's
+## effects synchronously before returning), so restoring it just needs to
+## re-point at that same line - see load_from_save().
+func get_save_data() -> Dictionary:
+	var objectives_data: Dictionary = {}
+	for id in _objective_state.keys():
+		var state: Dictionary = _objective_state[id]
+		objectives_data[id] = {"status": state["status"], "current": state["current"]}
+	return {
+		"flags": _flags.duplicate(),
+		"objectives": objectives_data,
+		"active_dialogue_id": _active_dialogue_id,
+		"active_dialogue_line": _active_line_index,
+	}
+
+## Restores flags/objective progress/the active dialogue+line from a "story"
+## save section. Must run after load_content() has registered this
+## session's content, since objective/dialogue ids are only restored if
+## they're still known - an id the save references that no longer exists
+## (removed or renamed content, or a save from before any content is
+## registered) is silently skipped rather than failing, the documented
+## player-safe fallback: the player just sees that flag/objective/dialogue
+## as never having happened, instead of a crash.
+##
+## Silent like GameState.load_from_save() - no signals fire here. There's no
+## dialogue/objective UI yet to react to them (see dialogue-schema.md); when
+## one exists (issue #18) it should read state via the getters below once,
+## after loading, the same way HUD does via GameState.announce_loaded_state().
+func load_from_save(data: Dictionary) -> void:
+	_flags.clear()
+	var saved_flags: Variant = data.get("flags", {})
+	if saved_flags is Dictionary:
+		for flag_name in saved_flags.keys():
+			if flag_name is String and saved_flags[flag_name] is bool:
+				_flags[flag_name] = saved_flags[flag_name]
+
+	var saved_objectives: Variant = data.get("objectives", {})
+	if saved_objectives is Dictionary:
+		for id in saved_objectives.keys():
+			if not (id is String) or not _objective_state.has(id):
+				continue
+			var entry: Variant = saved_objectives[id]
+			if not entry is Dictionary:
+				continue
+			var status: Variant = entry.get("status", "inactive")
+			if status is String and status in ["inactive", "active", "completed"]:
+				_objective_state[id]["status"] = status
+			var current: Variant = entry.get("current", 0)
+			if current is int or current is float:
+				_objective_state[id]["current"] = int(current)
+
+	_active_dialogue_id = ""
+	_active_line_index = -1
+	var saved_dialogue_id: Variant = data.get("active_dialogue_id", "")
+	if saved_dialogue_id is String and not saved_dialogue_id.is_empty() and _dialogues.has(saved_dialogue_id):
+		var saved_line_index: Variant = data.get("active_dialogue_line", -1)
+		var index: int = int(saved_line_index) if (saved_line_index is int or saved_line_index is float) else -1
+		var dialogue: DialogueDefinition = _dialogues[saved_dialogue_id]
+		if index >= 0 and index < dialogue.lines.size():
+			_active_dialogue_id = saved_dialogue_id
+			_active_line_index = index
+		# else: out-of-range/malformed line index - same player-safe fallback
+		# as an unknown id, drop back to no active dialogue rather than crash.
+
 func _apply_effect(effect: StoryEffect) -> void:
 	match effect.type:
 		StoryEffect.Type.SET_FLAG:

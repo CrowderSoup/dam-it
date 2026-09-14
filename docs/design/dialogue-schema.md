@@ -154,6 +154,52 @@ Key API:
   `objective_completed`, `dialogue_started`, `dialogue_line_shown`,
   `dialogue_choice_made`, `dialogue_ended`.
 
+## Save/load
+
+Status: **Implemented** (issue #8). Covers persistence only - there is still
+no dialogue/objective UI to load *into* (issue #18); this is what lets a
+future one resume correctly once it exists.
+
+`SaveManager` (`scripts/autoload/save_manager.gd`) owns the save file and its
+`save_version`, but not what's in the payload - that's assembled by
+`Main.get_save_data()`/`apply_save_data()` from `GameState` and
+`ActOneController`. Version 2 adds a `"story"` section, produced by
+`ActOneController.get_save_data()`:
+
+```gdscript
+"story": {
+    "flags": {"met_moss": true, ...},            # flag name -> bool
+    "objectives": {                                # objective id -> progress
+        "gather_starter_wood": {"status": "active", "current": 3},
+    },
+    "active_dialogue_id": "moss_intro",           # "" if none active
+    "active_dialogue_line": 1,                    # index into that dialogue's lines, -1 if none active
+}
+```
+
+**The mid-dialogue boundary**: a `DialogueLine`'s effects apply synchronously
+the moment it's shown (`_advance_to_next_visible_line()`), so a session is
+never saved "mid-effect" - only ever sitting on a fully-applied line, waiting
+for `advance_dialogue()` or `choose()`. Saving the active dialogue's id and
+line index is therefore enough to resume exactly there; `load_from_save()`
+just re-points at that line without replaying anything.
+
+**Restoring unknown ids** (an objective or dialogue id the save references
+that isn't registered - removed/renamed content, or a save taken before any
+content was loaded) is the documented player-safe fallback:
+`ActOneController.load_from_save()` silently skips that id rather than
+failing, so at worst the player loses an in-progress flag/objective/dialogue
+instead of hitting a crash.
+
+**Migrating version 1 saves**: version 1 (every save before this) has no
+`"story"` key at all. `SaveManager._migrate_v1_to_v2()` (in
+`scripts/autoload/save_manager.gd`) adds the section at its empty default -
+narratively a no-op, since a v1 save was always written before any Act I
+content existed to have flags or an active dialogue against. Migrations are
+explicit, named functions keyed by source version in `SaveManager._MIGRATIONS`
+and covered in `tests/smoke_test.gd`; a version with no registered migration
+is treated as unreadable (`peek_slot()` returns `{}`) rather than guessed at.
+
 ## The fixture
 
 `data/story/act1/` contains the worked example this schema was designed
