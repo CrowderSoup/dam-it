@@ -1,6 +1,21 @@
 extends CharacterBody2D
 ## The player-controlled beaver: movement, chopping trees, and building dam
 ## pieces via a single context-sensitive interact action.
+##
+## What "interact" actually does is never decided here - see
+## interaction_option.gd: every nearby interactable exposes a
+## get_interaction() contract (label, cost, whether it'll succeed, why not
+## if it won't), and this script just resolves the nearest one, shows it,
+## and presses it. Main wires interaction_option_changed/interaction_failed
+## to HUD so the action prompt and any failure toast stay decoupled from
+## Player itself.
+
+## The live "what would pressing interact do right now" prompt - null when
+## nothing's nearby. HUD.set_action_prompt() renders this.
+signal interaction_option_changed(option: InteractionOption)
+## Fired when interact was pressed but the resolved action couldn't
+## succeed, carrying the same reason the prompt was already showing.
+signal interaction_failed(reason: String)
 
 const SPEED := 140.0
 const WORLD_BOUNDS := Rect2(20, 20, 1360, 760)
@@ -75,8 +90,7 @@ func _unhandled_input(event: InputEvent) -> void:
 ## group, so the overlap result is the area, not the interactable itself;
 ## dam slots, the Lodge, garden spots, raccoons, berry bushes, and pond
 ## plants ARE the Area2D, so no indirection is needed. This resolves any of
-## them to the node that actually has chop()/mine()/build()/advance()/
-## harvest()/eat()/feed()/set_highlighted().
+## them to the node that actually has get_interaction()/set_highlighted().
 func _resolve_target(area: Area2D) -> Node:
 	if area.is_in_group("tree_areas") or area.is_in_group("rock_areas"):
 		return area.get_parent()
@@ -88,33 +102,16 @@ func _try_interact() -> void:
 	var target := _nearest_interaction_target()
 	if target == null:
 		return
-	if target.is_in_group("trees"):
-		target.chop()
-	elif target.is_in_group("rocks"):
-		target.mine()
-	elif target.is_in_group("dam_slots"):
-		if target.can_build() and GameState.can_afford_dam_piece():
-			GameState.spend_resources_on_dam_piece()
-			target.build()
-		elif target.can_repair() and GameState.can_afford_dam_piece():
-			GameState.spend_resources_on_repair()
-			target.repair()
-	elif target.is_in_group("lodge"):
-		if target.can_advance() and GameState.can_afford_lodge_stage():
-			target.advance()
-		elif target.can_rest():
-			target.rest()
-		elif target.can_upgrade_pouch():
-			target.upgrade_pouch()
-	elif target.is_in_group("garden_spots"):
-		if target.can_build() and GameState.can_afford(GardenSpot.WOOD_COST, GardenSpot.STONE_COST):
-			target.build()
-	elif target.is_in_group("raccoons") and target.can_feed():
-		target.feed()
-	elif target.is_in_group("berry_bushes") and target.can_harvest():
-		target.harvest()
-	elif target.is_in_group("pond_plants") and target.can_eat():
-		target.eat()
+	var option: InteractionOption = target.get_interaction()
+	if option == null:
+		return
+	# Always safe to call - every get_interaction() implementation predicts
+	# `available` from the same checks its action method re-runs itself
+	# (see e.g. Tree.chop()/DamSlot.build()), so this can never double-spend
+	# or act on stale state even if something changed between the two calls.
+	option.perform.call()
+	if not option.available and not option.reason.is_empty():
+		interaction_failed.emit(option.reason)
 
 func _nearest_interaction_target() -> Node:
 	var nearest: Node = null
@@ -131,10 +128,15 @@ func _nearest_interaction_target() -> Node:
 
 func _update_highlight() -> void:
 	var nearest := _nearest_interaction_target()
-	if nearest == _highlighted_target:
-		return
-	if _highlighted_target and is_instance_valid(_highlighted_target):
-		_highlighted_target.set_highlighted(false)
-	if nearest:
-		nearest.set_highlighted(true)
-	_highlighted_target = nearest
+	if nearest != _highlighted_target:
+		if _highlighted_target and is_instance_valid(_highlighted_target):
+			_highlighted_target.set_highlighted(false)
+		if nearest:
+			nearest.set_highlighted(true)
+		_highlighted_target = nearest
+	# Recomputed every frame (not just on target change) since a target's
+	# own affordability can change while the player just stands there -
+	# e.g. gathering enough wood/stone to finally afford the dam piece
+	# they're already next to.
+	var option: InteractionOption = nearest.get_interaction() if nearest else null
+	interaction_option_changed.emit(option)

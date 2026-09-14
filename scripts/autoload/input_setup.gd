@@ -1,7 +1,23 @@
 extends Node
 ## Registers custom input actions in code (rather than as hand-edited
 ## resource literals in project.godot) so movement/interact bindings stay
-## simple to read and change. Autoloaded as "InputSetup".
+## simple to read and change. Also tracks which input device the player is
+## actually using, so HUD's action prompt (see hud.gd/interaction_option.gd)
+## can show "[E]" or the gamepad button rather than guessing. Autoloaded as
+## "InputSetup".
+
+## Emitted whenever the active input device flips between keyboard/mouse and
+## gamepad - HUD doesn't need this directly (it just reads uses_gamepad()
+## each time it redraws the action prompt), but it's here for anything that
+## wants to react live.
+signal input_device_changed(is_gamepad: bool)
+
+## Analog stick drift/noise below this shouldn't be enough to flip the
+## prompt away from keyboard just because a controller happens to be
+## plugged in.
+const JOY_AXIS_DEADZONE := 0.5
+
+var _uses_gamepad := false
 
 func _ready() -> void:
 	_bind("move_up", KEY_W, KEY_UP)
@@ -55,3 +71,29 @@ func _add_joy_axis(action_name: String, axis: JoyAxis, axis_sign: float) -> void
 	event.axis = axis
 	event.axis_value = axis_sign
 	InputMap.action_add_event(action_name, event)
+
+## Whichever device last produced a real (non-noise) input event - used to
+## pick which glyph HUD's action prompt shows for "interact".
+func uses_gamepad() -> bool:
+	return _uses_gamepad
+
+## The player-facing label for the "interact" action under the currently
+## active input device. Text-only (no button glyph assets in this project),
+## matching the actual bindings in _ready() above.
+func interact_prompt() -> String:
+	return "A" if _uses_gamepad else "E"
+
+func _input(event: InputEvent) -> void:
+	if event is InputEventJoypadButton:
+		_set_uses_gamepad(true)
+	elif event is InputEventJoypadMotion:
+		if absf(event.axis_value) >= JOY_AXIS_DEADZONE:
+			_set_uses_gamepad(true)
+	elif event is InputEventKey:
+		_set_uses_gamepad(false)
+
+func _set_uses_gamepad(value: bool) -> void:
+	if _uses_gamepad == value:
+		return
+	_uses_gamepad = value
+	input_device_changed.emit(value)

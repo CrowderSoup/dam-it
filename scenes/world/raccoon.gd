@@ -54,6 +54,14 @@ func set_highlighted(value: bool) -> void:
 func can_feed() -> bool:
 	return _active and GameState.berries > 0
 
+## See interaction_option.gd. Null while no raccoon is around to feed.
+func get_interaction() -> InteractionOption:
+	if not _active:
+		return null
+	var available := GameState.berries > 0
+	var reason := "" if available else "No berries to feed it"
+	return InteractionOption.new("Feed", feed, available, reason, {"berries": FEED_BERRIES_COST})
+
 func feed() -> void:
 	if not can_feed():
 		return
