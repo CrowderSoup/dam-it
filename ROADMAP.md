@@ -170,7 +170,8 @@ building content that may not belong.
 
 #### Product decisions
 
-Approved brief: [Milestone 0 — Product Decisions](PRODUCT_DECISIONS.md). Record
+Approved brief:
+[Milestone 0 — Product Decisions](docs/design/product-decisions.md). Record
 future revisions there so implementation does not silently change the product.
 
 - [x] Approve or revise the north-star pitch and 2–4 hour target.
