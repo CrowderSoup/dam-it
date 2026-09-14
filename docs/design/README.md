@@ -14,6 +14,7 @@ document before they alter implementation scope.
 | [Detailed story outline](story-outline.md) | Full interview-derived story beats and constraints | Approved |
 | [Cast](cast.md) | Names, desires, conflicts, relationship changes, habitat payoffs, and voices | Approved |
 | [Dialogue style](dialogue-style.md) | Length, humor, reading level, interruptions, and player-response rules | Approved |
+| [Dialogue and objective schema](dialogue-schema.md) | Data-driven dialogue/objective Resource schema and the ActOneController runtime | Implemented |
 
 ## Systems and visuals
 

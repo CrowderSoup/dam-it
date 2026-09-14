@@ -1,0 +1,58 @@
+[gd_resource type="Resource" script_class="DialogueDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/story/dialogue_line.gd" id="1_v2ow3"]
+[ext_resource type="Script" path="res://scripts/story/dialogue_choice.gd" id="2_6dvoy"]
+[ext_resource type="Script" path="res://scripts/story/story_effect.gd" id="3_xw20q"]
+[ext_resource type="Script" path="res://scripts/story/dialogue_definition.gd" id="4_q2c4n"]
+
+[sub_resource type="Resource" id="Resource_ksi20"]
+script = ExtResource("1_v2ow3")
+text = "You're the beaver who's been poking at that old dam. I've watched three floods and two droughts from this puddle."
+
+[sub_resource type="Resource" id="Resource_226v6"]
+script = ExtResource("3_xw20q")
+target_id = "met_moss"
+
+[sub_resource type="Resource" id="Resource_eckc0"]
+script = ExtResource("2_6dvoy")
+id = "earnest_stay_for_everyone"
+text = "I want to bring the water back for everyone here, not just me."
+acknowledgement = "...We'll see if that holds past the first hard week."
+effects = Array[ExtResource("3_xw20q")]([SubResource("Resource_226v6")])
+
+[sub_resource type="Resource" id="Resource_3t6nf"]
+script = ExtResource("2_6dvoy")
+id = "practical_start_together"
+tone = 1
+text = "One repaired dam is a start. Let's find out together."
+acknowledgement = "Practical. I can work with practical."
+effects = Array[ExtResource("3_xw20q")]([SubResource("Resource_226v6")])
+
+[sub_resource type="Resource" id="Resource_4qg18"]
+script = ExtResource("2_6dvoy")
+id = "playful_lucky_you"
+tone = 2
+text = "Lucky for you, I happen to know a good dam-builder."
+acknowledgement = "That confidence again. Let's see it fed."
+effects = Array[ExtResource("3_xw20q")]([SubResource("Resource_226v6")])
+
+[sub_resource type="Resource" id="Resource_kv0pn"]
+script = ExtResource("1_v2ow3")
+text = "Everyone who visits promises the water will come back. It never does."
+choices = Array[ExtResource("2_6dvoy")]([SubResource("Resource_eckc0"), SubResource("Resource_3t6nf"), SubResource("Resource_4qg18")])
+
+[sub_resource type="Resource" id="Resource_ique5"]
+script = ExtResource("3_xw20q")
+type = 2
+target_id = "gather_starter_wood"
+
+[sub_resource type="Resource" id="Resource_em67l"]
+script = ExtResource("1_v2ow3")
+text = "Fine. If you're staying, you'll need wood before I trust your word. Start gathering, and I'll be watching."
+effects = Array[ExtResource("3_xw20q")]([SubResource("Resource_ique5")])
+
+[resource]
+script = ExtResource("4_q2c4n")
+id = "moss_intro"
+speaker = "moss"
+lines = Array[ExtResource("1_v2ow3")]([SubResource("Resource_ksi20"), SubResource("Resource_kv0pn"), SubResource("Resource_em67l")])

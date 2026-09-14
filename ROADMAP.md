@@ -223,7 +223,7 @@ together in a polished 30–45 minute chapter.
 - [ ] Add a dialogue presentation that supports keyboard, mouse, and gamepad.
 - [ ] Add named speakers, portraits or expressive poses, and concise branching
   acknowledgements where useful.
-- [ ] Add data-driven dialogue and objective definitions so writing does not
+- [x] Add data-driven dialogue and objective definitions so writing does not
   require editing gameplay scripts.
 - [ ] Add story flags and objective progress to the save format, including a
   migration path from existing demo saves.

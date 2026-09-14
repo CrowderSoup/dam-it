@@ -19,6 +19,7 @@ config/icon="res://icon.svg"
 [autoload]
 
 GameState="*res://scripts/autoload/game_state.gd"
+ActOneController="*res://scripts/autoload/act_one_controller.gd"
 InputSetup="*res://scripts/autoload/input_setup.gd"
 Sfx="*res://scripts/autoload/sfx.gd"
 Fx="*res://scripts/autoload/fx.gd"

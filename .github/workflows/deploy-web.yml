@@ -35,6 +35,7 @@ jobs:
         run: |
           godot --headless --editor --path . --quit
           timeout 60s godot --headless --path . tests/smoke_test.tscn
+          timeout 60s godot --headless --path . tests/story_test.tscn
 
   export:
     name: Export Web build
