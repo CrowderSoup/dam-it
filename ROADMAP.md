@@ -2,7 +2,7 @@
 
 Last reviewed: 2026-09-14
 
-Current phase: **Milestone 0 — Vision lock**
+Current phase: **Milestone 1 — Act I narrative vertical slice**
 
 This roadmap turns the existing playable demo into a small, complete cozy
 narrative builder. It is both a product definition and a development tracker:

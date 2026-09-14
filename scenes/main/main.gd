@@ -46,7 +46,7 @@ func _ready() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("restart"):
-		_start_new_game()
+		game_menu.request_new_game()
 
 ## Shared by the "restart" shortcut and the game menu's "New Game" button.
 func _start_new_game() -> void:
