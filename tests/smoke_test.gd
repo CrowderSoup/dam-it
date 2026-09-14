@@ -9,10 +9,13 @@ extends Node
 ## SCRIPT ERROR: Assertion failed on the first broken behavior.
 
 func _ready() -> void:
-	# A stray real save file (from manual/live testing on this machine, or a
-	# previous run of this test) would otherwise get loaded into `main`
-	# below and silently invalidate every assertion that follows.
-	SaveManager.delete_save()
+	# A stray real save file in slot 1 (from manual/live testing on this
+	# machine, or a previous run of this test) would otherwise get loaded
+	# into `main` below and silently invalidate every assertion that
+	# follows. Main no longer auto-loads without a session, so begin one
+	# first - the same thing the title screen does when a slot is picked.
+	SaveManager.begin_session(1)
+	SaveManager.delete_save(1)
 
 	var main_scene: PackedScene = load("res://scenes/main/main.tscn")
 	var main: Node = main_scene.instantiate()
@@ -28,6 +31,7 @@ func _ready() -> void:
 	var raccoon: Raccoon = main.get_node("Raccoon")
 	var hud: CanvasLayer = main.get_node("HUD")
 	var berry_bush1: Area2D = main.get_node("BerryBushes/BerryBush1")
+	var cattail1: PondPlant = main.get_node("PondPlants/Cattail1")
 
 	assert(GameState.dam_pieces_total == 5, "expected 5 dam slots, got %d" % GameState.dam_pieces_total)
 	print("OK: dam_pieces_total == 5")
@@ -77,16 +81,25 @@ func _ready() -> void:
 	assert(not GameState.is_tired())
 	print("OK: spend_energy()/restore_energy() clamp correctly and is_tired() reflects the threshold")
 
-	assert(berry_bush1.can_eat(), "a fresh berry bush should be eatable")
+	assert(berry_bush1.can_harvest(), "a fresh berry bush should be harvestable")
 	assert(player._resolve_target(berry_bush1) == berry_bush1)
-	GameState.spend_energy(50.0)
-	var energy_before_eat := GameState.energy
-	berry_bush1.eat()
-	assert(GameState.energy == energy_before_eat + BerryBush.ENERGY_RESTORE, "eating should restore ENERGY_RESTORE energy")
-	assert(not berry_bush1.can_eat(), "a just-eaten bush should not be eatable again until it respawns")
-	berry_bush1.eat()
-	assert(GameState.energy == energy_before_eat + BerryBush.ENERGY_RESTORE, "eating a picked bush should be a no-op")
-	print("OK: eating a berry bush restores energy once, then blocks re-eating until it respawns")
+	var berries_before_harvest := GameState.berries
+	var energy_before_harvest := GameState.energy
+	berry_bush1.harvest()
+	assert(GameState.berries == berries_before_harvest + BerryBush.HARVEST_AMOUNT, "harvesting should add HARVEST_AMOUNT berries")
+	assert(GameState.energy == energy_before_harvest, "harvesting berries should not restore energy - that's cattails/lilies now")
+	assert(not berry_bush1.can_harvest(), "a just-harvested bush should not be harvestable again until it respawns")
+	berry_bush1.harvest()
+	assert(GameState.berries == berries_before_harvest + BerryBush.HARVEST_AMOUNT, "harvesting a picked bush should be a no-op")
+	print("OK: harvesting a berry bush stockpiles berries once, then blocks re-harvesting until it respawns")
+
+	# --- Ambient energy drain is gated behind the pond (dam completion) ---
+	assert(not GameState.is_dam_complete(), "dam should not be complete yet")
+	assert(not cattail1.visible, "pond plants should stay hidden before the dam is complete")
+	var energy_before_ambient := GameState.energy
+	player._physics_process(player.AMBIENT_DRAIN_INTERVAL + 1.0)
+	assert(GameState.energy == energy_before_ambient, "ambient energy drain should not run before the dam/pond exists")
+	print("OK: energy does not drain before the dam is finished")
 
 	assert(not lodge.visible, "lodge should be hidden before the dam is finished")
 	assert(not lodge.can_advance())
@@ -125,6 +138,25 @@ func _ready() -> void:
 
 	assert(lodge.visible, "lodge should appear once the dam is complete")
 	print("OK: lodge appears once the dam is complete")
+
+	# --- Pond plants appear once the pond does, and ambient drain kicks in ---
+	assert(GameState.is_dam_complete())
+	assert(cattail1.visible, "pond plants should appear once the dam/pond is complete")
+	assert(cattail1.can_eat(), "a fresh pond plant should be eatable")
+	assert(player._resolve_target(cattail1) == cattail1)
+	GameState.spend_energy(50.0)
+	var energy_before_pond_eat := GameState.energy
+	cattail1.eat()
+	assert(GameState.energy == energy_before_pond_eat + PondPlant.ENERGY_RESTORE, "eating a pond plant should restore ENERGY_RESTORE energy")
+	assert(not cattail1.can_eat(), "a just-eaten pond plant should not be eatable again until it regrows")
+	cattail1.eat()
+	assert(GameState.energy == energy_before_pond_eat + PondPlant.ENERGY_RESTORE, "eating an already-picked pond plant should be a no-op")
+	print("OK: eating a pond plant restores energy once, then blocks re-eating until it regrows")
+
+	var energy_before_ambient_active := GameState.energy
+	player._physics_process(player.AMBIENT_DRAIN_INTERVAL + 1.0)
+	assert(GameState.energy == energy_before_ambient_active - player.AMBIENT_DRAIN_AMOUNT, "ambient energy drain should run once the dam/pond exists")
+	print("OK: energy drains on its own once the dam is finished")
 
 	# --- HUD toast + edge indicators (threat visibility) ---
 	assert(hud.toast_label.visible and hud.toast_background.visible, "dam_completed should have shown a toast")
@@ -165,16 +197,23 @@ func _ready() -> void:
 	assert(hud.storm_indicator.target == null, "repairing the only leak should clear the storm indicator")
 	print("OK: a leaking dam slot can be repaired without affecting dam_pieces_built or re-firing dam_completed")
 
-	# --- Scavenger: shoo vs. steal-and-flee ---
-	assert(not raccoon.can_shoo(), "raccoon should be inactive until spawned")
+	# --- Scavenger: feeding it berries vs. steal-and-flee ---
+	assert(not raccoon.can_feed(), "raccoon should be inactive until spawned")
 	raccoon.spawn_at(Vector2(300, 300))
 	hud.point_to_raccoon(raccoon)
-	assert(raccoon.can_shoo() and raccoon.visible, "spawn_at() should activate and show the raccoon")
+	GameState.remove_berries(GameState.berries)
+	assert(GameState.berries == 0, "berries should be empty after draining stock for this check")
+	assert(not raccoon.can_feed(), "feeding should require at least one berry in stock")
+	assert(raccoon.visible, "spawn_at() should show the raccoon even without berries to feed it")
 	assert(player._resolve_target(raccoon) == raccoon)
-	raccoon.shoo()
-	assert(not raccoon.can_shoo() and not raccoon.visible, "shoo() should despawn the raccoon with no theft")
-	assert(hud.raccoon_indicator.target == null, "despawning (via shoo) should clear the raccoon indicator")
-	print("OK: shooing the raccoon despawns it without stealing anything, and clears its indicator")
+
+	GameState.add_berries(1)
+	assert(raccoon.can_feed(), "feeding should be possible once a berry is in stock")
+	raccoon.feed()
+	assert(GameState.berries == 0, "feed() should spend the berry")
+	assert(not raccoon.can_feed() and not raccoon.visible, "feed() should despawn the raccoon with no theft")
+	assert(hud.raccoon_indicator.target == null, "despawning (via feed) should clear the raccoon indicator")
+	print("OK: feeding the raccoon a berry despawns it without stealing anything, and clears its indicator")
 
 	raccoon.spawn_at(Vector2(300, 300))
 	var wood_before_theft := GameState.wood
@@ -182,7 +221,7 @@ func _ready() -> void:
 	raccoon._steal_and_flee()
 	assert(GameState.wood == wood_before_theft - Raccoon.STEAL_WOOD, "the raccoon should steal STEAL_WOOD wood")
 	assert(GameState.stone == stone_before_theft - Raccoon.STEAL_STONE, "the raccoon should steal STEAL_STONE stone")
-	assert(not raccoon.can_shoo(), "the raccoon should despawn after stealing")
+	assert(not raccoon.can_feed(), "the raccoon should despawn after stealing")
 	print("OK: an unshooed raccoon steals a small amount of wood/stone then despawns")
 
 	GameState.wood = 0
@@ -231,7 +270,7 @@ func _ready() -> void:
 	assert(butterfly.visible, "building the flower bed should reveal the butterfly")
 	print("OK: garden spots unlock with the lodge, and building one reveals its critter")
 
-	for action_name in ["move_up", "move_down", "move_left", "move_right", "interact", "restart"]:
+	for action_name in ["move_up", "move_down", "move_left", "move_right", "interact", "restart", "menu"]:
 		assert(InputMap.has_action(action_name), "missing action: %s" % action_name)
 		var has_physical := false
 		var has_logical := false
@@ -249,16 +288,19 @@ func _ready() -> void:
 		assert(has_joy, "%s has no joypad event" % action_name)
 	print("OK: all actions have physical, logical, and joypad bindings")
 
-	# --- Save / load ---
+	# --- Save / load (slot-based) ---
 	var dam_slot2: Area2D = main.get_node("DamSlots/DamSlot2")
 	dam_slot2.start_leaking()
 
-	SaveManager.delete_save()
-	assert(not SaveManager.has_save())
+	SaveManager.delete_save(1)
+	assert(not SaveManager.has_save(1))
+	assert(SaveManager.peek_slot(1).is_empty(), "peek_slot() should be empty for a slot with no save file")
 
 	GameState.spend_energy(37.0)
+	GameState.add_berries(3)
 	var saved_data: Dictionary = main.get_save_data()
 	assert(saved_data["wood"] == GameState.wood)
+	assert(saved_data["berries"] == GameState.berries)
 	assert(saved_data["energy"] == GameState.energy)
 	assert(saved_data["lodge_stage"] == GameState.LODGE_MAX_STAGE)
 	assert(saved_data["dam_slots_built"]["DamSlot1"] == true)
@@ -273,18 +315,65 @@ func _ready() -> void:
 	SaveManager.save_game()
 	get_tree().current_scene = self
 	main.reparent(self)
-	assert(SaveManager.has_save(), "save_game() should have written a save file")
-	print("OK: save_game() writes a save file for the current scene's data")
+	assert(SaveManager.has_save(1), "save_game() should have written a save file to the active session's slot")
+	assert(not SaveManager.has_save(2), "save_game() must not touch other slots")
+	print("OK: save_game() writes a save file to the active session's slot only")
+
+	assert(SaveManager.peek_slot(1)["wood"] == saved_data["wood"], "peek_slot() should read back what was saved, without starting a session")
+	print("OK: peek_slot() reads a slot's data without loading it into a scene")
+
+	# --- Title screen save-slot rows. title_screen.gd itself just wires a
+	# row's slot_chosen signal to change_scene_to_file(), which we don't
+	# want to trigger mid-test - so exercise the row directly. Slot 1 is
+	# read-only here (main2 below still needs its save intact); slot 2 is
+	# untouched so far and safe to fully exercise. ---
+	var occupied_row: Panel = load("res://scenes/ui/save_slot_row.tscn").instantiate()
+	occupied_row.slot_index = 1
+	add_child(occupied_row)
+	assert(occupied_row.continue_button.visible, "a slot with a save should offer Continue")
+	assert(occupied_row.info_label.text.begins_with("Dam "), "an occupied slot should summarize its progress, got: %s" % occupied_row.info_label.text)
+	var occupied_chosen := [-1]
+	occupied_row.slot_chosen.connect(func(i): occupied_chosen[0] = i)
+	occupied_row._on_new_game_pressed()
+	assert(occupied_chosen[0] == -1, "New Game on an occupied slot must ask for confirmation before doing anything")
+	assert(occupied_row.confirm_overwrite.visible, "the overwrite confirmation dialog should be showing")
+	print("OK: New Game on an occupied save-slot row requires confirmation before touching anything")
+
+	var empty_row: Panel = load("res://scenes/ui/save_slot_row.tscn").instantiate()
+	empty_row.slot_index = 2
+	add_child(empty_row)
+	assert(not empty_row.continue_button.visible, "an empty slot should not offer Continue")
+	assert(empty_row.info_label.text == "Empty", "an empty slot should say Empty")
+	var empty_chosen := [-1]
+	empty_row.slot_chosen.connect(func(i): empty_chosen[0] = i)
+	empty_row._on_new_game_pressed()
+	assert(empty_chosen[0] == 2, "New Game on an empty slot should start immediately, with no confirmation needed")
+	print("OK: New Game on an empty save-slot row skips the overwrite confirmation")
 
 	GameState.reset()
 	assert(GameState.wood == 0 and GameState.lodge_stage == 0)
+	assert(GameState.berries == 0, "reset() should zero out berries")
 	assert(GameState.energy == GameState.ENERGY_MAX, "reset() should restore energy to max")
 
+	SaveManager.current_slot = -1
+	var main_no_session: Node = load("res://scenes/main/main.tscn").instantiate()
+	add_child(main_no_session)
+	assert(GameState.wood == 0, "load_into() must be a no-op with no active session, so nothing auto-loads before a slot is picked")
+	print("OK: nothing auto-loads before begin_session() runs (i.e. before the title screen picks a slot)")
+
+	# main_no_session's own DamSlots just registered themselves with
+	# GameState (dam_pieces_total is a running count across every Main
+	# instance in the tree, real gameplay only ever has one) - reset again
+	# so main2 below starts from a clean 0 and its apply_save_data() sees
+	# built_count == dam_pieces_total as it would in a real session.
+	GameState.reset()
+	SaveManager.begin_session(1)
 	var main2: Node = load("res://scenes/main/main.tscn").instantiate()
 	add_child(main2)
 	# main2's own _ready() calls SaveManager.load_into(self), so by the time
 	# add_child() returns, it should already be restored.
 	assert(GameState.wood == saved_data["wood"], "loading should restore wood")
+	assert(GameState.berries == saved_data["berries"], "loading should restore berries")
 	assert(GameState.energy == saved_data["energy"], "loading should restore energy")
 	assert(GameState.lodge_stage == GameState.LODGE_MAX_STAGE, "loading should restore lodge stage")
 	var restored_slot1: Area2D = main2.get_node("DamSlots/DamSlot1")
@@ -294,15 +383,17 @@ func _ready() -> void:
 	assert(restored_slot2.can_repair())
 	var restored_lodge: Area2D = main2.get_node("Lodge")
 	assert(restored_lodge.visible, "loading should reveal the lodge if the dam was complete")
+	var restored_cattail: PondPlant = main2.get_node("PondPlants/Cattail1")
+	assert(restored_cattail.visible, "loading should reveal pond plants if the dam was complete")
 	var restored_flower_spot: GardenSpot = main2.get_node("GardenSpots/FlowerBedSpot")
 	assert(restored_flower_spot.visible and restored_flower_spot.built, "loading should restore built garden spots")
 	var restored_butterfly: Node2D = main2.get_node("Critters/Butterfly")
 	assert(restored_butterfly.visible, "loading a built garden spot should re-reveal its critter")
-	print("OK: a fresh scene instance auto-loads saved progress on _ready()")
+	print("OK: a fresh scene instance auto-loads the active session's slot on _ready()")
 
-	SaveManager.delete_save()
-	assert(not SaveManager.has_save())
-	print("OK: delete_save() removes the save file")
+	SaveManager.delete_save(1)
+	assert(not SaveManager.has_save(1))
+	print("OK: delete_save() removes a slot's save file")
 
 	GameState.reset()
 	assert(GameState.wood == 0 and GameState.stone == 0)

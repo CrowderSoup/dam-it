@@ -1,10 +1,11 @@
-[gd_scene load_steps=16 format=3]
+[gd_scene load_steps=17 format=3]
 
 [ext_resource type="Script" path="res://scenes/main/main.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2"]
 [ext_resource type="PackedScene" path="res://scenes/world/tree.tscn" id="3"]
 [ext_resource type="PackedScene" path="res://scenes/world/dam_slot.tscn" id="4"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="5"]
+[ext_resource type="PackedScene" path="res://scenes/ui/game_menu.tscn" id="16"]
 [ext_resource type="PackedScene" path="res://scenes/world/rock.tscn" id="7"]
 [ext_resource type="PackedScene" path="res://scenes/world/grass_patch.tscn" id="8"]
 [ext_resource type="PackedScene" path="res://scenes/world/lodge.tscn" id="9"]
@@ -13,6 +14,7 @@
 [ext_resource type="PackedScene" path="res://scenes/world/garden_spot.tscn" id="12"]
 [ext_resource type="PackedScene" path="res://scenes/world/raccoon.tscn" id="13"]
 [ext_resource type="PackedScene" path="res://scenes/world/berry_bush.tscn" id="14"]
+[ext_resource type="PackedScene" path="res://scenes/world/pond_plant.tscn" id="15"]
 
 [sub_resource type="ShaderMaterial" id="2"]
 shader = ExtResource("11")
@@ -79,6 +81,24 @@ visible = false
 material = SubResource("3")
 color = Color(0.2275, 0.498, 0.7882, 1)
 polygon = PackedVector2Array(950.0, 400.0, 894.6, 463.8, 855.5, 542.9, 740.0, 542.5, 619.2, 549.4, 576.3, 467.5, 519.5, 400.0, 594.5, 340.0, 624.5, 257.1, 740.0, 250.0, 834.5, 283.1, 931.0, 321.2)
+
+[node name="PondPlants" type="Node2D" parent="."]
+
+[node name="Cattail1" parent="PondPlants" instance=ExtResource("15")]
+kind = 0
+position = Vector2(700, 320)
+
+[node name="WaterLily1" parent="PondPlants" instance=ExtResource("15")]
+kind = 1
+position = Vector2(830, 330)
+
+[node name="WaterLily2" parent="PondPlants" instance=ExtResource("15")]
+kind = 1
+position = Vector2(650, 460)
+
+[node name="Cattail2" parent="PondPlants" instance=ExtResource("15")]
+kind = 0
+position = Vector2(820, 480)
 
 [node name="BerryBushes" type="Node2D" parent="."]
 
@@ -201,3 +221,5 @@ position = Vector2(830, 655)
 position = Vector2(200, 200)
 
 [node name="HUD" parent="." instance=ExtResource("5")]
+
+[node name="GameMenu" parent="." instance=ExtResource("16")]

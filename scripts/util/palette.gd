@@ -77,3 +77,8 @@ const CRACK := Color("26211d")
 const RACCOON_FUR := Color("6b6664")
 const RACCOON_MASK := Color("262220")
 const RACCOON_TAIL_LIGHT := Color("d9d6d0")
+
+# Pond plants
+const CATTAIL := Color("6b4a2f")
+const LILY_PAD := Color("3f8a52")
+const LILY_PETAL := Color("f5eee0")

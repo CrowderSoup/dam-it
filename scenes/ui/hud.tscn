@@ -1,4 +1,4 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scenes/ui/hud.gd" id="1"]
 [ext_resource type="Script" path="res://scenes/ui/hud_icon.gd" id="2"]
@@ -24,6 +24,12 @@ font_size = 20
 font_color = Color(1, 0.95, 0.8, 1)
 outline_size = 5
 outline_color = Color(0.11, 0.09, 0.07, 0.9)
+
+[sub_resource type="LabelSettings" id="4"]
+font_size = 11
+font_color = Color(1, 1, 1, 1)
+outline_size = 2
+outline_color = Color(0.11, 0.09, 0.07, 0.85)
 
 [node name="HUD" type="CanvasLayer"]
 script = ExtResource("1")
@@ -87,6 +93,20 @@ label_settings = SubResource("2")
 vertical_alignment = 1
 text = "0"
 
+[node name="BerriesGroup" type="HBoxContainer" parent="BottomMargin/ItemsHBox"]
+theme_override_constants/separation = 4
+
+[node name="BerriesIcon" type="Control" parent="BottomMargin/ItemsHBox/BerriesGroup"]
+custom_minimum_size = Vector2(26, 26)
+script = ExtResource("2")
+kind = 5
+
+[node name="BerriesLabel" type="Label" parent="BottomMargin/ItemsHBox/BerriesGroup"]
+custom_minimum_size = Vector2(0, 26)
+label_settings = SubResource("2")
+vertical_alignment = 1
+text = "0"
+
 [node name="DamGroup" type="HBoxContainer" parent="BottomMargin/ItemsHBox"]
 theme_override_constants/separation = 4
 
@@ -123,8 +143,9 @@ theme_override_styles/panel = SubResource("1")
 [node name="HintLabel" type="Label" parent="."]
 position = Vector2(24, 22)
 size = Vector2(424, 24)
-label_settings = SubResource("2")
-text = "WASD / arrows to move · E to chop, mine, build & eat berries when tired"
+label_settings = SubResource("4")
+vertical_alignment = 1
+text = "WASD / arrows to move · E to chop, mine, build, harvest berries & feed raccoons"
 
 [node name="ToastBackground" type="Panel" parent="."]
 visible = false

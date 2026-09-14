@@ -1,0 +1,79 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scenes/ui/save_slot_row.gd" id="1"]
+
+[sub_resource type="StyleBoxFlat" id="1"]
+bg_color = Color(0.1, 0.09, 0.1, 0.65)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+shadow_color = Color(0, 0, 0, 0.25)
+shadow_size = 4
+
+[sub_resource type="LabelSettings" id="2"]
+font_size = 18
+font_color = Color(1, 0.95, 0.8, 1)
+outline_size = 4
+outline_color = Color(0.11, 0.09, 0.07, 0.9)
+
+[sub_resource type="LabelSettings" id="3"]
+font_size = 13
+font_color = Color(0.9, 0.9, 0.9, 1)
+outline_size = 3
+outline_color = Color(0.11, 0.09, 0.07, 0.85)
+
+[node name="SaveSlotRow" type="Panel"]
+custom_minimum_size = Vector2(460, 55)
+theme_override_styles/panel = SubResource("1")
+script = ExtResource("1")
+
+[node name="Margin" type="MarginContainer" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 6
+
+[node name="HBox" type="HBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Info" type="VBoxContainer" parent="Margin/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 2
+
+[node name="NameLabel" type="Label" parent="Margin/HBox/Info"]
+layout_mode = 2
+label_settings = SubResource("2")
+text = "Slot 1"
+
+[node name="InfoLabel" type="Label" parent="Margin/HBox/Info"]
+layout_mode = 2
+label_settings = SubResource("3")
+text = "Empty"
+
+[node name="Buttons" type="HBoxContainer" parent="Margin/HBox"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_constants/separation = 8
+
+[node name="ContinueButton" type="Button" parent="Margin/HBox/Buttons"]
+layout_mode = 2
+text = "Continue"
+
+[node name="NewGameButton" type="Button" parent="Margin/HBox/Buttons"]
+layout_mode = 2
+text = "New Game"
+
+[node name="ConfirmOverwrite" type="ConfirmationDialog" parent="."]
+title = "New Game?"
+initial_position = 1
+size = Vector2i(320, 120)
+dialog_text = "Start a new game in this slot? This will erase its saved progress."
+
+[connection signal="pressed" from="Margin/HBox/Buttons/ContinueButton" to="." method="_on_continue_pressed"]
+[connection signal="pressed" from="Margin/HBox/Buttons/NewGameButton" to="." method="_on_new_game_pressed"]
+[connection signal="confirmed" from="ConfirmOverwrite" to="." method="_on_confirm_overwrite"]

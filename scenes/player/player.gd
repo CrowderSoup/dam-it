@@ -56,10 +56,14 @@ func _physics_process(delta: float) -> void:
 		visual.position.y = lerp(visual.position.y, 0.0, 0.2)
 		_footstep_time = FOOTSTEP_INTERVAL
 
-	_ambient_drain_time += delta
-	if _ambient_drain_time >= AMBIENT_DRAIN_INTERVAL:
-		_ambient_drain_time = 0.0
-		GameState.spend_energy(AMBIENT_DRAIN_AMOUNT)
+	# No pond, no upkeep: energy only starts draining on its own once the dam
+	# (and the pond behind it) is finished, so a new player can focus on
+	# building without also having to watch the meter.
+	if GameState.is_dam_complete():
+		_ambient_drain_time += delta
+		if _ambient_drain_time >= AMBIENT_DRAIN_INTERVAL:
+			_ambient_drain_time = 0.0
+			GameState.spend_energy(AMBIENT_DRAIN_AMOUNT)
 
 	_update_highlight()
 
@@ -69,14 +73,14 @@ func _unhandled_input(event: InputEvent) -> void:
 
 ## Trees and rocks register their InteractArea (a child) in a "*_areas"
 ## group, so the overlap result is the area, not the interactable itself;
-## dam slots, the Lodge, garden spots, raccoons, and berry bushes ARE the
-## Area2D, so no indirection is needed. This resolves any of them to the
-## node that actually has chop()/mine()/build()/advance()/eat()/
-## set_highlighted().
+## dam slots, the Lodge, garden spots, raccoons, berry bushes, and pond
+## plants ARE the Area2D, so no indirection is needed. This resolves any of
+## them to the node that actually has chop()/mine()/build()/advance()/
+## harvest()/eat()/feed()/set_highlighted().
 func _resolve_target(area: Area2D) -> Node:
 	if area.is_in_group("tree_areas") or area.is_in_group("rock_areas"):
 		return area.get_parent()
-	if area.is_in_group("dam_slots") or area.is_in_group("lodge") or area.is_in_group("garden_spots") or area.is_in_group("raccoons") or area.is_in_group("berry_bushes"):
+	if area.is_in_group("dam_slots") or area.is_in_group("lodge") or area.is_in_group("garden_spots") or area.is_in_group("raccoons") or area.is_in_group("berry_bushes") or area.is_in_group("pond_plants"):
 		return area
 	return null
 
@@ -110,10 +114,14 @@ func _try_interact() -> void:
 				target.build()
 			return
 		if target.is_in_group("raccoons"):
-			if target.can_shoo():
-				target.shoo()
+			if target.can_feed():
+				target.feed()
 			return
 		if target.is_in_group("berry_bushes"):
+			if target.can_harvest():
+				target.harvest()
+			return
+		if target.is_in_group("pond_plants"):
 			if target.can_eat():
 				target.eat()
 			return

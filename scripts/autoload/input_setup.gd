@@ -10,6 +10,7 @@ func _ready() -> void:
 	_bind("move_right", KEY_D, KEY_RIGHT)
 	_bind("interact", KEY_E, KEY_SPACE)
 	_bind("restart", KEY_R)
+	_bind("menu", KEY_ESCAPE)
 
 	_add_joy_button("move_up", JOY_BUTTON_DPAD_UP)
 	_add_joy_button("move_down", JOY_BUTTON_DPAD_DOWN)
@@ -17,6 +18,7 @@ func _ready() -> void:
 	_add_joy_button("move_right", JOY_BUTTON_DPAD_RIGHT)
 	_add_joy_button("interact", JOY_BUTTON_A)
 	_add_joy_button("restart", JOY_BUTTON_START)
+	_add_joy_button("menu", JOY_BUTTON_BACK)
 
 	_add_joy_axis("move_up", JOY_AXIS_LEFT_Y, -1.0)
 	_add_joy_axis("move_down", JOY_AXIS_LEFT_Y, 1.0)

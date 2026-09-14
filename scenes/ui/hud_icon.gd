@@ -1,10 +1,10 @@
 extends Control
 ## A small hand-drawn icon for the bottom HUD bar, echoing the look of the
 ## matching world object (wood = log end-grain, stone = rock cluster, dam
-## piece = tiny log stack, lodge = tiny house) so the icon reads at a glance
-## without needing a text label to explain it.
+## piece = tiny log stack, lodge = tiny house, berries = a berry cluster) so
+## the icon reads at a glance without needing a text label to explain it.
 
-enum Kind { WOOD, STONE, DAM, LODGE, ENERGY }
+enum Kind { WOOD, STONE, DAM, LODGE, ENERGY, BERRIES }
 
 @export var kind: Kind = Kind.WOOD
 
@@ -21,6 +21,8 @@ func _draw() -> void:
 			_draw_lodge(c)
 		Kind.ENERGY:
 			_draw_energy(c)
+		Kind.BERRIES:
+			_draw_berries(c)
 
 func _draw_wood(c: Vector2) -> void:
 	draw_circle(c, 11.0, Palette.WOOD_MID)
@@ -62,3 +64,9 @@ func _draw_energy(c: Vector2) -> void:
 	])
 	DrawUtil.outlined_polygon(self, leaf, Palette.LEAF_MID, 1.5)
 	draw_line(c + Vector2(0, -8), c + Vector2(0, 9), Palette.LEAF_DARK, 1.2)
+
+func _draw_berries(c: Vector2) -> void:
+	DrawUtil.outlined_circle(self, c + Vector2(-4, 3), 4.0, Palette.BERRY, 1.2)
+	DrawUtil.outlined_circle(self, c + Vector2(4, 3), 4.0, Palette.BERRY, 1.2)
+	DrawUtil.outlined_circle(self, c + Vector2(0, -4), 4.0, Palette.BERRY, 1.2)
+	draw_line(c + Vector2(0, -8), c + Vector2(0, -4), Palette.LEAF_DARK, 1.2)

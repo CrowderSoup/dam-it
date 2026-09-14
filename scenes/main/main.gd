@@ -21,11 +21,13 @@ const RACCOON_SPAWN_POINTS := [
 @onready var river_water: Area2D = $RiverWater
 @onready var dam_slots: Node2D = $DamSlots
 @onready var lodge: Area2D = $Lodge
+@onready var pond_plants: Node2D = $PondPlants
 @onready var garden_spots: Node2D = $GardenSpots
 @onready var raccoon: Raccoon = $Raccoon
 @onready var player: CharacterBody2D = $Player
 @onready var camera: Camera2D = $Player/Camera2D
 @onready var hud: CanvasLayer = $HUD
+@onready var game_menu: CanvasLayer = $GameMenu
 
 var _challenges_active := false
 var _storm_timer: Timer
@@ -39,13 +41,18 @@ func _ready() -> void:
 
 	GameState.dam_completed.connect(_on_dam_completed)
 	GameState.dam_completed.connect(_start_challenges)
+	game_menu.new_game_requested.connect(_start_new_game)
 	SaveManager.load_into(self)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("restart"):
-		SaveManager.delete_save()
-		GameState.reset()
-		get_tree().reload_current_scene()
+		_start_new_game()
+
+## Shared by the "restart" shortcut and the game menu's "New Game" button.
+func _start_new_game() -> void:
+	SaveManager.delete_save(SaveManager.current_slot)
+	GameState.reset()
+	get_tree().reload_current_scene()
 
 func _on_dam_completed() -> void:
 	river_water.queue_free()
@@ -143,6 +150,7 @@ func get_save_data() -> Dictionary:
 	return {
 		"wood": GameState.wood,
 		"stone": GameState.stone,
+		"berries": GameState.berries,
 		"energy": GameState.energy,
 		"lodge_stage": GameState.lodge_stage,
 		"dam_slots_built": dam_slots_built,
@@ -169,6 +177,8 @@ func apply_save_data(data: Dictionary) -> void:
 	if built_count > 0 and built_count >= GameState.dam_pieces_total:
 		_apply_completed_dam_visuals()
 		lodge.reveal()
+		for plant in pond_plants.get_children():
+			plant.reveal()
 		_start_challenges()
 
 	if GameState.lodge_stage >= GameState.LODGE_MAX_STAGE:

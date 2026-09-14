@@ -10,6 +10,7 @@ signal dam_completed
 signal lodge_stage_changed(stage: int)
 signal lodge_completed
 signal energy_changed(new_amount: float)
+signal berries_changed(new_amount: int)
 
 const WOOD_PER_DAM_PIECE := 2
 const STONE_PER_DAM_PIECE := 1
@@ -33,6 +34,7 @@ const BUILD_ENERGY_COST := 5.0
 
 var wood: int = 0
 var stone: int = 0
+var berries: int = 0
 var dam_pieces_total: int = 0
 var dam_pieces_built: int = 0
 var lodge_stage: int = 0
@@ -64,6 +66,18 @@ func remove_stone(amount: int) -> int:
 	var removed: int = min(amount, stone)
 	stone -= removed
 	stone_changed.emit(stone)
+	return removed
+
+## Berries are harvested from bushes and spent feeding raccoons to shoo them
+## off - see BerryBush.harvest() and Raccoon.feed().
+func add_berries(amount: int) -> void:
+	berries += amount
+	berries_changed.emit(berries)
+
+func remove_berries(amount: int) -> int:
+	var removed: int = min(amount, berries)
+	berries -= removed
+	berries_changed.emit(berries)
 	return removed
 
 func can_afford_dam_piece() -> bool:
@@ -122,6 +136,12 @@ func advance_lodge_stage() -> void:
 	if lodge_stage >= LODGE_MAX_STAGE:
 		lodge_completed.emit()
 
+## The pond doesn't exist, and nothing threatens the beaver, until every dam
+## slot is built. Player uses this to hold off ambient energy drain until
+## then - see the AMBIENT_DRAIN comment on Player.
+func is_dam_complete() -> bool:
+	return dam_pieces_total > 0 and dam_pieces_built >= dam_pieces_total
+
 func is_tired() -> bool:
 	return energy <= ENERGY_TIRED_THRESHOLD
 
@@ -145,6 +165,7 @@ func restore_energy_fully() -> void:
 func load_from_save(data: Dictionary) -> void:
 	wood = data.get("wood", 0)
 	stone = data.get("stone", 0)
+	berries = data.get("berries", 0)
 	lodge_stage = data.get("lodge_stage", 0)
 	energy = data.get("energy", ENERGY_MAX)
 
@@ -161,6 +182,7 @@ func restore_dam_progress(built: int) -> void:
 func announce_loaded_state() -> void:
 	wood_changed.emit(wood)
 	stone_changed.emit(stone)
+	berries_changed.emit(berries)
 	dam_progress_changed.emit(dam_pieces_built, dam_pieces_total)
 	lodge_stage_changed.emit(lodge_stage)
 	energy_changed.emit(energy)
@@ -171,12 +193,14 @@ func announce_loaded_state() -> void:
 func reset() -> void:
 	wood = 0
 	stone = 0
+	berries = 0
 	dam_pieces_total = 0
 	dam_pieces_built = 0
 	lodge_stage = 0
 	energy = ENERGY_MAX
 	wood_changed.emit(wood)
 	stone_changed.emit(stone)
+	berries_changed.emit(berries)
 	dam_progress_changed.emit(dam_pieces_built, dam_pieces_total)
 	lodge_stage_changed.emit(lodge_stage)
 	energy_changed.emit(energy)

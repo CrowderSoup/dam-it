@@ -6,6 +6,7 @@ const TOAST_DURATION := 6.0
 @onready var energy_label: Label = $BottomMargin/ItemsHBox/EnergyGroup/EnergyLabel
 @onready var wood_label: Label = $BottomMargin/ItemsHBox/WoodGroup/WoodLabel
 @onready var stone_label: Label = $BottomMargin/ItemsHBox/StoneGroup/StoneLabel
+@onready var berries_label: Label = $BottomMargin/ItemsHBox/BerriesGroup/BerriesLabel
 @onready var dam_label: Label = $BottomMargin/ItemsHBox/DamGroup/DamLabel
 @onready var lodge_label: Label = $BottomMargin/ItemsHBox/LodgeGroup/LodgeLabel
 @onready var toast_label: Label = $ToastLabel
@@ -20,12 +21,14 @@ var _toast_generation := 0
 func _ready() -> void:
 	GameState.wood_changed.connect(_on_wood_changed)
 	GameState.stone_changed.connect(_on_stone_changed)
+	GameState.berries_changed.connect(_on_berries_changed)
 	GameState.dam_progress_changed.connect(_on_dam_progress_changed)
 	GameState.dam_completed.connect(_on_dam_completed)
 	GameState.lodge_stage_changed.connect(_on_lodge_stage_changed)
 	GameState.energy_changed.connect(_on_energy_changed)
 	_on_wood_changed(GameState.wood)
 	_on_stone_changed(GameState.stone)
+	_on_berries_changed(GameState.berries)
 	_on_dam_progress_changed(GameState.dam_pieces_built, GameState.dam_pieces_total)
 	_on_lodge_stage_changed(GameState.lodge_stage)
 	_on_energy_changed(GameState.energy)
@@ -78,6 +81,9 @@ func _on_wood_changed(amount: int) -> void:
 func _on_stone_changed(amount: int) -> void:
 	stone_label.text = str(amount)
 
+func _on_berries_changed(amount: int) -> void:
+	berries_label.text = str(amount)
+
 func _on_dam_progress_changed(built: int, total: int) -> void:
 	dam_label.text = "%d / %d" % [built, total]
 
@@ -90,7 +96,7 @@ func _on_lodge_stage_changed(stage: int) -> void:
 		lodge_label.text = "%d / %d" % [stage, GameState.LODGE_MAX_STAGE]
 
 func _on_dam_completed() -> void:
-	show_toast("Dam complete! A Lodge site has appeared south of the pond.")
+	show_toast("Dam complete! Cattails and lilies are growing in the pond, and a Lodge site has appeared south of it.")
 	# dam_progress_changed already flipped the "X / Y" dam counter, but the
 	# Lodge counter's "Locked" text depends on dam completion too, and only
 	# lodge_stage_changed normally refreshes it - without this it would keep

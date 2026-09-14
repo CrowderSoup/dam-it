@@ -28,8 +28,9 @@ godot --path .
 - `WASD` or arrow keys, or a gamepad's d-pad/left stick — move
 - `E` / `Space` / gamepad A — context-sensitive interact: chop a nearby
   tree, mine a nearby rock, build a dam piece at a nearby empty slot if you
-  have enough wood + stone, eat from a berry bush, or rest at a finished
-  Lodge
+  have enough wood + stone, harvest a berry bush, eat from a cattail/lily
+  patch growing in the pond, feed a berry to a raccoon to shoo it off, or
+  rest at a finished Lodge
 - `R` / gamepad Start — reset ALL progress (dam + Lodge) and start over
 
 ## Current demo loop: "Grow Your Pond"
@@ -81,9 +82,10 @@ gathering wood and stone:
   piece slows you again if you wade near it). Repair it the same way you
   built it - interact, same 2 wood + 1 stone cost.
 - **The raccoon.** Every 60-120 seconds, a raccoon shows up near your
-  resources and lingers for ~18 seconds. Walk up and interact to shoo it
-  off for free. Ignore it and it swipes a little wood/stone (clamped at
-  zero - it can never take more than you have) and scurries off.
+  resources and lingers for ~18 seconds. Walk up and interact to feed it a
+  berry and it scurries off empty-handed. No berries in stock? It ignores
+  you, swipes a little wood/stone (clamped at zero - it can never take more
+  than you have), and scurries off anyway.
 
 Both start only once the dam is first completed - a fresh game never has
 to deal with either. Both are also announced: a HUD toast names what just
@@ -92,21 +94,30 @@ toward the leak/raccoon whenever it's off-screen (fading once you're close
 enough or it's dealt with) - so neither one relies on you noticing it by
 chance.
 
-## Getting tired: energy, berry bushes, and resting
+## Getting tired: energy, pond plants, berries, and resting
 
 The beaver has an energy meter (shown as a leaf icon + number in the HUD,
 starting at 100) that drains a little with every chop, mine, dam
-piece/repair/Lodge stage/garden spot built (a few points each), and every
-10 seconds of active movement. It's a soft mechanic, never a fail state:
+piece/repair/Lodge stage/garden spot built (a few points each). Energy
+never drains just from the passage of time until the dam - and the pond
+behind it - is finished; a brand new player can take as long as they like
+getting the dam built without anything to manage. It's a soft mechanic,
+never a fail state:
 
 - Below 25 energy the beaver is "tired" - droopy, closed eyes replace the
   normal ones, and movement speed drops the same way wading through the
   river does. It never blocks chopping, mining, building, or anything
   else - it's just a nudge to go take a break.
-- **Berry bushes** (scattered around the map, the same spots that used to
-  be purely decorative) restore a chunk of energy when eaten - interact
-  like a tree or rock. A picked bush regrows its berries after a short
-  cooldown, just like a felled tree or mined rock.
+- Once the dam is complete, energy also drains every 10 seconds of active
+  movement - the trade-off for the pond that just appeared.
+- **Cattails and water lilies** grow in the pond itself, appearing only
+  once the dam is complete. Eating one (interact, like a tree or rock)
+  restores a chunk of energy; a picked patch regrows after a cooldown, just
+  like a felled tree or mined rock. This is now the beaver's only food.
+- **Berry bushes** (scattered around the map) no longer feed the beaver
+  directly - interacting harvests berries into a stockpile instead (shown
+  in the HUD). Berries exist for one reason: feeding raccoons (see
+  "Storms & Scavengers" above) to shoo them off without a loss.
 - Once the **Lodge** is fully built, interacting with it also offers an
   instant full energy refill (resting) whenever you're below max, in
   addition to its earlier build-up stages.
@@ -119,9 +130,11 @@ scenes/
               polygons, the "pond fades in" completion script, and the
               storm and raccoon-spawner timers (see main.gd)
   player/   - the beaver: movement, facing/bob animation, interact
-  world/    - tree, rock, berry bush (energy), dam slot (build +
-              repair-a-leak), dam piece, lodge (build-up + resting),
-              garden spot (flower bed/bench), raccoon (scavenger), critter
+  world/    - tree, rock, berry bush (harvested for raccoon-feeding),
+              pond plant (cattail/water lily - the beaver's actual food),
+              dam slot (build + repair-a-leak), dam piece, lodge (build-up
+              + resting), garden spot (flower bed/bench), raccoon
+              (scavenger, fed berries to shoo off), critter
               (frog/duck/fish/butterfly/rabbit), and purely-visual
               decorations (rocks)
   ui/       - title screen and HUD: icon-based counts along the bottom,

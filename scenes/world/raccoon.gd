@@ -1,15 +1,18 @@
 class_name Raccoon
 extends Area2D
 ## A mischievous scavenger, not a threat: it periodically shows up near your
-## resources (see Main's raccoon timer), and if you don't walk up and shoo
-## it away within LINGER_TIME, it swipes a little wood/stone and scurries
-## off. No combat, no permanent loss - just a nuisance to keep an eye on.
+## resources (see Main's raccoon timer). Feed it a berry (harvested from a
+## BerryBush) within LINGER_TIME and it scurries off empty-handed; without a
+## berry to offer, it swipes a little wood/stone instead. No combat, no
+## permanent loss - just a nuisance to keep an eye on, and a reason to keep
+## berries in stock.
 
 signal despawned
 
 const LINGER_TIME := 18.0
 const STEAL_WOOD := 3
 const STEAL_STONE := 1
+const FEED_BERRIES_COST := 1
 
 var highlighted: bool = false
 var _active: bool = false
@@ -47,12 +50,14 @@ func set_highlighted(value: bool) -> void:
 	highlighted = value
 	queue_redraw()
 
-func can_shoo() -> bool:
-	return _active
+## Feeding requires a berry in stock - see GameState.berries.
+func can_feed() -> bool:
+	return _active and GameState.berries > 0
 
-func shoo() -> void:
-	if not _active:
+func feed() -> void:
+	if not can_feed():
 		return
+	GameState.remove_berries(FEED_BERRIES_COST)
 	Sfx.play_shoo()
 	Fx.burst(global_position, Color(0.6, 0.55, 0.5), 8)
 	_despawn()
