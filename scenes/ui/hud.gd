@@ -3,6 +3,7 @@ extends CanvasLayer
 const HINT_DURATION := 6.0
 const TOAST_DURATION := 6.0
 
+@onready var energy_label: Label = $BottomMargin/ItemsHBox/EnergyGroup/EnergyLabel
 @onready var wood_label: Label = $BottomMargin/ItemsHBox/WoodGroup/WoodLabel
 @onready var stone_label: Label = $BottomMargin/ItemsHBox/StoneGroup/StoneLabel
 @onready var dam_label: Label = $BottomMargin/ItemsHBox/DamGroup/DamLabel
@@ -22,10 +23,12 @@ func _ready() -> void:
 	GameState.dam_progress_changed.connect(_on_dam_progress_changed)
 	GameState.dam_completed.connect(_on_dam_completed)
 	GameState.lodge_stage_changed.connect(_on_lodge_stage_changed)
+	GameState.energy_changed.connect(_on_energy_changed)
 	_on_wood_changed(GameState.wood)
 	_on_stone_changed(GameState.stone)
 	_on_dam_progress_changed(GameState.dam_pieces_built, GameState.dam_pieces_total)
 	_on_lodge_stage_changed(GameState.lodge_stage)
+	_on_energy_changed(GameState.energy)
 	var hide_hint := func():
 		hint_label.hide()
 		hint_background.hide()
@@ -61,6 +64,13 @@ func show_toast(text: String, duration: float = TOAST_DURATION) -> void:
 			toast_label.hide()
 			toast_background.hide()
 	)
+
+func _on_energy_changed(amount: float) -> void:
+	energy_label.text = str(int(round(amount)))
+	if GameState.is_tired():
+		energy_label.add_theme_color_override("font_color", Palette.ENERGY_LOW)
+	else:
+		energy_label.remove_theme_color_override("font_color")
 
 func _on_wood_changed(amount: int) -> void:
 	wood_label.text = str(amount)

@@ -46,9 +46,21 @@ func advance() -> void:
 	Fx.burst(global_position, Color(0.7, 0.55, 0.35), 14)
 	queue_redraw()
 
+## Once the Lodge is fully built, it doubles as a place to rest - a full,
+## instant energy refill instead of the (now unavailable) "advance" action.
+func can_rest() -> bool:
+	return visible and GameState.lodge_stage >= GameState.LODGE_MAX_STAGE and GameState.energy < GameState.ENERGY_MAX
+
+func rest() -> void:
+	if not can_rest():
+		return
+	GameState.restore_energy_fully()
+	Sfx.play_rest()
+	Fx.burst(global_position, Color(0.95, 0.9, 0.6), 12)
+
 func _draw() -> void:
 	DrawUtil.shadow(self, Vector2(0, 15), Vector2(24, 5))
-	if highlighted and can_advance():
+	if highlighted and (can_advance() or can_rest()):
 		draw_arc(Vector2(0, -10), 34, 0, TAU, 32, Palette.HIGHLIGHT_RING, 2.5)
 
 	var stage := GameState.lodge_stage

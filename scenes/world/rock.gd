@@ -56,6 +56,7 @@ func mine() -> void:
 		return
 	hits_taken += 1
 	GameState.add_stone(STONE_YIELD)
+	GameState.spend_energy(GameState.MINE_ENERGY_COST)
 	Sfx.play_mine()
 	Fx.burst(global_position, Color(0.6, 0.6, 0.62), 6)
 	_shake()

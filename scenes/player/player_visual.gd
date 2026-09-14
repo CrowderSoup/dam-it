@@ -4,6 +4,9 @@ extends Node2D
 ## Art is authored facing right; Player flips this node's scale.x to face
 ## left, which mirrors everything (including the tail side) correctly.
 
+func _ready() -> void:
+	GameState.energy_changed.connect(func(_e): queue_redraw())
+
 func _draw() -> void:
 	DrawUtil.shadow(self, Vector2(0, 13), Vector2(10, 4))
 
@@ -29,11 +32,16 @@ func _draw() -> void:
 	draw_circle(Vector2(-7, 0), 2.2, Color(0.85, 0.5, 0.45, 0.5))
 	draw_circle(Vector2(7, 0), 2.2, Color(0.85, 0.5, 0.45, 0.5))
 
-	# Eyes with a little life in them.
-	draw_circle(Vector2(-4.5, -4), 2.1, Color(0.12, 0.09, 0.08))
-	draw_circle(Vector2(4.5, -4), 2.1, Color(0.12, 0.09, 0.08))
-	draw_circle(Vector2(-5.1, -4.6), 0.7, Color(1, 1, 1, 0.9))
-	draw_circle(Vector2(3.9, -4.6), 0.7, Color(1, 1, 1, 0.9))
+	# Eyes with a little life in them - or droopy, sleepy-lidded ones once
+	# GameState.energy runs low, as a visual cue to go eat/rest.
+	if GameState.is_tired():
+		draw_line(Vector2(-6.3, -4), Vector2(-2.7, -4), Color(0.12, 0.09, 0.08), 1.4)
+		draw_line(Vector2(2.7, -4), Vector2(6.3, -4), Color(0.12, 0.09, 0.08), 1.4)
+	else:
+		draw_circle(Vector2(-4.5, -4), 2.1, Color(0.12, 0.09, 0.08))
+		draw_circle(Vector2(4.5, -4), 2.1, Color(0.12, 0.09, 0.08))
+		draw_circle(Vector2(-5.1, -4.6), 0.7, Color(1, 1, 1, 0.9))
+		draw_circle(Vector2(3.9, -4.6), 0.7, Color(1, 1, 1, 0.9))
 
 	# Nose + buck teeth, the signature beaver look.
 	draw_circle(Vector2(0, -1), 1.6, Color(0.15, 0.1, 0.08))

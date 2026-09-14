@@ -27,8 +27,9 @@ godot --path .
 
 - `WASD` or arrow keys, or a gamepad's d-pad/left stick — move
 - `E` / `Space` / gamepad A — context-sensitive interact: chop a nearby
-  tree, mine a nearby rock, or build a dam piece at a nearby empty slot if
-  you have enough wood + stone
+  tree, mine a nearby rock, build a dam piece at a nearby empty slot if you
+  have enough wood + stone, eat from a berry bush, or rest at a finished
+  Lodge
 - `R` / gamepad Start — reset ALL progress (dam + Lodge) and start over
 
 ## Current demo loop: "Grow Your Pond"
@@ -91,6 +92,25 @@ toward the leak/raccoon whenever it's off-screen (fading once you're close
 enough or it's dealt with) - so neither one relies on you noticing it by
 chance.
 
+## Getting tired: energy, berry bushes, and resting
+
+The beaver has an energy meter (shown as a leaf icon + number in the HUD,
+starting at 100) that drains a little with every chop, mine, dam
+piece/repair/Lodge stage/garden spot built (a few points each), and every
+10 seconds of active movement. It's a soft mechanic, never a fail state:
+
+- Below 25 energy the beaver is "tired" - droopy, closed eyes replace the
+  normal ones, and movement speed drops the same way wading through the
+  river does. It never blocks chopping, mining, building, or anything
+  else - it's just a nudge to go take a break.
+- **Berry bushes** (scattered around the map, the same spots that used to
+  be purely decorative) restore a chunk of energy when eaten - interact
+  like a tree or rock. A picked bush regrows its berries after a short
+  cooldown, just like a felled tree or mined rock.
+- Once the **Lodge** is fully built, interacting with it also offers an
+  instant full energy refill (resting) whenever you're below max, in
+  addition to its earlier build-up stages.
+
 ## Project layout
 
 ```
@@ -99,10 +119,11 @@ scenes/
               polygons, the "pond fades in" completion script, and the
               storm and raccoon-spawner timers (see main.gd)
   player/   - the beaver: movement, facing/bob animation, interact
-  world/    - tree, rock, dam slot (build + repair-a-leak), dam piece,
-              lodge, garden spot (flower bed/bench), raccoon (scavenger),
-              critter (frog/duck/fish/butterfly/rabbit), and purely-visual
-              decorations (bushes)
+  world/    - tree, rock, berry bush (energy), dam slot (build +
+              repair-a-leak), dam piece, lodge (build-up + resting),
+              garden spot (flower bed/bench), raccoon (scavenger), critter
+              (frog/duck/fish/butterfly/rabbit), and purely-visual
+              decorations (rocks)
   ui/       - title screen and HUD: icon-based counts along the bottom,
               a toast banner for announcements, and edge_indicator.gd
               (the off-screen threat arrows)

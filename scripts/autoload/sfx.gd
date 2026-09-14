@@ -12,6 +12,8 @@ var _footstep_player: AudioStreamPlayer
 var _storm_player: AudioStreamPlayer
 var _shoo_player: AudioStreamPlayer
 var _steal_player: AudioStreamPlayer
+var _eat_player: AudioStreamPlayer
+var _rest_player: AudioStreamPlayer
 
 func _ready() -> void:
 	_chop_player = _make_player(_make_tone(220.0, 0.08, 0.5))
@@ -22,6 +24,8 @@ func _ready() -> void:
 	_storm_player = _make_player(_make_tone(70.0, 0.35, 0.45))
 	_shoo_player = _make_player(_make_tone(320.0, 0.06, 0.4))
 	_steal_player = _make_player(_make_arpeggio([320.0, 220.0], 0.08))
+	_eat_player = _make_player(_make_arpeggio([180.0, 220.0], 0.05))
+	_rest_player = _make_player(_make_arpeggio([392.0, 494.0, 587.0], 0.1))
 	GameState.dam_completed.connect(play_complete)
 
 func play_chop() -> void:
@@ -47,6 +51,12 @@ func play_shoo() -> void:
 
 func play_steal() -> void:
 	_steal_player.play()
+
+func play_eat() -> void:
+	_eat_player.play()
+
+func play_rest() -> void:
+	_rest_player.play()
 
 func _make_player(stream: AudioStreamWAV) -> AudioStreamPlayer:
 	var player := AudioStreamPlayer.new()

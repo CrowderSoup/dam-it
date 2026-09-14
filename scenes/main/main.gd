@@ -143,6 +143,7 @@ func get_save_data() -> Dictionary:
 	return {
 		"wood": GameState.wood,
 		"stone": GameState.stone,
+		"energy": GameState.energy,
 		"lodge_stage": GameState.lodge_stage,
 		"dam_slots_built": dam_slots_built,
 		"dam_slots_leaking": dam_slots_leaking,

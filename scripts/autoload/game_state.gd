@@ -1,6 +1,7 @@
 extends Node
-## Tracks shared game progress: resources, dam completion, and the Lodge
-## build-up that becomes available afterward. Autoloaded as "GameState".
+## Tracks shared game progress: resources, dam completion, the Lodge
+## build-up that becomes available afterward, and the beaver's energy.
+## Autoloaded as "GameState".
 
 signal wood_changed(new_amount: int)
 signal stone_changed(new_amount: int)
@@ -8,6 +9,7 @@ signal dam_progress_changed(built: int, total: int)
 signal dam_completed
 signal lodge_stage_changed(stage: int)
 signal lodge_completed
+signal energy_changed(new_amount: float)
 
 const WOOD_PER_DAM_PIECE := 2
 const STONE_PER_DAM_PIECE := 1
@@ -20,11 +22,21 @@ const LODGE_STAGE_COSTS := [
 ]
 const LODGE_MAX_STAGE := 3
 
+## Energy: a soft, never-fail meter. Being "tired" only ever slows the
+## beaver down (see Player.TIRED_SPEED_MULTIPLIER) - it never blocks
+## chopping, mining, building, or anything else.
+const ENERGY_MAX := 100.0
+const ENERGY_TIRED_THRESHOLD := 25.0
+const CHOP_ENERGY_COST := 3.0
+const MINE_ENERGY_COST := 3.0
+const BUILD_ENERGY_COST := 5.0
+
 var wood: int = 0
 var stone: int = 0
 var dam_pieces_total: int = 0
 var dam_pieces_built: int = 0
 var lodge_stage: int = 0
+var energy: float = ENERGY_MAX
 
 ## Called by each DamSlot on _ready() so the total is derived from the
 ## scene instead of duplicated as a magic number.
@@ -64,6 +76,7 @@ func spend_resources_on_dam_piece() -> void:
 	stone_changed.emit(stone)
 	dam_pieces_built += 1
 	dam_progress_changed.emit(dam_pieces_built, dam_pieces_total)
+	spend_energy(BUILD_ENERGY_COST)
 	if dam_pieces_total > 0 and dam_pieces_built >= dam_pieces_total:
 		dam_completed.emit()
 
@@ -75,6 +88,7 @@ func spend_resources_on_repair() -> void:
 	stone -= STONE_PER_DAM_PIECE
 	wood_changed.emit(wood)
 	stone_changed.emit(stone)
+	spend_energy(BUILD_ENERGY_COST)
 
 ## Generic spend for one-off cosmetic purchases (garden decorations) that
 ## don't need their own dedicated cost table like the dam/Lodge do.
@@ -86,6 +100,7 @@ func spend(wood_cost: int, stone_cost: int) -> void:
 	stone -= stone_cost
 	wood_changed.emit(wood)
 	stone_changed.emit(stone)
+	spend_energy(BUILD_ENERGY_COST)
 
 func can_afford_lodge_stage() -> bool:
 	if lodge_stage >= LODGE_MAX_STAGE:
@@ -103,8 +118,24 @@ func advance_lodge_stage() -> void:
 	stone_changed.emit(stone)
 	lodge_stage += 1
 	lodge_stage_changed.emit(lodge_stage)
+	spend_energy(BUILD_ENERGY_COST)
 	if lodge_stage >= LODGE_MAX_STAGE:
 		lodge_completed.emit()
+
+func is_tired() -> bool:
+	return energy <= ENERGY_TIRED_THRESHOLD
+
+func spend_energy(amount: float) -> void:
+	energy = maxf(0.0, energy - amount)
+	energy_changed.emit(energy)
+
+func restore_energy(amount: float) -> void:
+	energy = minf(ENERGY_MAX, energy + amount)
+	energy_changed.emit(energy)
+
+func restore_energy_fully() -> void:
+	energy = ENERGY_MAX
+	energy_changed.emit(energy)
 
 ## Restores the plain scalar fields from a save file, silently (no signals
 ## yet - Main hasn't finished restoring dam-slot/lodge scene state at this
@@ -115,6 +146,7 @@ func load_from_save(data: Dictionary) -> void:
 	wood = data.get("wood", 0)
 	stone = data.get("stone", 0)
 	lodge_stage = data.get("lodge_stage", 0)
+	energy = data.get("energy", ENERGY_MAX)
 
 ## Dam-slot state is scene-shaped, not GameState-shaped, so Main restores
 ## that directly and reports back the resulting count here (silently, see
@@ -131,8 +163,9 @@ func announce_loaded_state() -> void:
 	stone_changed.emit(stone)
 	dam_progress_changed.emit(dam_pieces_built, dam_pieces_total)
 	lodge_stage_changed.emit(lodge_stage)
+	energy_changed.emit(energy)
 
-## Resets all progress (dam + Lodge) ahead of a scene reload;
+## Resets all progress (dam + Lodge + energy) ahead of a scene reload;
 ## dam_pieces_total is rebuilt as the reloaded DamSlot instances
 ## re-register themselves.
 func reset() -> void:
@@ -141,7 +174,9 @@ func reset() -> void:
 	dam_pieces_total = 0
 	dam_pieces_built = 0
 	lodge_stage = 0
+	energy = ENERGY_MAX
 	wood_changed.emit(wood)
 	stone_changed.emit(stone)
 	dam_progress_changed.emit(dam_pieces_built, dam_pieces_total)
 	lodge_stage_changed.emit(lodge_stage)
+	energy_changed.emit(energy)

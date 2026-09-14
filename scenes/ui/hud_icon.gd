@@ -4,7 +4,7 @@ extends Control
 ## piece = tiny log stack, lodge = tiny house) so the icon reads at a glance
 ## without needing a text label to explain it.
 
-enum Kind { WOOD, STONE, DAM, LODGE }
+enum Kind { WOOD, STONE, DAM, LODGE, ENERGY }
 
 @export var kind: Kind = Kind.WOOD
 
@@ -19,6 +19,8 @@ func _draw() -> void:
 			_draw_dam(c)
 		Kind.LODGE:
 			_draw_lodge(c)
+		Kind.ENERGY:
+			_draw_energy(c)
 
 func _draw_wood(c: Vector2) -> void:
 	draw_circle(c, 11.0, Palette.WOOD_MID)
@@ -52,3 +54,11 @@ func _draw_lodge(c: Vector2) -> void:
 		c + Vector2(-10, -1), c + Vector2(10, -1), c + Vector2(0, -11),
 	])
 	DrawUtil.outlined_polygon(self, roof, Palette.ROOF, 1.5)
+
+func _draw_energy(c: Vector2) -> void:
+	# A leaf, echoing what the beaver actually eats (bark + greens).
+	var leaf := PackedVector2Array([
+		c + Vector2(0, -10), c + Vector2(8, -2), c + Vector2(0, 10), c + Vector2(-8, -2),
+	])
+	DrawUtil.outlined_polygon(self, leaf, Palette.LEAF_MID, 1.5)
+	draw_line(c + Vector2(0, -8), c + Vector2(0, 9), Palette.LEAF_DARK, 1.2)

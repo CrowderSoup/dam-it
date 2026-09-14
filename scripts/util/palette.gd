@@ -31,6 +31,8 @@ const LEAF_MID := Color("4fa348")
 const LEAF_DARK := Color("368239")
 const BUSH_LIGHT := Color("5fae4f")
 const BUSH_DARK := Color("3f8a3f")
+const BERRY := Color("bf4050")
+const ENERGY_LOW := Color("ff8c4d")
 
 # Beaver
 const FUR_LIGHT := Color("a9764a")

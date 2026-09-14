@@ -48,6 +48,7 @@ func chop() -> void:
 		return
 	hits_taken += 1
 	GameState.add_wood(WOOD_YIELD)
+	GameState.spend_energy(GameState.CHOP_ENERGY_COST)
 	Sfx.play_chop()
 	Fx.burst(global_position, Color(0.55, 0.4, 0.22), 8)
 	_shake()

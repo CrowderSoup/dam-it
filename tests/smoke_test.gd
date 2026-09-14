@@ -27,6 +27,7 @@ func _ready() -> void:
 	var frog: Node2D = main.get_node("Critters/Frog")
 	var raccoon: Raccoon = main.get_node("Raccoon")
 	var hud: CanvasLayer = main.get_node("HUD")
+	var berry_bush1: Area2D = main.get_node("BerryBushes/BerryBush1")
 
 	assert(GameState.dam_pieces_total == 5, "expected 5 dam slots, got %d" % GameState.dam_pieces_total)
 	print("OK: dam_pieces_total == 5")
@@ -45,19 +46,47 @@ func _ready() -> void:
 	tree1.set_highlighted(false)
 	print("OK: tree highlighting toggles")
 
+	var energy_before_chop := GameState.energy
 	for i in 3:
 		tree1.chop()
 	assert(GameState.wood == 3 and tree1.felled, "expected 3 wood, tree felled after 3 hits")
 	tree1.chop()
 	assert(GameState.wood == 3, "chopping a felled tree should not yield more wood")
+	assert(GameState.energy == energy_before_chop - 3 * GameState.CHOP_ENERGY_COST, "3 successful chops should spend CHOP_ENERGY_COST each")
 	print("OK: chopping a tree 3 times yields wood and fells it; felled trees give no more")
 
+	var energy_before_mine := GameState.energy
 	for i in 2:
 		rock1.mine()
 	assert(GameState.stone == 2 and rock1.broken, "expected 2 stone, rock broken after 2 hits")
 	rock1.mine()
 	assert(GameState.stone == 2, "mining a broken rock should not yield more stone")
+	assert(GameState.energy == energy_before_mine - 2 * GameState.MINE_ENERGY_COST, "2 successful mines should spend MINE_ENERGY_COST each")
 	print("OK: mining a rock 2 times yields stone and breaks it; broken rocks give no more")
+
+	# --- Energy / tired mechanic ---
+	assert(not GameState.is_tired(), "energy should still be well above the tired threshold")
+	GameState.spend_energy(1000.0)
+	assert(GameState.energy == 0.0, "spend_energy should clamp at zero, not go negative")
+	assert(GameState.is_tired(), "energy at zero should count as tired")
+	GameState.restore_energy(10.0)
+	assert(GameState.energy == 10.0)
+	assert(GameState.is_tired(), "10/100 energy should still be tired (threshold is 25)")
+	GameState.restore_energy(1000.0)
+	assert(GameState.energy == GameState.ENERGY_MAX, "restore_energy should clamp at ENERGY_MAX, not overshoot")
+	assert(not GameState.is_tired())
+	print("OK: spend_energy()/restore_energy() clamp correctly and is_tired() reflects the threshold")
+
+	assert(berry_bush1.can_eat(), "a fresh berry bush should be eatable")
+	assert(player._resolve_target(berry_bush1) == berry_bush1)
+	GameState.spend_energy(50.0)
+	var energy_before_eat := GameState.energy
+	berry_bush1.eat()
+	assert(GameState.energy == energy_before_eat + BerryBush.ENERGY_RESTORE, "eating should restore ENERGY_RESTORE energy")
+	assert(not berry_bush1.can_eat(), "a just-eaten bush should not be eatable again until it respawns")
+	berry_bush1.eat()
+	assert(GameState.energy == energy_before_eat + BerryBush.ENERGY_RESTORE, "eating a picked bush should be a no-op")
+	print("OK: eating a berry bush restores energy once, then blocks re-eating until it respawns")
 
 	assert(not lodge.visible, "lodge should be hidden before the dam is finished")
 	assert(not lodge.can_advance())
@@ -176,6 +205,17 @@ func _ready() -> void:
 	assert(not lodge.can_advance(), "lodge should not advance past max stage")
 	print("OK: lodge reaches max stage and stops accepting further advances")
 
+	# --- Resting at the finished Lodge ---
+	GameState.restore_energy_fully()
+	assert(not lodge.can_rest(), "a lodge at full energy should not offer resting")
+	GameState.spend_energy(80.0)
+	assert(lodge.can_rest(), "a finished lodge should offer resting once energy is below max")
+	assert(player._resolve_target(lodge) == lodge)
+	lodge.rest()
+	assert(GameState.energy == GameState.ENERGY_MAX, "resting at the lodge should fully refill energy")
+	assert(not lodge.can_rest(), "a freshly-rested lodge should not offer resting again immediately")
+	print("OK: resting at a finished lodge fully refills energy")
+
 	# --- Garden spots (post-Lodge cosmetic decorations) ---
 	var flower_spot: GardenSpot = main.get_node("GardenSpots/FlowerBedSpot")
 	var butterfly: Node2D = main.get_node("Critters/Butterfly")
@@ -216,8 +256,10 @@ func _ready() -> void:
 	SaveManager.delete_save()
 	assert(not SaveManager.has_save())
 
+	GameState.spend_energy(37.0)
 	var saved_data: Dictionary = main.get_save_data()
 	assert(saved_data["wood"] == GameState.wood)
+	assert(saved_data["energy"] == GameState.energy)
 	assert(saved_data["lodge_stage"] == GameState.LODGE_MAX_STAGE)
 	assert(saved_data["dam_slots_built"]["DamSlot1"] == true)
 	assert(saved_data["dam_slots_leaking"]["DamSlot2"] == true)
@@ -236,12 +278,14 @@ func _ready() -> void:
 
 	GameState.reset()
 	assert(GameState.wood == 0 and GameState.lodge_stage == 0)
+	assert(GameState.energy == GameState.ENERGY_MAX, "reset() should restore energy to max")
 
 	var main2: Node = load("res://scenes/main/main.tscn").instantiate()
 	add_child(main2)
 	# main2's own _ready() calls SaveManager.load_into(self), so by the time
 	# add_child() returns, it should already be restored.
 	assert(GameState.wood == saved_data["wood"], "loading should restore wood")
+	assert(GameState.energy == saved_data["energy"], "loading should restore energy")
 	assert(GameState.lodge_stage == GameState.LODGE_MAX_STAGE, "loading should restore lodge stage")
 	var restored_slot1: Area2D = main2.get_node("DamSlots/DamSlot1")
 	assert(restored_slot1.built, "loading should restore built dam slots")

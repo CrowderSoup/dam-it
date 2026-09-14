@@ -5,7 +5,6 @@
 [ext_resource type="PackedScene" path="res://scenes/world/tree.tscn" id="3"]
 [ext_resource type="PackedScene" path="res://scenes/world/dam_slot.tscn" id="4"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="5"]
-[ext_resource type="PackedScene" path="res://scenes/world/decoration.tscn" id="6"]
 [ext_resource type="PackedScene" path="res://scenes/world/rock.tscn" id="7"]
 [ext_resource type="PackedScene" path="res://scenes/world/grass_patch.tscn" id="8"]
 [ext_resource type="PackedScene" path="res://scenes/world/lodge.tscn" id="9"]
@@ -13,6 +12,7 @@
 [ext_resource type="Shader" path="res://shaders/water.gdshader" id="11"]
 [ext_resource type="PackedScene" path="res://scenes/world/garden_spot.tscn" id="12"]
 [ext_resource type="PackedScene" path="res://scenes/world/raccoon.tscn" id="13"]
+[ext_resource type="PackedScene" path="res://scenes/world/berry_bush.tscn" id="14"]
 
 [sub_resource type="ShaderMaterial" id="2"]
 shader = ExtResource("11")
@@ -80,22 +80,18 @@ material = SubResource("3")
 color = Color(0.2275, 0.498, 0.7882, 1)
 polygon = PackedVector2Array(950.0, 400.0, 894.6, 463.8, 855.5, 542.9, 740.0, 542.5, 619.2, 549.4, 576.3, 467.5, 519.5, 400.0, 594.5, 340.0, 624.5, 257.1, 740.0, 250.0, 834.5, 283.1, 931.0, 321.2)
 
-[node name="Decorations" type="Node2D" parent="."]
+[node name="BerryBushes" type="Node2D" parent="."]
 
-[node name="Bush1" parent="Decorations" instance=ExtResource("6")]
-kind = 1
+[node name="BerryBush1" parent="BerryBushes" instance=ExtResource("14")]
 position = Vector2(420, 480)
 
-[node name="Bush2" parent="Decorations" instance=ExtResource("6")]
-kind = 1
+[node name="BerryBush2" parent="BerryBushes" instance=ExtResource("14")]
 position = Vector2(950, 150)
 
-[node name="Bush3" parent="Decorations" instance=ExtResource("6")]
-kind = 1
+[node name="BerryBush3" parent="BerryBushes" instance=ExtResource("14")]
 position = Vector2(150, 720)
 
-[node name="Bush4" parent="Decorations" instance=ExtResource("6")]
-kind = 1
+[node name="BerryBush4" parent="BerryBushes" instance=ExtResource("14")]
 position = Vector2(1300, 480)
 
 [node name="Trees" type="Node2D" parent="."]

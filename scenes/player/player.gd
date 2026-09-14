@@ -8,6 +8,9 @@ const BOB_SPEED := 10.0
 const BOB_HEIGHT := 2.0
 const FOOTSTEP_INTERVAL := 0.35
 const WATER_SPEED_MULTIPLIER := 0.5
+const TIRED_SPEED_MULTIPLIER := 0.5
+const AMBIENT_DRAIN_INTERVAL := 10.0
+const AMBIENT_DRAIN_AMOUNT := 1.0
 
 @onready var interact_area: Area2D = $InteractionArea
 @onready var water_detector: Area2D = $WaterDetector
@@ -15,6 +18,7 @@ const WATER_SPEED_MULTIPLIER := 0.5
 
 var _bob_time := 0.0
 var _footstep_time := 0.0
+var _ambient_drain_time := 0.0
 var _highlighted_target: Node = null
 
 func _physics_process(delta: float) -> void:
@@ -30,6 +34,8 @@ func _physics_process(delta: float) -> void:
 	input_vector = input_vector.normalized()
 
 	var speed_multiplier := WATER_SPEED_MULTIPLIER if water_detector.get_overlapping_areas().size() > 0 else 1.0
+	if GameState.is_tired():
+		speed_multiplier *= TIRED_SPEED_MULTIPLIER
 	velocity = input_vector * SPEED * speed_multiplier
 	move_and_slide()
 
@@ -50,6 +56,11 @@ func _physics_process(delta: float) -> void:
 		visual.position.y = lerp(visual.position.y, 0.0, 0.2)
 		_footstep_time = FOOTSTEP_INTERVAL
 
+	_ambient_drain_time += delta
+	if _ambient_drain_time >= AMBIENT_DRAIN_INTERVAL:
+		_ambient_drain_time = 0.0
+		GameState.spend_energy(AMBIENT_DRAIN_AMOUNT)
+
 	_update_highlight()
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -58,13 +69,14 @@ func _unhandled_input(event: InputEvent) -> void:
 
 ## Trees and rocks register their InteractArea (a child) in a "*_areas"
 ## group, so the overlap result is the area, not the interactable itself;
-## dam slots and the Lodge ARE the Area2D, so no indirection is needed.
-## This resolves any of them to the node that actually has
-## chop()/mine()/build()/advance()/set_highlighted().
+## dam slots, the Lodge, garden spots, raccoons, and berry bushes ARE the
+## Area2D, so no indirection is needed. This resolves any of them to the
+## node that actually has chop()/mine()/build()/advance()/eat()/
+## set_highlighted().
 func _resolve_target(area: Area2D) -> Node:
 	if area.is_in_group("tree_areas") or area.is_in_group("rock_areas"):
 		return area.get_parent()
-	if area.is_in_group("dam_slots") or area.is_in_group("lodge") or area.is_in_group("garden_spots") or area.is_in_group("raccoons"):
+	if area.is_in_group("dam_slots") or area.is_in_group("lodge") or area.is_in_group("garden_spots") or area.is_in_group("raccoons") or area.is_in_group("berry_bushes"):
 		return area
 	return null
 
@@ -90,6 +102,8 @@ func _try_interact() -> void:
 		if target.is_in_group("lodge"):
 			if target.can_advance() and GameState.can_afford_lodge_stage():
 				target.advance()
+			elif target.can_rest():
+				target.rest()
 			return
 		if target.is_in_group("garden_spots"):
 			if target.can_build() and GameState.can_afford(GardenSpot.WOOD_COST, GardenSpot.STONE_COST):
@@ -98,6 +112,10 @@ func _try_interact() -> void:
 		if target.is_in_group("raccoons"):
 			if target.can_shoo():
 				target.shoo()
+			return
+		if target.is_in_group("berry_bushes"):
+			if target.can_eat():
+				target.eat()
 			return
 
 func _update_highlight() -> void:

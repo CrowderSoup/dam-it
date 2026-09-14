@@ -29,13 +29,13 @@ outline_color = Color(0.11, 0.09, 0.07, 0.9)
 script = ExtResource("1")
 
 [node name="BottomBar" type="Panel" parent="."]
-position = Vector2(112, 298)
-size = Vector2(416, 46)
+position = Vector2(70, 298)
+size = Vector2(500, 46)
 theme_override_styles/panel = SubResource("1")
 
 [node name="BottomMargin" type="MarginContainer" parent="."]
-position = Vector2(112, 298)
-size = Vector2(416, 46)
+position = Vector2(70, 298)
+size = Vector2(500, 46)
 theme_override_constants/margin_left = 12
 theme_override_constants/margin_top = 6
 theme_override_constants/margin_right = 12
@@ -44,6 +44,20 @@ theme_override_constants/margin_bottom = 6
 [node name="ItemsHBox" type="HBoxContainer" parent="BottomMargin"]
 alignment = 1
 theme_override_constants/separation = 22
+
+[node name="EnergyGroup" type="HBoxContainer" parent="BottomMargin/ItemsHBox"]
+theme_override_constants/separation = 4
+
+[node name="EnergyIcon" type="Control" parent="BottomMargin/ItemsHBox/EnergyGroup"]
+custom_minimum_size = Vector2(26, 26)
+script = ExtResource("2")
+kind = 4
+
+[node name="EnergyLabel" type="Label" parent="BottomMargin/ItemsHBox/EnergyGroup"]
+custom_minimum_size = Vector2(0, 26)
+label_settings = SubResource("2")
+vertical_alignment = 1
+text = "100"
 
 [node name="WoodGroup" type="HBoxContainer" parent="BottomMargin/ItemsHBox"]
 theme_override_constants/separation = 4
@@ -110,7 +124,7 @@ theme_override_styles/panel = SubResource("1")
 position = Vector2(24, 22)
 size = Vector2(424, 24)
 label_settings = SubResource("2")
-text = "WASD / arrows to move · E to chop, mine & build (2 wood + 1 stone / piece)"
+text = "WASD / arrows to move · E to chop, mine, build & eat berries when tired"
 
 [node name="ToastBackground" type="Panel" parent="."]
 visible = false
