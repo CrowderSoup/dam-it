@@ -561,6 +561,15 @@ func _ready() -> void:
 	hud.set_action_prompt(null)
 	print("OK: HUD.set_action_prompt() renders label/cost/reason and hides for a null option")
 
+	# The controls window used to derive a viewport-breaking minimum width
+	# from its two long, unwrapped sentences in Web builds (issue #32).
+	game_menu._on_controls_pressed()
+	await get_tree().process_frame
+	assert(game_menu.controls_dialog.get_label().autowrap_mode != TextServer.AUTOWRAP_OFF, "controls copy should wrap")
+	assert(game_menu.controls_dialog.size.x <= 420 and game_menu.controls_dialog.size.y <= 300, "controls dialog should stay at its bounded design size, got %s" % game_menu.controls_dialog.size)
+	game_menu.controls_dialog.hide()
+	print("OK: the controls dialog uses wrapped copy and a viewport-safe size")
+
 	# --- Save / load (slot-based) ---
 	var dam_slot2: Area2D = main.get_node("DamSlots/DamSlot2")
 	dam_slot2.start_leaking()
@@ -610,7 +619,8 @@ func _ready() -> void:
 	# pinning down here. See story_test.gd for real story save/load coverage.
 	var story_data: Dictionary = saved_data["story"]
 	assert(story_data["flags"] == {}, "no flags should be set without any dialogue having run")
-	assert(story_data["active_dialogue_id"] == "" and story_data["active_dialogue_line"] == -1, "no dialogue is active outside of dialogue_ui_test.gd")
+	assert(story_data["active_dialogue_id"] == "" and story_data["active_dialogue_line"] == -1 and story_data["active_dialogue_choice"] == "", "no dialogue is active outside of dialogue_ui_test.gd")
+	assert(story_data["current_objective_id"] == "gather_starter_wood", "the HUD's current objective must survive a save/load")
 	assert(story_data["objectives"].keys() == ["gather_starter_wood"], "Main's bootstrapped fixture objective should be the only one registered")
 	assert(story_data["objectives"]["gather_starter_wood"]["status"] in ["active", "completed"], "the bootstrapped objective should have started")
 	print("OK: get_save_data() includes the version 2 story section, reflecting Main's bootstrapped objective")
@@ -643,7 +653,7 @@ func _ready() -> void:
 	assert(migrated_data["save_version"] == SaveManager.SAVE_VERSION, "a version-1 save should be migrated to the current save version on read")
 	assert(migrated_data["wood"] == 4 and migrated_data["lodge_stage"] == 1, "migration should preserve pre-existing fields untouched")
 	assert(migrated_data["dam_slots_built"]["DamSlot1"] == true, "migration should preserve pre-existing dam-slot state untouched")
-	assert(migrated_data["story"] == {"flags": {}, "objectives": {}, "active_dialogue_id": "", "active_dialogue_line": -1}, "migrating a version-1 save should introduce the story section at its empty default")
+	assert(migrated_data["story"] == {"flags": {}, "objectives": {}, "current_objective_id": "", "active_dialogue_id": "", "active_dialogue_line": -1, "active_dialogue_choice": ""}, "migrating a version-1 save should introduce the story section at its empty default")
 	print("OK: SaveManager migrates a version-1 save to the current version, preserving its data and adding an empty default story section")
 
 	# A save from a version this build has no migration path for is treated
@@ -731,6 +741,9 @@ func _ready() -> void:
 	assert(restored_flower_spot.visible and restored_flower_spot.built, "loading should restore built garden spots")
 	var restored_butterfly: Node2D = main2.get_node("Critters/Butterfly")
 	assert(restored_butterfly.visible, "loading a built garden spot should re-reveal its critter")
+	assert(ActOneController.get_objective_status("gather_starter_wood") == story_data["objectives"]["gather_starter_wood"]["status"], "Main must register story content before loading its saved objective state")
+	assert(ActOneController.get_current_objective_id() == "gather_starter_wood", "loading should restore the HUD's current objective")
+	assert(main2.get_node("HUD").objective_label.visible, "the HUD should refresh from restored objective state")
 	print("OK: a fresh scene instance auto-loads the active session's slot on _ready()")
 
 	SaveManager.delete_save(1)

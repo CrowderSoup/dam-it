@@ -25,6 +25,10 @@ var _journal: CanvasLayer = null
 func _ready() -> void:
 	hide()
 	save_feedback.hide()
+	# AcceptDialog sizes itself from its label's minimum width. Without wrap,
+	# the long controls copy forced an embedded Web window wider than the
+	# entire 640px viewport despite the size set in the scene.
+	controls_dialog.get_label().autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
 func set_journal(journal: CanvasLayer) -> void:
 	_journal = journal
@@ -64,7 +68,7 @@ func _on_save_pressed() -> void:
 	save_feedback.show()
 
 func _on_controls_pressed() -> void:
-	controls_dialog.popup_centered()
+	controls_dialog.popup_centered(Vector2i(420, 300))
 
 func _on_new_game_pressed() -> void:
 	request_new_game()

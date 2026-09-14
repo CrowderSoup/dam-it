@@ -105,6 +105,7 @@ func _ready() -> void:
 	var mid_objective_save: Dictionary = ActOneController.get_save_data()
 	assert(mid_objective_save["flags"]["met_moss"] == true, "the flag set by the earlier choice should be in the save data")
 	assert(mid_objective_save["objectives"]["gather_starter_wood"] == {"status": "active", "current": 3})
+	assert(mid_objective_save["current_objective_id"] == "gather_starter_wood")
 	assert(mid_objective_save["active_dialogue_id"] == "", "the dialogue had already ended before this save")
 
 	ActOneController.reset()
@@ -114,8 +115,9 @@ func _ready() -> void:
 	assert(ActOneController.get_flag("met_moss"), "loading should restore the flag")
 	assert(ActOneController.get_objective_status("gather_starter_wood") == "active")
 	assert(ActOneController.get_objective_progress("gather_starter_wood") == 3, "loading should restore mid-objective progress")
+	assert(ActOneController.get_current_objective_id() == "gather_starter_wood", "loading should restore which objective the HUD calls current")
 	assert(ActOneController.get_active_dialogue_id() == "", "no dialogue was active when this was saved")
-	print("OK: save/load restores flags and mid-objective progress")
+	print("OK: save/load restores flags, progress, and the current objective")
 
 	# Major objective boundary: completed.
 	GameState.add_wood(3)
@@ -141,6 +143,7 @@ func _ready() -> void:
 	var mid_dialogue_save: Dictionary = ActOneController.get_save_data()
 	assert(mid_dialogue_save["active_dialogue_id"] == "moss_intro")
 	assert(mid_dialogue_save["active_dialogue_line"] == 1)
+	assert(mid_dialogue_save["active_dialogue_choice"] == "")
 	assert(not mid_dialogue_save["flags"].get("met_moss", false), "no choice has been made yet at this boundary")
 
 	ActOneController.reset()
@@ -155,14 +158,30 @@ func _ready() -> void:
 	assert(ActOneController.get_flag("met_moss"), "choosing after a mid-dialogue load should still apply its effects")
 	print("OK: save/load resumes mid-dialogue at the exact saved line, and it's still interactive")
 
+	# Saving after a choice must restore the acknowledgement phase rather
+	# than offer the choices (and their effects) a second time.
+	var acknowledgement_save := ActOneController.get_save_data()
+	assert(acknowledgement_save["active_dialogue_choice"] == "playful_lucky_you")
+	ActOneController.reset()
+	ActOneController.load_content(objectives, dialogues)
+	ActOneController.load_from_save(acknowledgement_save)
+	assert(ActOneController.get_active_choice_id() == "playful_lucky_you")
+	assert(ActOneController.get_active_choice_acknowledgement() == "That confidence again. Let's see it fed.")
+	ActOneController.advance_dialogue()
+	assert(ActOneController.get_active_choice_id().is_empty(), "advancing should leave the restored acknowledgement phase")
+	assert(ActOneController.get_current_line().text.begins_with("Fine."), "advancing a restored acknowledgement should reach the next line")
+	print("OK: save/load preserves a post-choice acknowledgement without replaying the choice")
+
 	# --- Unknown ids in saved data are dropped safely, not crashed on ---
 	ActOneController.reset()
 	ActOneController.load_content(objectives, dialogues)
 	ActOneController.load_from_save({
 		"flags": {"met_moss": true},
 		"objectives": {"an_objective_that_was_removed": {"status": "active", "current": 5}},
+		"current_objective_id": "an_objective_that_was_removed",
 		"active_dialogue_id": "a_dialogue_that_was_removed",
 		"active_dialogue_line": 0,
+		"active_dialogue_choice": "removed_choice",
 	})
 	assert(ActOneController.get_flag("met_moss"), "a known flag should still restore")
 	assert(ActOneController.get_objective_status("gather_starter_wood") == "inactive", "an untouched known objective should keep its default state")

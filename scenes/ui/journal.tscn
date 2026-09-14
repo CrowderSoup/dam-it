@@ -98,6 +98,6 @@ text = "No objectives yet - explore a little and one will turn up."
 layout_mode = 2
 label_settings = SubResource("3")
 horizontal_alignment = 1
-text = "[J] Close  ·  [Esc] Close  ·  Arrows/D-pad to browse"
+text = "[J] Close  |  [Esc] Close  |  Arrows/D-pad to browse"
 
 [connection signal="pressed" from="Panel/CloseButton" to="." method="close"]

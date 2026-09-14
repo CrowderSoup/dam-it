@@ -57,8 +57,15 @@ func _ready() -> void:
 	# (advance/choose) as the only thing "menu" and friends can reach.
 	ActOneController.dialogue_started.connect(_on_dialogue_started)
 	ActOneController.dialogue_ended.connect(_on_dialogue_ended)
-	SaveManager.load_into(self)
+	# Story content must exist before apply_save_data() asks the controller to
+	# restore objective/dialogue ids. The old order silently discarded every
+	# saved story entry as unknown, then started the first objective fresh.
 	_setup_act1_objective()
+	SaveManager.load_into(self)
+	hud.restore_from_state()
+	dialogue_box.restore_from_state()
+	if not ActOneController.get_active_dialogue_id().is_empty():
+		_on_dialogue_started(ActOneController.get_active_dialogue_id())
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("restart"):
@@ -66,6 +73,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _on_dialogue_started(_dialogue_id: String) -> void:
 	game_menu.process_mode = Node.PROCESS_MODE_DISABLED
+	journal.process_mode = Node.PROCESS_MODE_DISABLED
 
 func _on_dialogue_ended(_dialogue_id: String) -> void:
 	# game_menu.tscn sets GameMenu's own process_mode to ALWAYS (see its
@@ -73,6 +81,7 @@ func _on_dialogue_ended(_dialogue_id: String) -> void:
 	# CanvasLayer default of INHERIT, or Escape/Start would stop reaching it
 	# once a dialogue has been opened and closed.
 	game_menu.process_mode = Node.PROCESS_MODE_ALWAYS
+	journal.process_mode = Node.PROCESS_MODE_ALWAYS
 
 ## Shared by the "restart" shortcut and the game menu's "New Game" button.
 func _start_new_game() -> void:
@@ -222,9 +231,8 @@ func get_save_data() -> Dictionary:
 func apply_save_data(data: Dictionary) -> void:
 	GameState.load_from_save(data)
 	# Content (objectives/dialogues) must already be registered via
-	# ActOneController.load_content() by whatever loads it for this scene -
-	# not wired into Main yet (see dialogue-schema.md's ActOneController
-	# section) - before this can restore anything beyond an empty default.
+	# _setup_act1_objective() before this runs; otherwise every saved id would
+	# be treated as removed content and silently skipped.
 	ActOneController.load_from_save(_saved_dictionary(data, "story"))
 
 	var built_count := 0

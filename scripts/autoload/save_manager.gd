@@ -158,8 +158,10 @@ func _migrate_v1_to_v2(data: Dictionary) -> Dictionary:
 		migrated["story"] = {
 			"flags": {},
 			"objectives": {},
+			"current_objective_id": "",
 			"active_dialogue_id": "",
 			"active_dialogue_line": -1,
+			"active_dialogue_choice": "",
 		}
 	return migrated
 

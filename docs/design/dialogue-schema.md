@@ -133,20 +133,18 @@ registered in `project.godot` alongside `GameState`. It owns Act I's story
 flags and objective progress - orchestration that used to have nowhere to
 live except `GameState` (which stays focused on resources/dam/Lodge/energy).
 
-Content is not auto-loaded; nothing currently calls `load_content()` during
-real gameplay (only `tests/story_test.gd` and `tests/dialogue_ui_test.gd`
-do, to exercise the schema/UI against the Moss fixture). Wiring a
-resident's interact() to actually offer `start_dialogue()`, and hooking
-real Act I content into scene startup, is follow-up work for later issues
-(#16/#17) - #18 built the presentation/input layer any such caller can
-already drive today by calling `start_dialogue()`.
+`Main` registers the current Act I resources before applying a save, so
+objective and mid-dialogue state can be restored against known content.
+Wiring a resident's interact() to actually offer `start_dialogue()` remains
+follow-up work; for now Main starts the first gathering objective directly.
 
 Key API:
 
 - `load_content(objectives, dialogues)` / `register_objective()` /
   `register_dialogue()` - validate and register content.
 - `start_dialogue(id)`, `advance_dialogue()`, `choose(choice_id)`,
-  `get_current_line()`, `get_current_speaker()`, `get_active_dialogue_id()` -
+  `get_current_line()`, `get_current_speaker()`, `get_active_dialogue_id()`,
+  `get_active_choice_id()` -
   step through a dialogue. Matches [Dialogue style](dialogue-style.md)'s
   "ordinary dialogue never auto-advances" rule: nothing here advances on its
   own, including after a choice - a caller (eventually the dialogue UI)
@@ -163,9 +161,8 @@ Key API:
 
 ## Save/load
 
-Status: **Implemented** (issue #8). Covers persistence only - there is still
-no dialogue/objective UI to load *into* (issue #18); this is what lets a
-future one resume correctly once it exists.
+Status: **Implemented** (issues #8, #16, and #18), including restoration into
+the current-objective HUD, journal, and dialogue presentation.
 
 `SaveManager` (`scripts/autoload/save_manager.gd`) owns the save file and its
 `save_version`, but not what's in the payload - that's assembled by
@@ -179,17 +176,24 @@ future one resume correctly once it exists.
     "objectives": {                                # objective id -> progress
         "gather_starter_wood": {"status": "active", "current": 3},
     },
+    "current_objective_id": "gather_starter_wood", # objective called out by the HUD
     "active_dialogue_id": "moss_intro",           # "" if none active
     "active_dialogue_line": 1,                    # index into that dialogue's lines, -1 if none active
+    "active_dialogue_choice": "practical_start_together", # choice acknowledgement waiting for confirm, or ""
 }
 ```
 
 **The mid-dialogue boundary**: a `DialogueLine`'s effects apply synchronously
 the moment it's shown (`_advance_to_next_visible_line()`), so a session is
 never saved "mid-effect" - only ever sitting on a fully-applied line, waiting
-for `advance_dialogue()` or `choose()`. Saving the active dialogue's id and
-line index is therefore enough to resume exactly there; `load_from_save()`
-just re-points at that line without replaying anything.
+for `advance_dialogue()` or `choose()`. The active dialogue id and line index
+restore the line; the optional choice id distinguishes an already-applied
+choice acknowledgement from a line still waiting for a choice. This prevents
+re-offering a response and applying its effects twice after reload.
+
+The current-objective and active-choice fields were added compatibly within
+version 2. When they are absent, loading derives the latest started objective
+from story order and treats the active line as still awaiting a choice.
 
 **Restoring unknown ids** (an objective or dialogue id the save references
 that isn't registered - removed/renamed content, or a save taken before any

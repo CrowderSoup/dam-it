@@ -88,7 +88,11 @@ func _refresh() -> void:
 		# player about a goal they don't have yet.
 		if summary["status"] == "inactive":
 			continue
-		var prefix := "✓ " if summary["status"] == "completed" else "● "
+		# Godot's Web export does not have the desktop system-font fallback
+		# that happened to supply these Unicode glyphs locally. Keep status
+		# markers in the guaranteed ASCII range so the journal is identical in
+		# native and browser builds.
+		var prefix := "[Done] " if summary["status"] == "completed" else "> "
 		list.add_item(prefix + String(summary["title"]))
 		_ids.append(summary["id"])
 

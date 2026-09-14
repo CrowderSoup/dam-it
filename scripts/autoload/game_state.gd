@@ -76,10 +76,9 @@ var water_read: bool = false
 ## Staged tutorial banners (see hud.gd) the player has already dismissed or
 ## let time out, keyed by tutorial id - so a seen tutorial doesn't reappear
 ## after loading a save. This is a straightforward additive JSON field
-## (see get_save_data()/load_from_save() below) rather than a proper
-## versioned save-schema field; issue #8 is expected to introduce real save
-## migrations, at which point this should fold into whatever schema that
-## establishes instead of keeping its own parallel pattern.
+## (see Main.get_save_data()/load_from_save() below). It is additive to the
+## version-2 payload, so older version-2 saves simply default to nothing
+## seen while the explicit version-1 migration remains unchanged.
 var seen_tutorials: Dictionary = {}
 
 func has_seen_tutorial(id: String) -> bool:
