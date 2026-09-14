@@ -62,6 +62,21 @@ var lodge_stage: int = 0
 var energy: float = ENERGY_MAX
 var pouch_tier: int = 0
 
+## Staged tutorial banners (see hud.gd) the player has already dismissed or
+## let time out, keyed by tutorial id - so a seen tutorial doesn't reappear
+## after loading a save. This is a straightforward additive JSON field
+## (see get_save_data()/load_from_save() below) rather than a proper
+## versioned save-schema field; issue #8 is expected to introduce real save
+## migrations, at which point this should fold into whatever schema that
+## establishes instead of keeping its own parallel pattern.
+var seen_tutorials: Dictionary = {}
+
+func has_seen_tutorial(id: String) -> bool:
+	return bool(seen_tutorials.get(id, false))
+
+func mark_tutorial_seen(id: String) -> void:
+	seen_tutorials[id] = true
+
 func wood_capacity() -> int:
 	return POUCH_BASE_CAPACITY + pouch_tier * POUCH_CAPACITY_PER_TIER
 
@@ -234,6 +249,7 @@ func load_from_save(data: Dictionary) -> void:
 	berries = _saved_int(data, "berries", 0, 0, 999999)
 	lodge_stage = _saved_int(data, "lodge_stage", 0, 0, LODGE_MAX_STAGE)
 	energy = _saved_float(data, "energy", ENERGY_MAX, 0.0, ENERGY_MAX)
+	seen_tutorials = _saved_tutorials(data)
 
 func _saved_int(data: Dictionary, key: String, default_value: int, minimum: int, maximum: int) -> int:
 	var value: Variant = data.get(key, default_value)
@@ -246,6 +262,21 @@ func _saved_float(data: Dictionary, key: String, default_value: float, minimum: 
 	if value is int or value is float:
 		return clampf(float(value), minimum, maximum)
 	return default_value
+
+## Only keeps String keys with a `true` value, so malformed or hand-edited
+## save data can't smuggle in unexpected key/value shapes.
+func _saved_tutorials(data: Dictionary) -> Dictionary:
+	var value: Variant = data.get("seen_tutorials", {})
+	if not value is Dictionary:
+		return {}
+	var result := {}
+	for key in value.keys():
+		# Compare types before "==" - a bare "== true" against a non-bool
+		# Variant (e.g. a stray String in hand-edited save data) is a runtime
+		# type error in GDScript, not just a false comparison.
+		if key is String and value[key] is bool and value[key] == true:
+			result[key] = true
+	return result
 
 ## Dam-slot state is scene-shaped, not GameState-shaped, so Main restores
 ## that directly and reports back the resulting count here (silently, see
@@ -278,6 +309,7 @@ func reset() -> void:
 	lodge_stage = 0
 	energy = ENERGY_MAX
 	pouch_tier = 0
+	seen_tutorials = {}
 	wood_changed.emit(wood)
 	stone_changed.emit(stone)
 	berries_changed.emit(berries)
