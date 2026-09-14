@@ -187,13 +187,15 @@ future revisions there so implementation does not silently change the product.
 
 #### Creative planning
 
-- [ ] Write a one-page story synopsis covering the opening, act turns, climax,
+Design index: [1.0 design documentation](docs/design/README.md).
+
+- [x] Write a one-page story synopsis covering the opening, act turns, climax,
   and ending.
-- [ ] Give each resident a name, desire, conflict, relationship change, and
+- [x] Give each resident a name, desire, conflict, relationship change, and
   habitat payoff.
-- [ ] Create a one-page visual reference for each region.
-- [ ] List the exact construction verbs and player upgrades planned for 1.0.
-- [ ] Establish tone rules for dialogue: length, humor, reading level, and how
+- [x] Create a one-page visual reference for each region.
+- [x] List the exact construction verbs and player upgrades planned for 1.0.
+- [x] Establish tone rules for dialogue: length, humor, reading level, and how
   often characters interrupt play.
 
 #### Production planning

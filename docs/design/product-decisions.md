@@ -170,9 +170,8 @@ and [post-fire snowmelt response](https://research.fs.usda.gov/treesearch/69718)
 
 ## 5. Player name and identity
 
-**Decision:** Use a **soft-authored protagonist** with a fixed name, basic
-history, and the capable-apprentice motivation. Select the final name alongside
-the resident names during the cast pass.
+**Decision:** Use a **soft-authored protagonist named Reed** with a basic
+history and the capable-apprentice motivation.
 
 There is no appearance creator or selectable backstory. The protagonist's
 gender is unspecified; residents normally use their name or “you.” Routine
@@ -262,6 +261,7 @@ intentional revision from documentation drift.
 | Date | Decision | Change | Reason |
 |---|---|---|---|
 | 2026-09-14 | All seven | Initial approval | Product interview for Milestone 0 |
+| 2026-09-14 | Player identity | Selected Reed as the protagonist's fixed name | Creative cast planning |
 
 ## Immediate follow-on work
 
