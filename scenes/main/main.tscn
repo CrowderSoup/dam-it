@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3]
+[gd_scene load_steps=18 format=3]
 
 [ext_resource type="Script" path="res://scenes/main/main.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2"]
@@ -15,6 +15,7 @@
 [ext_resource type="PackedScene" path="res://scenes/world/raccoon.tscn" id="13"]
 [ext_resource type="PackedScene" path="res://scenes/world/berry_bush.tscn" id="14"]
 [ext_resource type="PackedScene" path="res://scenes/world/pond_plant.tscn" id="15"]
+[ext_resource type="PackedScene" path="res://scenes/world/river_gauge.tscn" id="17"]
 
 [sub_resource type="ShaderMaterial" id="2"]
 shader = ExtResource("11")
@@ -164,12 +165,16 @@ position = Vector2(620, 380)
 
 [node name="DamSlot3" parent="DamSlots" instance=ExtResource("4")]
 position = Vector2(740, 425)
+is_keystone = true
 
 [node name="DamSlot4" parent="DamSlots" instance=ExtResource("4")]
 position = Vector2(860, 375)
 
 [node name="DamSlot5" parent="DamSlots" instance=ExtResource("4")]
 position = Vector2(980, 415)
+
+[node name="RiverGauge" parent="." instance=ExtResource("17")]
+position = Vector2(680, 300)
 
 [node name="Lodge" parent="." instance=ExtResource("9")]
 position = Vector2(740, 640)

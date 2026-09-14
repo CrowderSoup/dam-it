@@ -1,13 +1,18 @@
+class_name Rock
 extends Harvestable
 ## A mineable rock. Yields stone over a couple hits, then respawns.
+##
+## STONE_YIELD was doubled alongside Tree.WOOD_YIELD (see issue #19's
+## economy retune) - see the matching comment there for why yield went up
+## instead of costs coming down.
 
-const STONE_YIELD := 1
+const STONE_YIELD := 2
 const HITS_TO_BREAK := 2
 
 var hits_taken: int = 0
 
 func _ready() -> void:
-	respawn_time = 10.0
+	respawn_time = 7.0
 	add_to_group("rocks")
 	# The InteractArea (not this StaticBody2D) is what Player's overlap
 	# check actually finds - see Player._resolve_target().

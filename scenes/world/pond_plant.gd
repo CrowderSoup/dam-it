@@ -14,7 +14,10 @@ const ENERGY_RESTORE := 30.0
 @export var kind: Kind = Kind.CATTAIL
 
 func _ready() -> void:
-	respawn_time = 14.0
+	# Trimmed slightly alongside the rest of the economy retune (issue #19) -
+	# ENERGY_RESTORE itself stayed put, it was already generous relative to
+	# ambient drain.
+	respawn_time = 11.0
 	add_to_group("pond_plants")
 	set("monitorable", false)
 	hide()

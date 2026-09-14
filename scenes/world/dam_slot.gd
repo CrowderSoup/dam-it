@@ -3,11 +3,23 @@ extends Area2D
 ## built, a storm can weaken it into a leaking state (see Main's storm
 ## timer) that needs a repair - same interact action, same cost - before it
 ## goes back to just sitting there quietly.
+##
+## One slot in the scene is marked `is_keystone` - the gap that sits in the
+## river's main channel (see main.tscn). That slot can't be built until the
+## player has read the water at a nearby RiverGauge (see river_gauge.gd) -
+## the dam's observation step from issue #19, so the first dam asks for more
+## than five identical slots without adding any real risk: the gauge is
+## free and instant, and the slot just waits, cost and all, until it's been
+## read.
 
 ## Emitted whenever `leaking` starts or stops, live or restored from a save
 ## - Main listens to keep the storm edge-indicator pointed at a leak that
 ## still needs attention (or cleared once none remain).
 signal leak_changed
+
+## Set in the scene on the one slot that sits in the river's strongest
+## current. See the class comment and GameState.water_read.
+@export var is_keystone: bool = false
 
 var built: bool = false
 var leaking: bool = false
@@ -47,6 +59,12 @@ func can_build() -> bool:
 func can_repair() -> bool:
 	return built and leaking
 
+## True once this slot is blocked on the water not having been read yet -
+## only ever true for the keystone slot, and only until GameState.water_read
+## flips. See the class comment.
+func _needs_reading() -> bool:
+	return is_keystone and not GameState.water_read
+
 ## See interaction_option.gd. can_build()/can_repair() are mutually
 ## exclusive by construction (a slot is either not built, built and
 ## leaking, or built and fine), so there's never a priority question here -
@@ -58,6 +76,8 @@ func get_interaction() -> InteractionOption:
 	if can_repair():
 		return InteractionOption.new("Repair Dam Piece", repair, available, reason, cost)
 	if can_build():
+		if _needs_reading():
+			return InteractionOption.new("Build Dam Piece", build, false, "The current runs strongest through this gap - read the water first", cost)
 		return InteractionOption.new("Build Dam Piece", build, available, reason, cost)
 	return null
 
@@ -65,7 +85,7 @@ func get_interaction() -> InteractionOption:
 ## dispatch that get_interaction() replaces) - now build()/repair() guard
 ## their own cost the same way chop()/mine() always have.
 func build() -> void:
-	if not can_build() or not GameState.can_afford_dam_piece():
+	if not can_build() or _needs_reading() or not GameState.can_afford_dam_piece():
 		return
 	GameState.spend_resources_on_dam_piece()
 	Sfx.play_build()
