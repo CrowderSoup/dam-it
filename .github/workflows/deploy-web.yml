@@ -38,6 +38,7 @@ jobs:
           timeout 60s godot --headless --path . tests/story_test.tscn
           timeout 60s godot --headless --path . tests/dialogue_ui_test.tscn
           timeout 60s godot --headless --path . tests/journal_test.tscn
+          timeout 60s godot --headless --path . tests/player_visual_test.tscn
 
   export:
     name: Export Web build
