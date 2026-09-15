@@ -91,8 +91,30 @@ func _ready() -> void:
 	_refresh_story_indicator()
 
 func _unhandled_input(event: InputEvent) -> void:
+	# Temporary #47 cross-platform diagnostic. P is intentionally not an
+	# InputMap action, so this cannot alter normal gameplay or saved state.
+	# Showing the same world coordinates in native and Web builds distinguishes
+	# resident-state divergence from camera/render projection immediately.
+	if event is InputEventKey and event.pressed and not event.echo \
+			and event.physical_keycode == KEY_P:
+		_show_position_diagnostic()
+		get_viewport().set_input_as_handled()
+		return
 	if event.is_action_pressed("restart") and not act_one_ending.is_active():
 		game_menu.request_new_game()
+
+func _show_position_diagnostic() -> void:
+	var moss: Resident = $Residents/Moss
+	var message := "Reed %s | Moss %s | route %s" % [
+		_format_position(player.global_position),
+		_format_position(moss.global_position),
+		moss.get_active_route_id(),
+	]
+	print("POSITION DIAGNOSTIC: " + message)
+	hud.show_toast(message, 30.0)
+
+func _format_position(value: Vector2) -> String:
+	return "(%d,%d)" % [roundi(value.x), roundi(value.y)]
 
 func _on_dialogue_started(_dialogue_id: String) -> void:
 	game_menu.process_mode = Node.PROCESS_MODE_DISABLED
