@@ -16,6 +16,7 @@ func _ready() -> void:
 	var eddy: Resident = main.get_node("Residents/Eddy")
 	var marnie: Resident = main.get_node("Residents/Marnie")
 	var gauge: RiverGauge = main.get_node("RiverGauge")
+	assert(main.camera.position_smoothing_enabled, "normal play should retain smooth camera follow after its deterministic startup snap")
 
 	assert(ActOneController.get_active_dialogue_id() == "willowbend_arrival")
 	assert(get_tree().paused, "the brief arrival conversation should pause gameplay")

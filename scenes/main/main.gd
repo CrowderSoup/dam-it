@@ -78,6 +78,12 @@ func _ready() -> void:
 	# saved story entry as unknown, then started the first objective fresh.
 	_setup_act1_story()
 	SaveManager.load_into(self)
+	# Camera smoothing otherwise begins from renderer-dependent startup state.
+	# Web and desktop can spend a different number of frames loading, which made
+	# the same player/Moss world positions appear at different screen locations.
+	# The saved (or fresh) player position is final now, so establish one exact
+	# first composition before normal movement resumes smoothing.
+	camera.reset_smoothing()
 	# Select dry/restored ambience from the fully applied save. This path is
 	# intentionally sting-free; only the live dam_completed signal celebrates.
 	Ambience.sync_from_game_state(true)
