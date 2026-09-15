@@ -39,8 +39,8 @@ func can_advance() -> bool:
 	return visible and GameState.lodge_stage < GameState.LODGE_MAX_STAGE
 
 ## See interaction_option.gd. Mirrors the old Player._try_interact()
-## priority exactly (advance beats resting, but only if affordable; a tired
-## beaver falls back to resting rather than getting stuck; upgrading the
+## priority while making the stage-one platform's first practical payoff
+## reachable: a tired beaver rests before advancing again; upgrading the
 ## pouch is the last resort) and then adds informative, non-priority
 ## fallbacks for the "nothing succeeded" cases the old code left silent:
 ## an unaffordable advance/upgrade, or a fully-built, fully-rested,
@@ -48,12 +48,12 @@ func can_advance() -> bool:
 func get_interaction() -> InteractionOption:
 	if not visible:
 		return null
+	if can_rest() and (GameState.is_tired() or not can_advance()):
+		return InteractionOption.new("Rest", rest, true)
 	if can_advance():
 		var stage_cost: Dictionary = GameState.LODGE_STAGE_COSTS[GameState.lodge_stage]
 		if GameState.can_afford_lodge_stage():
 			return InteractionOption.new("Advance Lodge", advance, true, "", stage_cost)
-	if can_rest():
-		return InteractionOption.new("Rest", rest, true)
 	if can_upgrade_pouch():
 		var upgrade_cost: Dictionary = GameState.POUCH_UPGRADE_COSTS[GameState.pouch_tier]
 		return InteractionOption.new("Upgrade Pouch", upgrade_pouch, true, "", upgrade_cost)
@@ -74,10 +74,10 @@ func advance() -> void:
 	Fx.burst(global_position, Color(0.7, 0.55, 0.35), 14)
 	queue_redraw()
 
-## Once the Lodge is fully built, it doubles as a place to rest - a full,
-## instant energy refill instead of the (now unavailable) "advance" action.
+## The stage-one dry platform is already a usable place to rest. It keeps the
+## cozy full refill; later Lodge stages add other payoffs independently.
 func can_rest() -> bool:
-	return visible and GameState.lodge_stage >= GameState.LODGE_MAX_STAGE and GameState.energy < GameState.ENERGY_MAX
+	return visible and GameState.lodge_stage >= 1 and GameState.energy < GameState.ENERGY_MAX
 
 func rest() -> void:
 	if not can_rest():

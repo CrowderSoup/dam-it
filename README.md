@@ -38,7 +38,8 @@ godot --path .
   tree, mine a nearby rock, build a dam piece at a nearby empty slot if you
   have enough wood + stone, harvest a berry bush, eat from a cattail/lily
   patch growing in the pond, feed a berry to a raccoon to shoo it off, or
-  talk to a resident, rest, or upgrade your resource pouch at a finished Lodge
+  talk to a resident, rest at a Lodge platform, or upgrade your resource pouch
+  at a finished Lodge
 - `R` / gamepad Start — reset ALL progress (dam + Lodge + pouch) and start over
 - `J` / gamepad Y — open/close the journal: your current objective plus a
   compact history of completed and in-progress ones, in plain language.
@@ -99,7 +100,7 @@ means to an end, not the whole game:
 
 ## "Storms & Scavengers": ongoing upkeep after the dam is done
 
-Once the dam is complete, two low-stakes challenges kick in - no combat,
+Once the dam is complete, low-stakes upkeep begins - no combat,
 no permanent loss, nothing that can fail the game, just reasons to keep
 gathering wood and stone:
 
@@ -107,18 +108,15 @@ gathering wood and stone:
   piece into a leak (a crack + drip - the pond itself stays full, but that
   piece slows you again if you wade near it). Repair it the same way you
   built it - interact, same 2 wood + 1 stone cost.
-- **The raccoon.** Every 60-120 seconds, a raccoon shows up near your
-  resources and lingers for ~18 seconds. Walk up and interact to feed it a
-  berry and it scurries off empty-handed. No berries in stock? It ignores
-  you, swipes a little wood/stone (clamped at zero - it can never take more
-  than you have), and scurries off anyway.
+- **Bramble.** Random raccoon scavenging is now disabled until Bramble has
+  received an authored, save-safe introduction. That encounter is the next
+  #20 implementation slice; completing the dam alone can never start a random
+  raid. If recurring visits remain after playtesting, berries will provide the
+  same recoverable way to send Bramble off without a material loss.
 
-Both start only once the dam is first completed - a fresh game never has
-to deal with either. Both are also announced: a HUD toast names what just
-happened, and a small arrow appears at the edge of the screen pointing
-toward the leak/raccoon whenever it's off-screen (fading once you're close
-enough or it's dealt with) - so neither one relies on you noticing it by
-chance.
+Storms start only once the dam is first completed, so a fresh game never has
+to deal with one. Active upkeep events are announced with a HUD toast and an
+off-screen arrow, so they do not rely on being noticed by chance.
 
 ## Getting tired: energy, pond plants, berries, and resting
 
@@ -144,9 +142,9 @@ never a fail state:
   directly - interacting harvests berries into a stockpile instead (shown
   in the HUD). Berries exist for one reason: feeding raccoons (see
   "Storms & Scavengers" above) to shoo them off without a loss.
-- Once the **Lodge** is fully built, interacting with it also offers an
-  instant full energy refill (resting) whenever you're below max, in
-  addition to its earlier build-up stages.
+- Once the Lodge has a stage-one dry platform, interacting with it offers an
+  instant full energy refill whenever you're below max. A tired Reed rests
+  before starting the next construction stage.
 
 ## Project layout
 
@@ -160,8 +158,9 @@ scenes/
               pond plant (cattail/water lily - the beaver's actual food),
               dam slot (build + repair-a-leak), dam piece, lodge (build-up
               + resting), garden spot (flower bed/bench), raccoon
-              (scavenger, fed berries to shoo off), critter
-              (frog/duck/fish/butterfly/rabbit), and purely-visual
+              (scavenger, fed berries to shoo off), resident (named story
+              actor + routine), critter (lightweight frog/duck/fish/
+              butterfly/rabbit visual), and purely-visual
               decorations (rocks)
   ui/       - title screen and HUD: icon-based counts along the bottom, a
               toast banner for announcements, edge_indicator.gd (the
@@ -255,7 +254,7 @@ godot --headless --export-release "Web" builds/web/index.html
 
 There's a headless regression test at `tests/smoke_test.gd` (no real
 framework like GUT/GoDotTest set up - just plain `assert()`s against the
-actual game objects), plus five companions covering the data-driven story
+actual game objects), plus six companions covering the data-driven story
 layer, its UI, and presentation: `tests/story_test.gd` (ActOneController's dialogue/
 objective runtime, no UI), `tests/dialogue_ui_test.gd` (the dialogue box UI
 on top of it - see docs/design/dialogue-schema.md), and
@@ -264,7 +263,9 @@ on top of it - see docs/design/dialogue-schema.md), and
 (`GameState.seen_tutorials`)), and `tests/narrative_test.gd` (the complete
 Willowbend story sequence through resident interactions and world signals),
 and `tests/player_visual_test.gd` (Reed's cardinal poses and layered walk
-cycle). Run them after making logic changes:
+cycle), and `tests/resident_test.gd` (named-resident composition, routine and
+stage-one save restoration, and the Bramble scavenging gate). Run them after
+making logic changes:
 
 ```
 godot --headless --editor --path . --quit # populate a fresh checkout's import cache
@@ -274,6 +275,7 @@ godot --headless --path . tests/dialogue_ui_test.tscn
 godot --headless --path . tests/journal_test.tscn
 godot --headless --path . tests/player_visual_test.tscn
 godot --headless --path . tests/narrative_test.tscn
+godot --headless --path . tests/resident_test.tscn
 ```
 
 `smoke_test.gd` instantiates `main.tscn`, drives the real Tree/Rock/DamSlot/

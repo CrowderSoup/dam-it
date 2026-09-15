@@ -12,9 +12,9 @@ func _ready() -> void:
 
 	var main: Node = load("res://scenes/main/main.tscn").instantiate()
 	add_child(main)
-	var moss: Area2D = main.get_node("Critters/Frog")
-	var eddy: Area2D = main.get_node("Critters/Fish")
-	var marnie: Area2D = main.get_node("Critters/Duck")
+	var moss: Resident = main.get_node("Residents/Moss")
+	var eddy: Resident = main.get_node("Residents/Eddy")
+	var marnie: Resident = main.get_node("Residents/Marnie")
 	var gauge: RiverGauge = main.get_node("RiverGauge")
 
 	assert(ActOneController.get_active_dialogue_id() == "willowbend_arrival")

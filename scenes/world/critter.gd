@@ -1,58 +1,29 @@
-extends Area2D
-## A lightweight resident anchor. It retains the demo's procedural critter
-## drawing and reveal behavior, while named Act I residents can additionally
-## offer data-driven conversations through the shared interaction contract.
-## Movement/routines and changing ambient lines remain issue #20 work.
+class_name Critter
+extends Node2D
+## Lightweight procedural wildlife visual. Named residents compose this
+## node inside Resident; garden decorations can reveal one directly without
+## paying for collision, dialogue, or story-state listeners they do not use.
 
 enum Kind { FROG, DUCK, FISH, BUTTERFLY, RABBIT }
 
 @export var kind: Kind = Kind.FROG
-@export var required_stage: int = 1
 @export var bob_height: float = 2.0
 @export var bob_speed: float = 2.5
-@export var resident_name: String = ""
-@export var dialogue_ids: PackedStringArray = []
-@export var requires_restored_pond := false
+@export var starts_visible := true
 
 var _time := 0.0
 var _base_position: Vector2
-var highlighted := false
 
 func _ready() -> void:
-	add_to_group("residents")
 	_base_position = position
-	GameState.lodge_stage_changed.connect(_on_stage_changed)
-	GameState.dam_progress_changed.connect(_on_dam_progress_changed)
-	visible = _meets_reveal_condition()
-	monitorable = visible
+	visible = starts_visible
 
-func _on_stage_changed(stage: int) -> void:
-	if not requires_restored_pond and stage >= required_stage:
-		reveal()
-
-func _on_dam_progress_changed(_built: int, _total: int) -> void:
-	if requires_restored_pond and GameState.is_dam_complete():
-		reveal()
-
-func _meets_reveal_condition() -> bool:
-	if requires_restored_pond:
-		return GameState.is_dam_complete()
-	return GameState.lodge_stage >= required_stage
-
-## Re-evaluates save-restored world state after Main has rebuilt dam slots.
-func refresh_visibility() -> void:
-	if _meets_reveal_condition():
-		reveal()
-
-## Shows the critter with a little pop-in, if it isn't already visible.
-## Called either by lodge progress (see _on_stage_changed) or directly by a
-## GardenSpot when it's built.
+## Garden spots use the same small pop-in as before, without teaching the
+## decorative visual anything about Lodge stages or story objectives.
 func reveal() -> void:
 	if visible:
-		monitorable = true
 		return
 	visible = true
-	monitorable = true
 	scale = Vector2.ZERO
 	var tween := create_tween()
 	tween.tween_property(self, "scale", Vector2.ONE, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
@@ -63,27 +34,7 @@ func _process(delta: float) -> void:
 	_time += delta
 	position = _base_position + Vector2(0, sin(_time * bob_speed) * bob_height)
 
-func set_highlighted(value: bool) -> void:
-	if highlighted == value:
-		return
-	highlighted = value
-	queue_redraw()
-
-func get_interaction() -> InteractionOption:
-	if not visible or resident_name.is_empty():
-		return null
-	for dialogue_id in dialogue_ids:
-		if ActOneController.can_start_dialogue(dialogue_id):
-			return InteractionOption.new("Talk to %s" % resident_name, _start_dialogue.bind(dialogue_id), true)
-	return null
-
-func _start_dialogue(dialogue_id: String) -> void:
-	if ActOneController.can_start_dialogue(dialogue_id):
-		ActOneController.start_dialogue(dialogue_id)
-
 func _draw() -> void:
-	if highlighted and get_interaction() != null:
-		draw_arc(Vector2.ZERO, 17.0, 0, TAU, 24, Palette.HIGHLIGHT_RING, 2.5)
 	match kind:
 		Kind.FROG:
 			_draw_frog()

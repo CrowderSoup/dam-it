@@ -1,4 +1,4 @@
-[gd_scene load_steps=20 format=3]
+[gd_scene load_steps=21 format=3]
 
 [ext_resource type="Script" path="res://scenes/main/main.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2"]
@@ -18,6 +18,7 @@
 [ext_resource type="PackedScene" path="res://scenes/world/berry_bush.tscn" id="14"]
 [ext_resource type="PackedScene" path="res://scenes/world/pond_plant.tscn" id="15"]
 [ext_resource type="PackedScene" path="res://scenes/world/river_gauge.tscn" id="18"]
+[ext_resource type="PackedScene" path="res://scenes/world/resident.tscn" id="20"]
 
 [sub_resource type="ShaderMaterial" id="2"]
 shader = ExtResource("11")
@@ -181,40 +182,62 @@ position = Vector2(680, 300)
 [node name="Lodge" parent="." instance=ExtResource("9")]
 position = Vector2(740, 640)
 
-[node name="Critters" type="Node2D" parent="."]
+[node name="Residents" type="Node2D" parent="."]
 
-[node name="Frog" parent="Critters" instance=ExtResource("10")]
-kind = 0
-required_stage = 0
+[node name="Moss" parent="Residents" instance=ExtResource("20")]
+resident_id = "moss"
+speaker_id = "moss"
 resident_name = "Moss"
 dialogue_ids = PackedStringArray("moss_intro", "moss_supplies_ready", "pond_returns", "moss_lodge_foundation", "moss_lodge_walls")
-position = Vector2(680, 675)
+opening_points = PackedVector2Array(590, 520, 650, 500)
+restored_points = PackedVector2Array(620, 500, 700, 520, 820, 500)
+stage_one_points = PackedVector2Array(620, 500, 700, 610, 780, 610)
 
-[node name="Duck" parent="Critters" instance=ExtResource("10")]
-kind = 1
-required_stage = 3
-resident_name = "Marnie"
-dialogue_ids = PackedStringArray("marnie_upstream_call")
-position = Vector2(550, 460)
+[node name="Visual" parent="Residents/Moss" index="0"]
+kind = 0
 
-[node name="Fish" parent="Critters" instance=ExtResource("10")]
-kind = 2
-required_stage = 0
+[node name="Eddy" parent="Residents" instance=ExtResource("20")]
+resident_id = "eddy"
+speaker_id = "eddy"
 resident_name = "Eddy"
+availability = 1
 dialogue_ids = PackedStringArray("eddy_flow_check")
-requires_restored_pond = true
-position = Vector2(740, 400)
+opening_points = PackedVector2Array(740, 400)
+restored_points = PackedVector2Array(700, 430, 780, 455)
+settled_objective_id = "check_eddy_route"
+settled_points = PackedVector2Array(650, 450, 760, 480, 860, 440)
+
+[node name="Visual" parent="Residents/Eddy" index="0"]
+kind = 2
+
+[node name="Marnie" parent="Residents" instance=ExtResource("20")]
+resident_id = "marnie"
+speaker_id = "marnie"
+resident_name = "Marnie"
+availability = 2
+availability_objective_id = "answer_marnie"
+dialogue_ids = PackedStringArray("marnie_upstream_call")
+opening_points = PackedVector2Array(550, 460, 500, 430)
+
+[node name="Visual" parent="Residents/Marnie" index="0"]
+kind = 1
+
+[editable path="Residents/Moss"]
+[editable path="Residents/Eddy"]
+[editable path="Residents/Marnie"]
+
+[node name="Critters" type="Node2D" parent="."]
 
 [node name="Butterfly" parent="Critters" instance=ExtResource("10")]
 kind = 3
-required_stage = 99
 bob_height = 3.0
 bob_speed = 4.0
+starts_visible = false
 position = Vector2(630, 670)
 
 [node name="Rabbit" parent="Critters" instance=ExtResource("10")]
 kind = 4
-required_stage = 99
+starts_visible = false
 position = Vector2(840, 670)
 
 [node name="GardenSpots" type="Node2D" parent="."]
