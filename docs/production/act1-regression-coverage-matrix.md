@@ -49,7 +49,7 @@ state and presentation belong to the linked feature issues.
 
 | Area | Case | Exit condition | Status / dependency |
 | --- | --- | --- | --- |
-| Lodge/residents | Restore each implemented resident routine and Bramble introduction boundary | Moss, Eddy, and Marnie derive calm post-chapter routes/dialogue without replaying required beats; Bramble restores at discrete encounter boundaries | Resident routines automated in `resident_test`; Bramble boundaries pending its #20 slice |
+| Lodge/residents | Restore each implemented resident routine and Bramble introduction boundary | Moss, Eddy, and Marnie derive calm routes/dialogue; Bramble restores before/after its committed loss or as complete without replay | `resident_test`, `bramble_encounter_test`; automated |
 | Chapter | Become eligible for the ending | Stage three, pond response, Eddy's check, Marnie's request/Moss acknowledgement, clear overlays, and unstarted completion state are all required | `narrative_test`, `story_boundary_test`; automated #20 handoff shipped |
 | Chapter | Save before, during, and after the ending | The sequence resumes only at supported boundaries; `act_one_complete` cannot fire twice | Pending #21 |
 | Chapter | Finish and remain in calm post-chapter play | Controls, resident interactions, saves, and the next-region hook settle into the authored final state | Pending #21 |

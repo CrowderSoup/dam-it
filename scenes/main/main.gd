@@ -29,6 +29,7 @@ signal act_one_ending_eligibility_changed(eligible: bool)
 @onready var pond_plants: Node2D = $PondPlants
 @onready var garden_spots: Node2D = $GardenSpots
 @onready var raccoon: Raccoon = $Raccoon
+@onready var bramble_encounter: BrambleEncounter = $BrambleEncounter
 @onready var player: CharacterBody2D = $Player
 @onready var camera: Camera2D = $Player/Camera2D
 @onready var hud: CanvasLayer = $HUD
@@ -311,9 +312,9 @@ func _schedule_next_raccoon() -> void:
 	_raccoon_timer.wait_time = randf_range(RACCOON_MIN_INTERVAL, RACCOON_MAX_INTERVAL)
 	_raccoon_timer.start()
 
-## Bramble's first appearance is authored in a later #20 slice. Until that
-## encounter has completed, no random timer exists and scavenging is
-## impossible even on a restored dam-complete save.
+## Bramble's first appearance is owned by BrambleEncounter and invoked by the
+## #21 ending. Until that encounter has completed, no random timer exists and
+## scavenging is impossible even on a restored dam-complete save.
 func _start_recurring_scavenging_if_eligible() -> void:
 	if not _storms_active or not ActOneController.get_flag("bramble_intro_complete"):
 		return
@@ -338,6 +339,17 @@ func _on_story_flag_changed(flag_name: String, value: bool) -> void:
 
 func is_recurring_scavenging_enabled() -> bool:
 	return is_instance_valid(_raccoon_timer)
+
+## Stable #20 API consumed by #21's ending choreography. Main owns the scene
+## composition while BrambleEncounter owns phase and inventory semantics.
+func start_bramble_introduction() -> bool:
+	return bramble_encounter.start_encounter()
+
+func commit_bramble_material_take() -> Dictionary:
+	return bramble_encounter.commit_material_take()
+
+func begin_bramble_escape() -> bool:
+	return bramble_encounter.begin_flee()
 
 func _on_raccoon_timeout() -> void:
 	var spawn_point: Vector2 = RACCOON_SPAWN_POINTS[randi() % RACCOON_SPAWN_POINTS.size()]
@@ -384,6 +396,7 @@ func apply_save_data(data: Dictionary) -> void:
 	# _setup_act1_story() before this runs; otherwise every saved id would
 	# be treated as removed content and silently skipped.
 	ActOneController.load_from_save(_saved_dictionary(data, "story"))
+	bramble_encounter.restore_from_story_state()
 
 	var built_count := 0
 	var slots_built := _saved_dictionary(data, "dam_slots_built")

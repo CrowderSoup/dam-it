@@ -17,6 +17,7 @@ const FEED_BERRIES_COST := 1
 var highlighted: bool = false
 var _active: bool = false
 var _time_left := 0.0
+var _authored := false
 
 func _ready() -> void:
 	add_to_group("raccoons")
@@ -25,6 +26,7 @@ func _ready() -> void:
 	set_process(false)
 
 func spawn_at(spawn_position: Vector2) -> void:
+	_authored = false
 	global_position = spawn_position
 	_time_left = LINGER_TIME
 	_active = true
@@ -35,6 +37,29 @@ func spawn_at(spawn_position: Vector2) -> void:
 	scale = Vector2.ZERO
 	var tween := create_tween()
 	tween.tween_property(self, "scale", Vector2.ONE, 0.3).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	queue_redraw()
+
+## The first Bramble appearance is controlled by BrambleEncounter rather than
+## the recurring timer. It uses the same visual but cannot be fed, time out, or
+## steal independently while authored choreography owns it.
+func show_authored_at(spawn_position: Vector2) -> void:
+	global_position = spawn_position
+	_active = true
+	_authored = true
+	highlighted = false
+	monitorable = false
+	show()
+	set_process(false)
+	scale = Vector2.ONE
+	queue_redraw()
+
+func hide_authored() -> void:
+	_active = false
+	_authored = false
+	highlighted = false
+	monitorable = false
+	set_process(false)
+	hide()
 	queue_redraw()
 
 func _process(delta: float) -> void:
@@ -52,11 +77,11 @@ func set_highlighted(value: bool) -> void:
 
 ## Feeding requires a berry in stock - see GameState.berries.
 func can_feed() -> bool:
-	return _active and GameState.berries > 0
+	return _active and not _authored and GameState.berries > 0
 
 ## See interaction_option.gd. Null while no raccoon is around to feed.
 func get_interaction() -> InteractionOption:
-	if not _active:
+	if not _active or _authored:
 		return null
 	var available := GameState.berries > 0
 	var reason := "" if available else "No berries to feed it"

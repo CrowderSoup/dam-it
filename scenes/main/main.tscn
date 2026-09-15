@@ -1,4 +1,4 @@
-[gd_scene load_steps=21 format=3]
+[gd_scene load_steps=22 format=3]
 
 [ext_resource type="Script" path="res://scenes/main/main.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2"]
@@ -19,6 +19,7 @@
 [ext_resource type="PackedScene" path="res://scenes/world/pond_plant.tscn" id="15"]
 [ext_resource type="PackedScene" path="res://scenes/world/river_gauge.tscn" id="18"]
 [ext_resource type="PackedScene" path="res://scenes/world/resident.tscn" id="20"]
+[ext_resource type="PackedScene" path="res://scenes/world/bramble_encounter.tscn" id="21"]
 
 [sub_resource type="ShaderMaterial" id="2"]
 shader = ExtResource("11")
@@ -258,6 +259,9 @@ critter_path = NodePath("../../Critters/Rabbit")
 position = Vector2(830, 655)
 
 [node name="Raccoon" parent="." instance=ExtResource("13")]
+
+[node name="BrambleEncounter" parent="." instance=ExtResource("21")]
+raccoon_path = NodePath("../Raccoon")
 
 [node name="Player" parent="." instance=ExtResource("2")]
 position = Vector2(200, 200)
