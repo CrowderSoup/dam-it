@@ -16,6 +16,7 @@ document before they alter implementation scope.
 | [Dialogue style](dialogue-style.md) | Length, humor, reading level, interruptions, and player-response rules | Approved |
 | [Dialogue and objective schema](dialogue-schema.md) | Data-driven dialogue/objective Resource schema and the ActOneController runtime | Implemented |
 | [Act I Willowbend beat sheet](act1-willowbend-beat-sheet.md) | Gameplay-triggered narrative sequence and issue boundaries | Implemented spine; ending deferred |
+| [Act I chapter-ending storyboard](act1-ending-storyboard.md) | Final-sequence timing, camera, control, audio, and save checkpoints | Implementation contract |
 
 ## Systems and visuals
 

@@ -257,17 +257,19 @@ godot --headless --export-release "Web" builds/web/index.html
 
 There's a headless regression test at `tests/smoke_test.gd` (no real
 framework like GUT/GoDotTest set up - just plain `assert()`s against the
-actual game objects), plus six companions covering the data-driven story
-layer, its UI, and presentation: `tests/story_test.gd` (ActOneController's dialogue/
-objective runtime, no UI), `tests/dialogue_ui_test.gd` (the dialogue box UI
-on top of it - see docs/design/dialogue-schema.md), and
+actual game objects), plus seven companions covering the data-driven story
+layer, its UI, and presentation: `tests/story_test.gd` (ActOneController's
+dialogue/objective runtime, no UI), `tests/dialogue_ui_test.gd` (the dialogue
+box UI on top of it - see docs/design/dialogue-schema.md),
 `tests/journal_test.gd` (the current-objective HUD display, the Journal
 (`scenes/ui/journal.gd`), and staged tutorials' "seen" tracking
-(`GameState.seen_tutorials`)), and `tests/narrative_test.gd` (the complete
+(`GameState.seen_tutorials`)), `tests/narrative_test.gd` (the complete
 Willowbend story sequence through resident interactions and world signals),
-and `tests/player_visual_test.gd` (Reed's cardinal poses and layered walk
-cycle), and `tests/ambience_test.gd` (stable audio state, dialogue ducking,
-and live-versus-restored dam transitions). Run them after making logic changes:
+`tests/story_boundary_test.gd` (out-of-order story events plus every current
+Willowbend objective save boundary), and `tests/player_visual_test.gd`
+(Reed's cardinal poses and layered walk cycle), and `tests/ambience_test.gd`
+(stable audio state, dialogue ducking, and live-versus-restored dam
+transitions). Run them after making logic changes:
 
 ```
 godot --headless --editor --path . --quit # populate a fresh checkout's import cache
@@ -278,6 +280,7 @@ godot --headless --path . tests/journal_test.tscn
 godot --headless --path . tests/player_visual_test.tscn
 godot --headless --path . tests/narrative_test.tscn
 godot --headless --path . tests/ambience_test.tscn
+godot --headless --path . tests/story_boundary_test.tscn
 ```
 
 `smoke_test.gd` instantiates `main.tscn`, drives the real Tree/Rock/DamSlot/
