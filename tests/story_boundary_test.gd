@@ -154,9 +154,12 @@ func _test_out_of_order_world_events() -> void:
 
 	var main: Node = load("res://scenes/main/main.tscn").instantiate()
 	add_child(main)
-	var moss: Area2D = main.get_node("Critters/Frog")
-	var eddy: Area2D = main.get_node("Critters/Fish")
-	var marnie: Area2D = main.get_node("Critters/Duck")
+	# #20 replaces the temporary named Critter anchors with composed Resident
+	# actors. Accept both layouts so this story-ordering suite stays useful on
+	# either side of that independently reviewable refactor.
+	var moss: Area2D = _story_actor(main, "Residents/Moss", "Critters/Frog")
+	var eddy: Area2D = _story_actor(main, "Residents/Eddy", "Critters/Fish")
+	var marnie: Area2D = _story_actor(main, "Residents/Marnie", "Critters/Duck")
 
 	assert(ActOneController.get_active_dialogue_id() == "willowbend_arrival")
 	assert(moss.get_interaction() == null,
@@ -251,3 +254,9 @@ func _play_active_dialogue(choice_id: String = "") -> void:
 			ActOneController.choose(selected_id)
 		else:
 			ActOneController.advance_dialogue()
+
+func _story_actor(main: Node, resident_path: String, legacy_path: String) -> Area2D:
+	var actor := main.get_node_or_null(resident_path)
+	if actor == null:
+		actor = main.get_node(legacy_path)
+	return actor as Area2D
