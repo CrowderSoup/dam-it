@@ -1,4 +1,4 @@
-[gd_scene load_steps=25 format=3]
+[gd_scene load_steps=28 format=3]
 
 [ext_resource type="Script" path="res://scenes/main/main.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2"]
@@ -22,6 +22,9 @@
 [ext_resource type="PackedScene" path="res://scenes/world/bramble_encounter.tscn" id="21"]
 [ext_resource type="Script" path="res://scenes/main/act_one_ending.gd" id="22"]
 [ext_resource type="Script" path="res://scenes/world/upstream_route.gd" id="23"]
+[ext_resource type="Script" path="res://scenes/world/wasatch_backdrop.gd" id="24"]
+[ext_resource type="PackedScene" path="res://scenes/world/survey_spot.tscn" id="25"]
+[ext_resource type="PackedScene" path="res://scenes/world/eddy_passage.tscn" id="26"]
 
 [sub_resource type="ShaderMaterial" id="2"]
 shader = ExtResource("11")
@@ -43,9 +46,12 @@ shader_parameter/sparkle_strength = 0.25
 script = ExtResource("1")
 
 [node name="Background" type="ColorRect" parent="."]
-offset_right = 1400.0
-offset_bottom = 800.0
-color = Color(0.4196, 0.651, 0.2667, 1)
+offset_right = 2600.0
+offset_bottom = 900.0
+color = Color(0.5608, 0.6039, 0.3333, 1)
+
+[node name="WasatchBackdrop" type="Node2D" parent="."]
+script = ExtResource("24")
 
 [node name="GrassPatches" type="Node2D" parent="."]
 
@@ -69,10 +75,25 @@ position = Vector2(300, 100)
 patch_color = Color(0.5608, 0.7608, 0.3686, 0.4)
 patch_radius = 55.0
 
+[node name="Patch5" parent="GrassPatches" instance=ExtResource("8")]
+position = Vector2(1530, 590)
+patch_color = Color(0.3686, 0.6078, 0.3961, 0.48)
+patch_radius = 120.0
+
+[node name="Patch6" parent="GrassPatches" instance=ExtResource("8")]
+position = Vector2(2050, 315)
+patch_color = Color(0.6588, 0.7137, 0.3569, 0.38)
+patch_radius = 105.0
+
+[node name="Patch7" parent="GrassPatches" instance=ExtResource("8")]
+position = Vector2(2380, 610)
+patch_color = Color(0.4824, 0.7137, 0.3294, 0.42)
+patch_radius = 90.0
+
 [node name="River" type="Polygon2D" parent="."]
 material = SubResource("2")
 color = Color(0.25, 0.45, 0.65, 1)
-polygon = PackedVector2Array(-55.2, 434.6, 153.8, 464.8, 321.0, 395.0, 497.7, 454.9, 619.3, 415.0, 740.7, 460.0, 861.5, 410.0, 980.6, 450.0, 1151.1, 405.0, 1446.5, 434.8, 1453.5, 365.2, 1148.9, 335.0, 979.4, 380.0, 858.5, 340.0, 739.3, 390.0, 620.7, 345.0, 502.3, 385.1, 319.0, 325.0, 146.2, 395.2, -44.8, 365.4)
+polygon = PackedVector2Array(-55, 455, 180, 490, 390, 430, 620, 475, 830, 420, 1040, 465, 1240, 415, 1430, 460, 1620, 410, 1830, 450, 2040, 390, 2260, 435, 2655, 400, 2655, 330, 2260, 365, 2040, 320, 1830, 380, 1620, 340, 1430, 390, 1240, 345, 1040, 395, 830, 350, 620, 405, 390, 360, 180, 420, -55, 385)
 
 [node name="RiverWater" type="Area2D" parent="."]
 collision_layer = 16
@@ -81,31 +102,31 @@ monitoring = false
 monitorable = true
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="RiverWater"]
-polygon = PackedVector2Array(-55.2, 434.6, 153.8, 464.8, 321.0, 395.0, 497.7, 454.9, 619.3, 415.0, 740.7, 460.0, 861.5, 410.0, 980.6, 450.0, 1151.1, 405.0, 1446.5, 434.8, 1453.5, 365.2, 1148.9, 335.0, 979.4, 380.0, 858.5, 340.0, 739.3, 390.0, 620.7, 345.0, 502.3, 385.1, 319.0, 325.0, 146.2, 395.2, -44.8, 365.4)
+polygon = PackedVector2Array(-55, 455, 180, 490, 390, 430, 620, 475, 830, 420, 1040, 465, 1240, 415, 1430, 460, 1620, 410, 1830, 450, 2040, 390, 2260, 435, 2655, 400, 2655, 330, 2260, 365, 2040, 320, 1830, 380, 1620, 340, 1430, 390, 1240, 345, 1040, 395, 830, 350, 620, 405, 390, 360, 180, 420, -55, 385)
 
 [node name="Pond" type="Polygon2D" parent="."]
 visible = false
 material = SubResource("3")
 color = Color(0.2275, 0.498, 0.7882, 1)
-polygon = PackedVector2Array(950.0, 400.0, 894.6, 463.8, 855.5, 542.9, 740.0, 542.5, 619.2, 549.4, 576.3, 467.5, 519.5, 400.0, 594.5, 340.0, 624.5, 257.1, 740.0, 250.0, 834.5, 283.1, 931.0, 321.2)
+polygon = PackedVector2Array(1820, 405, 1770, 505, 1680, 590, 1500, 600, 1340, 565, 1240, 470, 1210, 390, 1300, 315, 1390, 240, 1550, 230, 1690, 275, 1780, 330)
 
 [node name="PondPlants" type="Node2D" parent="."]
 
 [node name="Cattail1" parent="PondPlants" instance=ExtResource("15")]
 kind = 0
-position = Vector2(700, 320)
+position = Vector2(1450, 300)
 
 [node name="WaterLily1" parent="PondPlants" instance=ExtResource("15")]
 kind = 1
-position = Vector2(830, 330)
+position = Vector2(1660, 335)
 
 [node name="WaterLily2" parent="PondPlants" instance=ExtResource("15")]
 kind = 1
-position = Vector2(650, 460)
+position = Vector2(1380, 500)
 
 [node name="Cattail2" parent="PondPlants" instance=ExtResource("15")]
 kind = 0
-position = Vector2(820, 480)
+position = Vector2(1680, 500)
 
 [node name="BerryBushes" type="Node2D" parent="."]
 
@@ -120,6 +141,12 @@ position = Vector2(150, 720)
 
 [node name="BerryBush4" parent="BerryBushes" instance=ExtResource("14")]
 position = Vector2(1300, 480)
+
+[node name="BerryBush5" parent="BerryBushes" instance=ExtResource("14")]
+position = Vector2(1920, 650)
+
+[node name="BerryBush6" parent="BerryBushes" instance=ExtResource("14")]
+position = Vector2(2380, 250)
 
 [node name="Trees" type="Node2D" parent="."]
 
@@ -147,6 +174,18 @@ position = Vector2(1050, 650)
 [node name="Tree8" parent="Trees" instance=ExtResource("3")]
 position = Vector2(1250, 580)
 
+[node name="Tree9" parent="Trees" instance=ExtResource("3")]
+position = Vector2(1510, 150)
+
+[node name="Tree10" parent="Trees" instance=ExtResource("3")]
+position = Vector2(1860, 710)
+
+[node name="Tree11" parent="Trees" instance=ExtResource("3")]
+position = Vector2(2200, 190)
+
+[node name="Tree12" parent="Trees" instance=ExtResource("3")]
+position = Vector2(2430, 660)
+
 [node name="Rocks" type="Node2D" parent="."]
 
 [node name="Rock1" parent="Rocks" instance=ExtResource("7")]
@@ -161,29 +200,52 @@ position = Vector2(950, 700)
 [node name="Rock4" parent="Rocks" instance=ExtResource("7")]
 position = Vector2(1300, 700)
 
+[node name="Rock5" parent="Rocks" instance=ExtResource("7")]
+position = Vector2(1760, 160)
+
+[node name="Rock6" parent="Rocks" instance=ExtResource("7")]
+position = Vector2(2310, 720)
+
 [node name="DamSlots" type="Node2D" parent="."]
 
 [node name="DamSlot1" parent="DamSlots" instance=ExtResource("4")]
-position = Vector2(500, 420)
+position = Vector2(1220, 420)
 
 [node name="DamSlot2" parent="DamSlots" instance=ExtResource("4")]
-position = Vector2(620, 380)
+position = Vector2(1360, 385)
 
 [node name="DamSlot3" parent="DamSlots" instance=ExtResource("4")]
-position = Vector2(740, 425)
+position = Vector2(1500, 425)
 is_keystone = true
 
 [node name="DamSlot4" parent="DamSlots" instance=ExtResource("4")]
-position = Vector2(860, 375)
+position = Vector2(1640, 375)
 
 [node name="DamSlot5" parent="DamSlots" instance=ExtResource("4")]
-position = Vector2(980, 415)
+position = Vector2(1780, 415)
 
 [node name="RiverGauge" parent="." instance=ExtResource("18")]
-position = Vector2(680, 300)
+position = Vector2(1440, 300)
 
 [node name="Lodge" parent="." instance=ExtResource("9")]
-position = Vector2(740, 640)
+position = Vector2(1580, 700)
+
+[node name="SurveySpots" type="Node2D" parent="."]
+
+[node name="MossPool" parent="SurveySpots" instance=ExtResource("25")]
+position = Vector2(560, 330)
+spot_id = "moss_pool"
+action_label = "Inspect the Last Pool"
+observation = "The shaded pool is deep enough for Moss, but cut off from the old wetland."
+
+[node name="DownstreamGravel" parent="SurveySpots" instance=ExtResource("25")]
+position = Vector2(2050, 420)
+spot_id = "downstream_gravel"
+action_label = "Inspect the Gravel"
+observation = "Clean gravel lies below the breach. A side current could keep it from silting over."
+
+[node name="EddyPassage" parent="." instance=ExtResource("26")]
+position = Vector2(1900, 425)
 
 [node name="Residents" type="Node2D" parent="."]
 
@@ -192,10 +254,10 @@ resident_id = "moss"
 speaker_id = "moss"
 resident_name = "Moss"
 dialogue_ids = Array[String](["moss_post_chapter", "moss_intro", "moss_supplies_ready", "pond_returns", "moss_lodge_foundation", "moss_lodge_walls"])
-opening_points = Array[Vector2]([Vector2(390, 245), Vector2(450, 270)])
-restored_points = Array[Vector2]([Vector2(620, 500), Vector2(700, 520), Vector2(820, 500)])
-stage_one_points = Array[Vector2]([Vector2(620, 500), Vector2(700, 610), Vector2(780, 610)])
-post_chapter_points = Array[Vector2]([Vector2(700, 610), Vector2(780, 610), Vector2(700, 520), Vector2(620, 500)])
+opening_points = Array[Vector2]([Vector2(520, 245), Vector2(590, 260)])
+restored_points = Array[Vector2]([Vector2(1360, 525), Vector2(1510, 565), Vector2(1700, 520)])
+stage_one_points = Array[Vector2]([Vector2(1400, 540), Vector2(1510, 665), Vector2(1640, 660)])
+post_chapter_points = Array[Vector2]([Vector2(1510, 665), Vector2(1640, 660), Vector2(1510, 545), Vector2(1370, 520)])
 
 [node name="Visual" parent="Residents/Moss" index="0"]
 kind = 0
@@ -206,11 +268,11 @@ speaker_id = "eddy"
 resident_name = "Eddy"
 availability = 1
 dialogue_ids = Array[String](["eddy_post_chapter", "eddy_flow_check"])
-opening_points = Array[Vector2]([Vector2(740, 400)])
-restored_points = Array[Vector2]([Vector2(700, 430), Vector2(780, 455)])
+opening_points = Array[Vector2]([Vector2(1570, 410)])
+restored_points = Array[Vector2]([Vector2(1710, 450), Vector2(1850, 425)])
 settled_objective_id = "check_eddy_route"
-settled_points = Array[Vector2]([Vector2(650, 450), Vector2(760, 480), Vector2(860, 440)])
-post_chapter_points = Array[Vector2]([Vector2(650, 450), Vector2(760, 480), Vector2(860, 440), Vector2(800, 400)])
+settled_points = Array[Vector2]([Vector2(1430, 460), Vector2(1630, 510), Vector2(1900, 425)])
+post_chapter_points = Array[Vector2]([Vector2(1430, 460), Vector2(1630, 510), Vector2(1900, 425), Vector2(1750, 385)])
 
 [node name="Visual" parent="Residents/Eddy" index="0"]
 kind = 2
@@ -222,10 +284,10 @@ resident_name = "Marnie"
 availability = 2
 availability_objective_id = "answer_marnie"
 dialogue_ids = Array[String](["marnie_post_chapter", "marnie_upstream_call"])
-opening_points = Array[Vector2]([Vector2(550, 460), Vector2(500, 430)])
+opening_points = Array[Vector2]([Vector2(2250, 390), Vector2(2180, 420)])
 settled_objective_id = "answer_marnie"
-settled_points = Array[Vector2]([Vector2(500, 430), Vector2(460, 390), Vector2(500, 350)])
-post_chapter_points = Array[Vector2]([Vector2(500, 350), Vector2(460, 390), Vector2(520, 410)])
+settled_points = Array[Vector2]([Vector2(2250, 390), Vector2(2180, 420), Vector2(2110, 380)])
+post_chapter_points = Array[Vector2]([Vector2(2110, 380), Vector2(2180, 420), Vector2(2250, 390)])
 
 [node name="Visual" parent="Residents/Marnie" index="0"]
 kind = 1
@@ -241,24 +303,28 @@ kind = 3
 bob_height = 3.0
 bob_speed = 4.0
 starts_visible = false
-position = Vector2(630, 670)
+position = Vector2(1460, 750)
 
 [node name="Rabbit" parent="Critters" instance=ExtResource("10")]
 kind = 4
 starts_visible = false
-position = Vector2(840, 670)
+position = Vector2(1710, 750)
 
 [node name="GardenSpots" type="Node2D" parent="."]
 
 [node name="FlowerBedSpot" parent="GardenSpots" instance=ExtResource("12")]
 kind = 0
 critter_path = NodePath("../../Critters/Butterfly")
-position = Vector2(650, 660)
+position = Vector2(1470, 755)
 
 [node name="BenchSpot" parent="GardenSpots" instance=ExtResource("12")]
 kind = 1
 critter_path = NodePath("../../Critters/Rabbit")
-position = Vector2(830, 655)
+position = Vector2(1710, 750)
+
+[node name="PondShelterSpot" parent="GardenSpots" instance=ExtResource("12")]
+kind = 2
+position = Vector2(1740, 555)
 
 [node name="Raccoon" parent="." instance=ExtResource("13")]
 
@@ -267,24 +333,24 @@ raccoon_path = NodePath("../Raccoon")
 
 [node name="EndingMudPulse" type="Polygon2D" parent="."]
 visible = false
-polygon = PackedVector2Array(380, 250, 450, 265, 530, 292, 610, 315, 600, 342, 515, 320, 435, 292, 370, 275)
+polygon = PackedVector2Array(1960, 330, 2040, 350, 2120, 370, 2210, 390, 2200, 420, 2110, 400, 2020, 375, 1940, 355)
 color = Color(0.35, 0.22, 0.12, 0.72)
 
 [node name="UpstreamRoute" type="Node2D" parent="."]
 visible = false
-position = Vector2(430, 275)
+position = Vector2(2250, 340)
 script = ExtResource("23")
 
 [node name="EndingMarkers" type="Node2D" parent="."]
 
 [node name="EndingGroupFrame" type="Marker2D" parent="EndingMarkers"]
-position = Vector2(740, 560)
+position = Vector2(1580, 630)
 
 [node name="EndingBrambleExit" type="Marker2D" parent="EndingMarkers"]
-position = Vector2(600, 390)
+position = Vector2(1980, 430)
 
 [node name="UpstreamRouteFrame" type="Marker2D" parent="EndingMarkers"]
-position = Vector2(430, 275)
+position = Vector2(2250, 340)
 
 [node name="Player" parent="." instance=ExtResource("2")]
 position = Vector2(200, 200)

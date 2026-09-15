@@ -5,7 +5,9 @@ extends Interactable
 ## critter moving in, giving leftover wood/stone somewhere to go after the
 ## Lodge itself is finished. Hidden entirely until then.
 
-enum Kind { FLOWER_BED, BENCH }
+signal built_completed
+
+enum Kind { FLOWER_BED, BENCH, POND_SHELTER }
 
 const WOOD_COST := 3
 const STONE_COST := 2
@@ -35,7 +37,10 @@ func get_interaction() -> InteractionOption:
 	return InteractionOption.new("Build " + _kind_label(), build, available, reason, {"wood": WOOD_COST, "stone": STONE_COST})
 
 func _kind_label() -> String:
-	return "Flower Bed" if kind == Kind.FLOWER_BED else "Bench"
+	match kind:
+		Kind.FLOWER_BED: return "Flower Bed"
+		Kind.BENCH: return "Creek Bench"
+		_: return "Pond Shelter"
 
 ## The affordability check used to live only in Player (the group-based
 ## dispatch that get_interaction() replaces) - now build() guards its own
@@ -47,6 +52,7 @@ func build() -> void:
 	Sfx.play_build()
 	Fx.burst(global_position, Color(0.85, 0.6, 0.7), 10)
 	_place()
+	built_completed.emit()
 
 ## Restores a built spot from a save file - same end state as build(), but
 ## silent (no sound/particles) since nothing just happened live.
@@ -71,6 +77,8 @@ func _draw() -> void:
 				_draw_flower_bed()
 			Kind.BENCH:
 				_draw_bench()
+			Kind.POND_SHELTER:
+				_draw_pond_shelter()
 		return
 	if highlighted and can_build():
 		draw_arc(Vector2(0, -2), 16.0, 0, TAU, 24, Palette.HIGHLIGHT_RING, 2.5)
@@ -96,3 +104,10 @@ func _draw_bench() -> void:
 	draw_rect(Rect2(-12, -9, 24, 3), Palette.WOOD_MID)
 	draw_rect(Rect2(-11, 1, 2, 7), Palette.WOOD_DARK)
 	draw_rect(Rect2(9, 1, 2, 7), Palette.WOOD_DARK)
+
+func _draw_pond_shelter() -> void:
+	DrawUtil.shadow(self, Vector2(0, 8), Vector2(15, 4))
+	draw_line(Vector2(-16, 5), Vector2(14, -4), Palette.WOOD_DARK, 5.0)
+	draw_line(Vector2(-10, -2), Vector2(15, 6), Palette.WOOD_MID, 4.0)
+	for x in [-12.0, -4.0, 5.0, 13.0]:
+		draw_line(Vector2(x, 4), Vector2(x + 4, -8), Palette.LEAF_MID, 2.0)

@@ -14,7 +14,7 @@ const STORM_MAX_INTERVAL := 150.0
 const RACCOON_MIN_INTERVAL := 60.0
 const RACCOON_MAX_INTERVAL := 120.0
 const RACCOON_SPAWN_POINTS := [
-	Vector2(250, 150), Vector2(1150, 200), Vector2(250, 650), Vector2(1000, 650), Vector2(700, 720),
+	Vector2(250, 150), Vector2(900, 210), Vector2(1450, 150), Vector2(2050, 690), Vector2(2420, 220),
 ]
 
 ## Emitted only when the complete #21 eligibility contract changes. The ending
@@ -49,6 +49,8 @@ func _ready() -> void:
 	player.interaction_failed.connect(hud.show_failure)
 	for slot in dam_slots.get_children():
 		slot.leak_changed.connect(_update_storm_indicator)
+	for spot in garden_spots.get_children():
+		spot.built_completed.connect(_on_community_improvement_built)
 	raccoon.despawned.connect(_on_raccoon_despawned)
 
 	GameState.dam_completed.connect(_on_dam_completed)
@@ -83,6 +85,7 @@ func _ready() -> void:
 	Ambience.sync_from_game_state(true)
 	_refresh_resident_visibility()
 	_reconcile_act1_story()
+	$EddyPassage.restore_from_story_state()
 	hud.restore_from_state()
 	dialogue_box.restore_from_state()
 	if not ActOneController.get_active_dialogue_id().is_empty():
@@ -133,9 +136,11 @@ func _setup_act1_story() -> void:
 			load("res://data/story/act1/objective_repair_willowbend_dam.tres"),
 			load("res://data/story/act1/objective_witness_pond_return.tres"),
 			load("res://data/story/act1/objective_check_eddy_route.tres"),
+			load("res://data/story/act1/objective_restore_eddy_passage.tres"),
 			load("res://data/story/act1/objective_build_lodge_foundation.tres"),
 			load("res://data/story/act1/objective_talk_moss_home.tres"),
 			load("res://data/story/act1/objective_finish_willowbend_lodge.tres"),
+			load("res://data/story/act1/objective_prepare_willowbend.tres"),
 			load("res://data/story/act1/objective_answer_marnie.tres"),
 		]
 		var dialogues: Array[DialogueDefinition] = [
@@ -177,7 +182,7 @@ func _on_story_objective_completed(objective_id: String) -> void:
 		"repair_willowbend_dam":
 			ActOneController.start_objective("witness_pond_return")
 		"finish_willowbend_lodge":
-			ActOneController.start_objective("answer_marnie")
+			ActOneController.start_objective("prepare_willowbend")
 	_refresh_act_one_ending_eligibility()
 	_refresh_story_indicator()
 
@@ -187,7 +192,19 @@ func _refresh_story_indicator() -> void:
 		"meet_moss", "witness_pond_return", "talk_moss_home":
 			target = $Residents/Moss
 		"read_willowbend_water":
-			target = $RiverGauge
+			if not ActOneController.get_flag("surveyed_moss_pool"):
+				target = $SurveySpots/MossPool
+			elif not ActOneController.get_flag("surveyed_old_gauge"):
+				target = $RiverGauge
+			elif not ActOneController.get_flag("surveyed_downstream_gravel"):
+				target = $SurveySpots/DownstreamGravel
+		"restore_eddy_passage":
+			target = $EddyPassage
+		"prepare_willowbend":
+			for spot in garden_spots.get_children():
+				if not spot.built:
+					target = spot
+					break
 		"check_eddy_route":
 			target = $Residents/Eddy
 		"answer_marnie":
@@ -198,7 +215,14 @@ func _refresh_story_indicator() -> void:
 		hud.point_to_story_target(target)
 
 func _on_water_observed() -> void:
+	ActOneController.set_flag("surveyed_old_gauge")
 	_sync_active_story_progress()
+	_refresh_story_indicator()
+
+func on_survey_spot_observed(observation: String) -> void:
+	hud.show_toast(observation, 3.5)
+	_sync_active_story_progress()
+	_refresh_story_indicator()
 
 func _on_dam_progress_changed(_built: int, _total: int) -> void:
 	_sync_active_story_progress()
@@ -206,6 +230,10 @@ func _on_dam_progress_changed(_built: int, _total: int) -> void:
 func _on_lodge_stage_changed(_stage: int) -> void:
 	_sync_active_story_progress()
 	_refresh_act_one_ending_eligibility()
+
+func _on_community_improvement_built() -> void:
+	_sync_active_story_progress()
+	_refresh_story_indicator()
 
 ## The pure, public handoff from #20 to #21. Stage three alone is deliberately
 ## insufficient: the pond response, Eddy's flow check, and Marnie's request
@@ -234,10 +262,15 @@ func _refresh_act_one_ending_eligibility() -> void:
 ## The controller setter is therefore absolute/idempotent too: no save can
 ## accidentally count a dam piece or Lodge stage twice.
 func _sync_active_story_progress() -> void:
-	if ActOneController.get_objective_status("read_willowbend_water") == "active" \
-			and GameState.water_read:
-		ActOneController.complete_objective("read_willowbend_water")
-		ActOneController.start_objective("repair_willowbend_dam")
+	if ActOneController.get_objective_status("read_willowbend_water") == "active":
+		var survey_count := 0
+		for flag_name in ["surveyed_moss_pool", "surveyed_old_gauge", "surveyed_downstream_gravel"]:
+			if ActOneController.get_flag(flag_name):
+				survey_count += 1
+		ActOneController.set_objective_progress("read_willowbend_water", survey_count)
+		if survey_count >= 3:
+			ActOneController.complete_objective("read_willowbend_water")
+			ActOneController.start_objective("repair_willowbend_dam")
 
 	if ActOneController.get_objective_status("repair_willowbend_dam") == "active":
 		ActOneController.set_objective_progress("repair_willowbend_dam", GameState.dam_pieces_built)
@@ -257,6 +290,16 @@ func _sync_active_story_progress() -> void:
 			ActOneController.set_flag("lodge_walls_ready")
 		if GameState.lodge_stage >= GameState.LODGE_MAX_STAGE:
 			ActOneController.complete_objective("finish_willowbend_lodge")
+
+	if ActOneController.get_objective_status("prepare_willowbend") == "active":
+		var improvement_count := 0
+		for spot in garden_spots.get_children():
+			if spot.built:
+				improvement_count += 1
+		ActOneController.set_objective_progress("prepare_willowbend", improvement_count)
+		if improvement_count >= 2:
+			ActOneController.complete_objective("prepare_willowbend")
+			ActOneController.start_objective("answer_marnie")
 
 func _refresh_resident_visibility() -> void:
 	for resident in $Residents.get_children():

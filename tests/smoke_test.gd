@@ -650,7 +650,7 @@ func _ready() -> void:
 	assert(story_data["flags"] == {}, "no flags should be set without any dialogue having run")
 	assert(story_data["active_dialogue_id"] == "" and story_data["active_dialogue_line"] == -1 and story_data["active_dialogue_choice"] == "", "no dialogue is active outside of dialogue_ui_test.gd")
 	assert(story_data["current_objective_id"] == "meet_moss", "the HUD's current objective must survive a save/load")
-	assert(story_data["objectives"].size() == 10, "Main should register the complete Willowbend objective spine")
+	assert(story_data["objectives"].size() == 12, "Main should register the complete Willowbend objective spine")
 	assert(story_data["objectives"]["meet_moss"]["status"] == "active")
 	assert(story_data["objectives"]["gather_starter_wood"]["status"] == "inactive")
 	print("OK: get_save_data() preserves the exact authored story boundary")

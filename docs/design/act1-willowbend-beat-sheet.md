@@ -8,16 +8,19 @@ celebration remain owned by issues #20 and #21.
 | --- | --- | --- | --- | ---: | --- |
 | 1. Willowbend arrival | Fresh or pre-story save; depleted creek and broken dam | Hazel (letter), Reed, Moss | Tie Reed to Hazel and the remembered Willowbend, establish the private-home goal, then challenge the assumption that the reach is empty | 4 | Start `meet_moss` |
 | 2. Moss introduction | `meet_moss` active; Moss at the last shallow pool | Moss, Reed | Let Reed choose a tone; establish Moss's earned skepticism and the first small proof of commitment | 4, including choice acknowledgement | Complete `meet_moss`; set `met_moss`; start `gather_starter_wood` |
-| 3. Supplies reminder | 6 wood gathered; `read_willowbend_water` active; gauge unread | Moss | Connect Hazel's gauge to the keystone gap without blocking the free observation action | 2 | No new state; contextual reminder only |
+| 3. Willowbend survey | 6 wood gathered; `read_willowbend_water` active | Moss, Reed | Read the last pool, Hazel's gauge, and downstream gravel before construction; establish habitat and fish-passage needs spatially | 2-line reminder plus 3 field observations | Complete `read_willowbend_water`; start `repair_willowbend_dam` |
 | 4. Pond returns | All 5 dam pieces built; `witness_pond_return` active; pond and Eddy visible | Moss, Reed, Eddy | Make restoration socially and ecologically legible; complicate “dam complete” with Eddy's route observation | 4 | Complete `witness_pond_return`; set `pond_restored`; start `check_eddy_route` |
-| 5. Eddy flow check | `check_eddy_route` active; Eddy visible in restored pond | Eddy, Reed | Confirm that observing the current produced a porous route that serves both pond and fish | 3 | Complete `check_eddy_route`; start `build_lodge_foundation` |
-| 6. Lodge foundation | Lodge stage 1; `talk_moss_home` active | Moss, Reed | Move Moss from skepticism toward belonging when Reed names the other residents as neighbors | 3 | Complete `talk_moss_home`; start `finish_willowbend_lodge` |
-| 7. Lodge walls | Lodge stage 2; `finish_willowbend_lodge` active; beat not previously seen | Moss, Reed | Briefly reconnect home-building to checking the living water; keep Moss's change tied to visible results | 2 | Set `moss_saw_lodge_walls`; clear one-time availability flag |
-| 8. Upstream call | Lodge stage 3; `answer_marnie` active; Marnie visible | Marnie, Moss, Reed | Present Aspen Meadow's need while having Reed explicitly carry Eddy's “look first” lesson forward | 5 | Complete `answer_marnie`; set `aspen_meadow_requested` and `willowbend_narrative_spine_complete` |
+| 5. Eddy flow check | `check_eddy_route` active; Eddy visible in restored pond | Eddy, Reed | Identify the pinched downstream side current rather than resolving fish passage in dialogue alone | 3 | Complete `check_eddy_route`; start `restore_eddy_passage` |
+| 6. Restore Eddy's passage | `restore_eddy_passage` active; debris visible below dam | Reed, Eddy | Open and brace the side current, then make Eddy's full route physically legible | Field action | Complete `restore_eddy_passage`; start `build_lodge_foundation` |
+| 7. Lodge foundation | Lodge stage 1; `talk_moss_home` active | Moss, Reed | Move Moss from skepticism toward belonging when Reed names the other residents as neighbors | 3 | Complete `talk_moss_home`; start `finish_willowbend_lodge` |
+| 8. Lodge walls | Lodge stage 2; `finish_willowbend_lodge` active; beat not previously seen | Moss, Reed | Briefly reconnect home-building to checking the living water; keep Moss's change tied to visible results | 2 | Set `moss_saw_lodge_walls`; clear one-time availability flag |
+| 9. Prepare for neighbors | Lodge stage 3; `prepare_willowbend` active | Reed and Willowbend residents | Complete any two of a flower bed, creek bench, and pond shelter so the gathering reflects player priorities | Field actions | Complete `prepare_willowbend`; start `answer_marnie` |
+| 10. Upstream call | Community prepared; `answer_marnie` active; Marnie visible | Marnie, Moss, Reed | Present Aspen Meadow's need while having Reed explicitly carry Eddy's “look first” lesson forward | 5 | Complete `answer_marnie`; set `aspen_meadow_requested` and `willowbend_narrative_spine_complete` |
 
-Non-conversation objectives connect those scenes: gather 6 wood, read the
-river gauge, repair 5 dam pieces, and build Lodge stages 1–3. Their counts are
-shown in the HUD/journal where a target exists.
+Non-conversation objectives connect those scenes: gather 6 wood, survey three
+creek habitats, repair 5 dam pieces, restore Eddy's passage, build Lodge stages
+1–3, and complete two of three community improvements. Their counts are shown
+in the HUD/journal where a target exists.
 
 ## Runtime boundaries
 

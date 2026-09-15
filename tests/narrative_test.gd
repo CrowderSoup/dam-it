@@ -16,6 +16,9 @@ func _ready() -> void:
 	var eddy: Resident = main.get_node("Residents/Eddy")
 	var marnie: Resident = main.get_node("Residents/Marnie")
 	var gauge: RiverGauge = main.get_node("RiverGauge")
+	var pool_survey: SurveySpot = main.get_node("SurveySpots/MossPool")
+	var gravel_survey: SurveySpot = main.get_node("SurveySpots/DownstreamGravel")
+	var eddy_passage: EddyPassage = main.get_node("EddyPassage")
 
 	assert(ActOneController.get_active_dialogue_id() == "willowbend_arrival")
 	assert(get_tree().paused, "the brief arrival conversation should pause gameplay")
@@ -40,6 +43,9 @@ func _ready() -> void:
 	print("OK: Moss's introduction and gathering progress lead to reading the creek")
 
 	gauge.read_water()
+	pool_survey.observe()
+	assert(ActOneController.get_objective_progress("read_willowbend_water") == 2)
+	gravel_survey.observe()
 	assert(ActOneController.get_objective_status("read_willowbend_water") == "completed")
 	assert(ActOneController.get_objective_status("repair_willowbend_dam") == "active")
 	GameState.restore_dam_progress(GameState.dam_pieces_total)
@@ -60,6 +66,11 @@ func _ready() -> void:
 	eddy.get_interaction().perform.call()
 	_play_active_dialogue()
 	assert(ActOneController.get_objective_status("check_eddy_route") == "completed")
+	assert(ActOneController.get_objective_status("restore_eddy_passage") == "active")
+	GameState.wood = 2
+	GameState.stone = 1
+	eddy_passage.restore()
+	assert(ActOneController.get_flag("eddy_passage_restored"))
 	assert(ActOneController.get_objective_status("build_lodge_foundation") == "active")
 
 	GameState.lodge_stage = 1
@@ -82,7 +93,16 @@ func _ready() -> void:
 
 	GameState.lodge_stage = GameState.LODGE_MAX_STAGE
 	GameState.lodge_stage_changed.emit(GameState.lodge_stage)
+	GameState.lodge_completed.emit()
 	assert(ActOneController.get_objective_status("finish_willowbend_lodge") == "completed")
+	assert(ActOneController.get_objective_status("prepare_willowbend") == "active")
+	var flower: GardenSpot = main.get_node("GardenSpots/FlowerBedSpot")
+	var shelter: GardenSpot = main.get_node("GardenSpots/PondShelterSpot")
+	GameState.wood = 6
+	GameState.stone = 4
+	flower.build()
+	shelter.build()
+	assert(ActOneController.get_objective_status("prepare_willowbend") == "completed")
 	assert(ActOneController.get_objective_status("answer_marnie") == "active")
 	assert(marnie.visible and marnie.get_interaction().label == "Talk to Marnie")
 	assert(not main.is_act_one_ending_eligible(), "stage three must not skip Marnie's request and Moss's final acknowledgement")

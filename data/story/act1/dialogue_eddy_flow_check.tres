@@ -24,15 +24,15 @@ script = ExtResource("3")
 type = 4
 target_id = "check_eddy_route"
 
-[sub_resource type="Resource" id="Effect_lodge"]
+[sub_resource type="Resource" id="Effect_passage"]
 script = ExtResource("3")
 type = 2
-target_id = "build_lodge_foundation"
+target_id = "restore_eddy_passage"
 
 [sub_resource type="Resource" id="Line_eddy_end"]
 script = ExtResource("2")
-text = "Yes. Look on both sides of each build. This one gave both of us a place to live."
-effects = Array[ExtResource("3")]([SubResource("Effect_complete"), SubResource("Effect_lodge")])
+text = "Almost. Downstream, those crossed branches pinch the side current. Open it and brace the banks; then I can show you the whole route."
+effects = Array[ExtResource("3")]([SubResource("Effect_complete"), SubResource("Effect_passage")])
 
 [resource]
 script = ExtResource("1")
