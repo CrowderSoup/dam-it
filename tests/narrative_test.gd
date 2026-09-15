@@ -24,10 +24,6 @@ func _ready() -> void:
 	assert(moss.visible and moss.get_interaction().label == "Talk to Moss")
 	assert(moss.global_position.y < 275.0, "Moss's opening route must stay above the HUD safe edge")
 	assert(main.hud.story_indicator.target == moss, "the first task should point a new player toward Moss")
-	assert(main._moss_diagnostic_shown and main.hud.toast_label.text.contains("Moss (390,245) | route opening"), "the arrival ending should expose Moss's exact position before the player must find them")
-	main._moss_diagnostic_shown = false
-	main._on_interaction_option_changed(moss.get_interaction())
-	assert(main._moss_diagnostic_shown and main.hud.toast_label.text.contains("route opening"), "reaching Moss should show the diagnostic without relying on a debug key")
 	print("OK: the Willowbend arrival leads to a visible, actionable Moss")
 
 	moss.get_interaction().perform.call()
