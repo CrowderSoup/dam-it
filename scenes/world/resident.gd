@@ -11,7 +11,10 @@ enum Availability { ALWAYS, DAM_COMPLETE, OBJECTIVE_REACHED }
 @export var resident_name: String = ""
 @export var availability: Availability = Availability.ALWAYS
 @export var availability_objective_id: String = ""
-@export var dialogue_ids: PackedStringArray = []
+## Nested-scene Packed*Array overrides are not preserved by the Godot 4.7.2
+## Web exporter used by CI. Keep authored dialogue ids in the same explicit,
+## Web-safe typed-array form as route points.
+@export var dialogue_ids: Array[String] = []
 ## Use ordinary typed arrays rather than PackedVector2Array for authored
 ## routes. Godot 4.7.2's Web export dropped the packed-array override on these
 ## nested Resident scene instances, leaving Moss at the fallback (0,0), while
@@ -35,6 +38,7 @@ func _ready() -> void:
 	assert(StoryIdentifiers.is_valid(resident_id), "Resident has invalid resident_id '%s'" % resident_id)
 	assert(StoryIdentifiers.is_known_speaker(speaker_id), "Resident '%s' has unknown speaker_id '%s'" % [resident_id, speaker_id])
 	assert(not resident_name.is_empty(), "Resident '%s' needs a display name" % resident_id)
+	assert(not dialogue_ids.is_empty(), "Resident '%s' needs at least one dialogue id" % resident_id)
 	add_to_group("residents")
 	GameState.dam_progress_changed.connect(_on_world_state_changed.unbind(2))
 	GameState.lodge_stage_changed.connect(_on_world_state_changed.unbind(1))
