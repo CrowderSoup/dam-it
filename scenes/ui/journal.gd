@@ -98,7 +98,7 @@ func _refresh() -> void:
 
 	list.visible = not _ids.is_empty()
 	if _ids.is_empty():
-		description_label.text = "No objectives yet - explore a little and one will turn up."
+		description_label.text = "No tasks yet. Look around and see what you find."
 		return
 
 	var reselect_index := _ids.find(previously_selected)

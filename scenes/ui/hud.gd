@@ -39,6 +39,7 @@ const TUTORIAL_JOURNAL := "journal"
 @onready var objective_background: Panel = $ObjectiveBackground
 @onready var storm_indicator: Control = $StormIndicator
 @onready var raccoon_indicator: Control = $RaccoonIndicator
+@onready var story_indicator: Control = $StoryIndicator
 @onready var action_prompt_label: Label = $ActionPromptLabel
 @onready var action_prompt_background: Panel = $ActionPromptBackground
 @onready var chapter_banner: Panel = $ChapterBanner
@@ -112,6 +113,13 @@ func _unhandled_input(event: InputEvent) -> void:
 func set_camera(camera: Camera2D) -> void:
 	storm_indicator.set_camera(camera)
 	raccoon_indicator.set_camera(camera)
+	story_indicator.set_camera(camera)
+
+func point_to_story_target(target: Node2D) -> void:
+	story_indicator.point_to(target)
+
+func clear_story_indicator() -> void:
+	story_indicator.clear()
 
 func point_to_storm(target: Node2D) -> void:
 	storm_indicator.point_to(target)
@@ -209,7 +217,7 @@ func _on_pouch_full(kind: String) -> void:
 	show_toast(GameState.pouch_full_message(kind), 3.0)
 
 func _on_water_observed() -> void:
-	show_toast("You read the water: the current runs strongest through the middle gap. Brace that one well.")
+	show_toast("The water runs fastest through the middle gap. Make that part strong.")
 
 func _on_berries_changed(amount: int) -> void:
 	berries_label.text = "%d/%d" % [amount, GameState.berry_capacity()]
@@ -226,7 +234,7 @@ func _on_lodge_stage_changed(stage: int) -> void:
 		lodge_label.text = "%d / %d" % [stage, GameState.LODGE_MAX_STAGE]
 
 func _on_dam_completed() -> void:
-	show_toast("Dam complete! Cattails and lilies are growing in the pond, and a Lodge site has appeared south of it.")
+	show_toast("The dam is done! Plants grow by the pond. Your Lodge site is on the south bank.")
 	# dam_progress_changed already flipped the "X / Y" dam counter, but the
 	# Lodge counter's "Locked" text depends on dam completion too, and only
 	# lodge_stage_changed normally refreshes it - without this it would keep
@@ -283,9 +291,9 @@ func _tutorial_text(id: String) -> String:
 		TUTORIAL_MOVE:
 			return "D-pad / left stick to move" if gamepad else "WASD / arrows to move"
 		TUTORIAL_INTERACT:
-			return "%s to chop, mine, build, and more" % ("A" if gamepad else "E")
+			return "%s to chop, mine, build, and talk" % ("A" if gamepad else "E")
 		TUTORIAL_JOURNAL:
-			return "%s to open your journal and see your objective" % ("Y" if gamepad else "J")
+			return "%s to open your journal and see your task" % ("Y" if gamepad else "J")
 		_:
 			return ""
 

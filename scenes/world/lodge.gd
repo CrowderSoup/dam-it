@@ -38,6 +38,11 @@ func set_highlighted(value: bool) -> void:
 func can_advance() -> bool:
 	return visible and GameState.lodge_stage < GameState.LODGE_MAX_STAGE
 
+func _story_allows_advance() -> bool:
+	if GameState.lodge_stage == 0:
+		return ActOneController.get_objective_status("build_lodge_foundation") in ["active", "completed"]
+	return ActOneController.get_objective_status("finish_willowbend_lodge") in ["active", "completed"]
+
 ## See interaction_option.gd. Mirrors the old Player._try_interact()
 ## priority while making the stage-one platform's first practical payoff
 ## reachable: a tired beaver rests before advancing again; upgrading the
@@ -52,6 +57,8 @@ func get_interaction() -> InteractionOption:
 		return InteractionOption.new("Rest", rest, true)
 	if can_advance():
 		var stage_cost: Dictionary = GameState.LODGE_STAGE_COSTS[GameState.lodge_stage]
+		if not _story_allows_advance():
+			return InteractionOption.new("Advance Lodge", advance, false, "Finish your current task first", stage_cost)
 		if GameState.can_afford_lodge_stage():
 			return InteractionOption.new("Advance Lodge", advance, true, "", stage_cost)
 	if can_upgrade_pouch():
@@ -66,7 +73,7 @@ func get_interaction() -> InteractionOption:
 ## dispatch that get_interaction() replaces) - now advance() guards its own
 ## cost the same way chop()/mine() always have.
 func advance() -> void:
-	if not can_advance() or not GameState.can_afford_lodge_stage():
+	if not can_advance() or not _story_allows_advance() or not GameState.can_afford_lodge_stage():
 		return
 	GameState.advance_lodge_stage()
 	Sfx.play_build()

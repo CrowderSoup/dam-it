@@ -10,7 +10,7 @@ target_id = "act_one_complete"
 
 [sub_resource type="Resource" id="Line_marnie"]
 script = ExtResource("2")
-text = "Aspen Meadow is beyond this bend. I will wait here until the route is ready; the water can tell us plenty meanwhile."
+text = "Aspen Meadow is past this bend. I will wait here until the path is ready. We can watch the water while we wait."
 
 [resource]
 script = ExtResource("1")

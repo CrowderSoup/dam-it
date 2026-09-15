@@ -71,6 +71,7 @@ func _ready() -> void:
 	ActOneController.dialogue_ended.connect(_on_dialogue_ended)
 	ActOneController.objective_started.connect(_on_story_objective_started)
 	ActOneController.objective_completed.connect(_on_story_objective_completed)
+	ActOneController.dialogue_ended.connect(_refresh_story_indicator.unbind(1))
 	ActOneController.flag_changed.connect(_on_story_flag_changed)
 	# Story content must exist before apply_save_data() asks the controller to
 	# restore objective/dialogue ids. The old order silently discarded every
@@ -87,6 +88,7 @@ func _ready() -> void:
 	if not ActOneController.get_active_dialogue_id().is_empty():
 		_on_dialogue_started(ActOneController.get_active_dialogue_id())
 	_refresh_act_one_ending_eligibility()
+	_refresh_story_indicator()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("restart") and not act_one_ending.is_active():
@@ -166,6 +168,7 @@ func _reconcile_act1_story() -> void:
 func _on_story_objective_started(_objective_id: String) -> void:
 	_sync_active_story_progress()
 	_refresh_act_one_ending_eligibility()
+	_refresh_story_indicator()
 
 func _on_story_objective_completed(objective_id: String) -> void:
 	match objective_id:
@@ -176,6 +179,23 @@ func _on_story_objective_completed(objective_id: String) -> void:
 		"finish_willowbend_lodge":
 			ActOneController.start_objective("answer_marnie")
 	_refresh_act_one_ending_eligibility()
+	_refresh_story_indicator()
+
+func _refresh_story_indicator() -> void:
+	var target: Node2D = null
+	match ActOneController.get_current_objective_id():
+		"meet_moss", "witness_pond_return", "talk_moss_home":
+			target = $Residents/Moss
+		"read_willowbend_water":
+			target = $RiverGauge
+		"check_eddy_route":
+			target = $Residents/Eddy
+		"answer_marnie":
+			target = $Residents/Marnie
+	if target == null or ActOneController.get_objective_status(ActOneController.get_current_objective_id()) == "completed":
+		hud.clear_story_indicator()
+	else:
+		hud.point_to_story_target(target)
 
 func _on_water_observed() -> void:
 	_sync_active_story_progress()

@@ -27,6 +27,7 @@ func _ready() -> void:
 	for i in 4:
 		ActOneController.advance_dialogue()
 	assert(not get_tree().paused)
+	var mechanics_story_boundary := ActOneController.get_save_data()
 
 	var player: CharacterBody2D = main.get_node("Player")
 	var tree1: StaticBody2D = main.get_node("Trees/Tree1")
@@ -135,6 +136,11 @@ func _ready() -> void:
 	assert(GameState.can_afford_dam_piece())
 	assert(dam_slot1.can_build())
 	var slot_option: InteractionOption = dam_slot1.get_interaction()
+	assert(slot_option != null and not slot_option.available and slot_option.reason == "Talk to Moss first", "dam work must not bypass the opening story")
+	dam_slot1.build()
+	assert(not dam_slot1.built, "the build method must enforce the story gate too")
+	ActOneController.start_objective("repair_willowbend_dam")
+	slot_option = dam_slot1.get_interaction()
 	assert(slot_option != null and slot_option.label == "Build Dam Piece" and slot_option.available, "a fresh dam slot should offer an available Build Dam Piece action")
 	assert(slot_option.cost_text() == "2 Wood, 1 Stone", "the dam-piece cost should show as 2 Wood, 1 Stone, got: %s" % slot_option.cost_text())
 	var energy_before_build := GameState.energy
@@ -169,7 +175,7 @@ func _ready() -> void:
 	assert(GameState.can_afford_dam_piece(), "the keystone slot should be affordable, just not yet buildable")
 	var blocked_option: InteractionOption = dam_slot3.get_interaction()
 	assert(blocked_option != null and blocked_option.label == "Build Dam Piece" and not blocked_option.available, "the keystone slot should offer Build Dam Piece, unavailable until the water is read")
-	assert(blocked_option.reason == "The current runs strongest through this gap - read the water first")
+	assert(blocked_option.reason == "Read the water first")
 	dam_slot3.build()
 	assert(not dam_slot3.built, "building the keystone slot before reading the water should be a no-op")
 	print("OK: the keystone dam slot refuses to build before the water is read")
@@ -347,6 +353,7 @@ func _ready() -> void:
 	assert(moss.visible, "Moss should be present from the start so the opening objective is actionable")
 	GameState.add_wood(10)
 	GameState.add_stone(10)
+	ActOneController.start_objective("build_lodge_foundation")
 	assert(lodge.can_advance() and GameState.can_afford_lodge_stage())
 	lodge.advance()
 	assert(GameState.lodge_stage == 1)
@@ -370,6 +377,7 @@ func _ready() -> void:
 	# proving the optional action is reachable without making it a story gate.
 	GameState.add_wood(10)
 	GameState.add_stone(10)
+	ActOneController.start_objective("finish_willowbend_lodge")
 	lodge.advance()
 	assert(GameState.lodge_stage == 2)
 	GameState.wood = GameState.POUCH_UPGRADE_COST["wood"]
@@ -593,6 +601,9 @@ func _ready() -> void:
 
 	GameState.spend_energy(37.0)
 	GameState.add_berries(3)
+	# Later mechanic checks temporarily opt into their story objectives. Put
+	# the actual post-arrival boundary back before serialization is inspected.
+	ActOneController.load_from_save(mechanics_story_boundary)
 	var saved_data: Dictionary = main.get_save_data()
 	assert(saved_data["wood"] == GameState.wood)
 	assert(saved_data["berries"] == GameState.berries)

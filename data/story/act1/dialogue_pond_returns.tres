@@ -13,7 +13,7 @@ target_id = "witness_pond_return"
 [sub_resource type="Resource" id="Line_moss"]
 script = ExtResource("2")
 speaker = "moss"
-text = "Well. That is no puddle. The wet edge already reaches the willow roots, and I hear another frog answering."
+text = "Well. That is no puddle. The water has reached the willow roots. I can hear another frog!"
 
 [sub_resource type="Resource" id="Effect_pond"]
 script = ExtResource("3")
@@ -22,13 +22,13 @@ target_id = "pond_restored"
 [sub_resource type="Resource" id="Line_reed"]
 script = ExtResource("2")
 speaker = "reed"
-text = "It is deep enough for my lodge. I did not expect the whole bank to wake up with it."
+text = "It is deep enough for my lodge. I did not think the whole bank would wake up too."
 effects = Array[ExtResource("3")]([SubResource("Effect_pond")])
 
 [sub_resource type="Resource" id="Line_eddy"]
 script = ExtResource("2")
 speaker = "eddy"
-text = "The pond is welcome, but silt is settling over my gravel. A dam helps most when water and fish still have a route."
+text = "I like the pond, but mud is covering my gravel. A good dam still leaves a path for water and fish."
 
 [sub_resource type="Resource" id="Effect_check"]
 script = ExtResource("3")
@@ -43,7 +43,7 @@ target_id = "witness_pond_return"
 [sub_resource type="Resource" id="Line_moss_end"]
 script = ExtResource("2")
 speaker = "moss"
-text = "One success, one new problem. You may actually belong here. Check both sides with Eddy before building your lodge."
+text = "One win and one new problem. You may fit in here. Check both sides with Eddy before you build your lodge."
 effects = Array[ExtResource("3")]([SubResource("Effect_complete_pond"), SubResource("Effect_check")])
 
 [resource]

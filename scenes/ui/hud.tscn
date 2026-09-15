@@ -202,6 +202,10 @@ script = ExtResource("3")
 size = Vector2(20, 20)
 script = ExtResource("3")
 
+[node name="StoryIndicator" type="Control" parent="."]
+size = Vector2(20, 20)
+script = ExtResource("3")
+
 [node name="ChapterBanner" type="Panel" parent="."]
 visible = false
 position = Vector2(40, 124)
@@ -220,6 +224,6 @@ vertical_alignment = 1
 position = Vector2(16, 56)
 size = Vector2(528, 32)
 label_settings = SubResource("4")
-text = "The water leads upstream to Aspen Meadow"
+text = "Follow the water to Aspen Meadow"
 horizontal_alignment = 1
 vertical_alignment = 1

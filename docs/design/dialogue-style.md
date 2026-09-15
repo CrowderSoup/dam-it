@@ -5,7 +5,7 @@ Milestone: **0 — Vision lock**
 
 ## Established constraints
 
-- The game is all-ages, centered on independent readers around age 10 and up.
+- The game is all-ages, centered on independent readers around age 8 and up.
   Clear language must not make the writing feel like children's educational
   software or talk down to older cozy-game players.
 - The protagonist is soft-authored and leaves room for player projection.
@@ -26,8 +26,9 @@ Milestone: **0 — Vision lock**
 
 ## Language and ecological concepts
 
-- Aim for a comfortable grade 5–7 reading level without flattening character
-  voice or emotional nuance.
+- Aim for a comfortable grade 3 reading level without flattening character
+  voice or emotional nuance. Place names and one visible nature word may read
+  above that score; explain their meaning with short, concrete sentences.
 - Introduce at most one unfamiliar ecological term at a time, in a scene where
   the player can see or interact with its meaning.
 - Prefer a resident's concrete observation over a definition. Eddy might say
@@ -60,6 +61,5 @@ Milestone: **0 — Vision lock**
 
 ## Readability test
 
-An independent 11-year-old reader should understand a line on the first read,
-while an adult should not feel that the line was written only for an
-11-year-old.
+An independent 8-year-old reader should understand a line on the first read,
+while an adult should not feel that the line was written only for a child.

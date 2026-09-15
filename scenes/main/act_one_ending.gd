@@ -81,7 +81,7 @@ func _begin() -> void:
 	Ambience.set_chapter_ending_active(true)
 	if not ActOneController.get_flag("act_one_celebration_started"):
 		ActOneController.set_flag("act_one_celebration_started")
-	hud.show_toast("Willowbend gathers at Reed's new lodge.", beat_delay)
+	hud.show_toast("Willowbend meets at Reed's new Lodge.", beat_delay)
 	_frame(group_frame)
 	await get_tree().create_timer(beat_delay).timeout
 	_show_muddy_pulse()
@@ -93,7 +93,7 @@ func _show_muddy_pulse() -> void:
 	Ambience.set_chapter_ending_active(true)
 	mud_pulse.show()
 	ActOneController.set_flag("act_one_muddy_pulse_seen")
-	hud.show_toast("A pulse of mud and charred branches rolls downstream.", beat_delay)
+	hud.show_toast("Mud and burned branches rush down the creek.", beat_delay)
 	await get_tree().create_timer(beat_delay).timeout
 	mud_pulse.hide()
 	_frame(bramble_frame)
@@ -120,7 +120,7 @@ func _reveal_route() -> void:
 
 func _complete_chapter() -> void:
 	route.show()
-	hud.show_chapter_banner("CHAPTER ONE COMPLETE", "The water leads upstream to Aspen Meadow")
+	hud.show_chapter_banner("CHAPTER ONE COMPLETE", "Follow the water to Aspen Meadow")
 	Ambience.play_chapter_complete_cue()
 	if not ActOneController.get_flag("act_one_complete"):
 		ActOneController.set_flag("act_one_complete")

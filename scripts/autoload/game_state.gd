@@ -106,7 +106,7 @@ func has_berry_room() -> bool:
 ## attempted through Player and one called directly always read the same.
 func pouch_full_message(kind: String) -> String:
 	var noun := {"wood": "Wood", "stone": "Stone", "berries": "Berry"}.get(kind, "Resource") as String
-	return "%s pouch is full! Spend something or reinforce your pouch at the Lodge." % noun
+	return "%s pouch is full! Use some or make your pouch bigger at the Lodge." % noun
 
 ## Called by each DamSlot on _ready() so the total is derived from the
 ## scene instead of duplicated as a magic number.

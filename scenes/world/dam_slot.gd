@@ -65,6 +65,9 @@ func can_repair() -> bool:
 func _needs_reading() -> bool:
 	return is_keystone and not GameState.water_read
 
+func _story_allows_building() -> bool:
+	return ActOneController.get_objective_status("repair_willowbend_dam") in ["active", "completed"]
+
 ## See interaction_option.gd. can_build()/can_repair() are mutually
 ## exclusive by construction (a slot is either not built, built and
 ## leaking, or built and fine), so there's never a priority question here -
@@ -76,8 +79,10 @@ func get_interaction() -> InteractionOption:
 	if can_repair():
 		return InteractionOption.new("Repair Dam Piece", repair, available, reason, cost)
 	if can_build():
+		if not _story_allows_building():
+			return InteractionOption.new("Build Dam Piece", build, false, "Talk to Moss first", cost)
 		if _needs_reading():
-			return InteractionOption.new("Build Dam Piece", build, false, "The current runs strongest through this gap - read the water first", cost)
+			return InteractionOption.new("Build Dam Piece", build, false, "Read the water first", cost)
 		return InteractionOption.new("Build Dam Piece", build, available, reason, cost)
 	return null
 
@@ -85,7 +90,7 @@ func get_interaction() -> InteractionOption:
 ## dispatch that get_interaction() replaces) - now build()/repair() guard
 ## their own cost the same way chop()/mine() always have.
 func build() -> void:
-	if not can_build() or _needs_reading() or not GameState.can_afford_dam_piece():
+	if not can_build() or not _story_allows_building() or _needs_reading() or not GameState.can_afford_dam_piece():
 		return
 	GameState.spend_resources_on_dam_piece()
 	Sfx.play_build()

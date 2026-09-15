@@ -5,6 +5,5 @@
 [resource]
 script = ExtResource("1")
 id = "meet_moss"
-title = "A Voice by the Shallows"
-description = "Find the frog beside Willowbend's last shallow pool and introduce yourself."
-
+title = "A Voice by the Water"
+description = "Find Moss the frog by the last small pool."

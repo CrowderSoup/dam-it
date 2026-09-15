@@ -12,12 +12,12 @@ target_id = "check_eddy_route"
 
 [sub_resource type="Resource" id="Line_eddy"]
 script = ExtResource("2")
-text = "The deeper pool is good shelter. Along the middle brace, water still slips through the sticks instead of dropping all its silt."
+text = "The deep pool is a safe home. Water still slips through the middle sticks, so mud does not cover all my gravel."
 
 [sub_resource type="Resource" id="Line_reed"]
 script = ExtResource("2")
 speaker = "reed"
-text = "So the strong gap I watched became the route I needed to keep porous."
+text = "So the fast gap became the path I needed to keep open."
 
 [sub_resource type="Resource" id="Effect_complete"]
 script = ExtResource("3")
@@ -31,7 +31,7 @@ target_id = "build_lodge_foundation"
 
 [sub_resource type="Resource" id="Line_eddy_end"]
 script = ExtResource("2")
-text = "Exactly. Look above and below every build. For this one, you left us both a place to live."
+text = "Yes. Look on both sides of each build. This one gave both of us a place to live."
 effects = Array[ExtResource("3")]([SubResource("Effect_complete"), SubResource("Effect_lodge")])
 
 [resource]
@@ -40,4 +40,3 @@ id = "eddy_flow_check"
 speaker = "eddy"
 condition = SubResource("Condition_check")
 lines = Array[ExtResource("2")]([SubResource("Line_eddy"), SubResource("Line_reed"), SubResource("Line_eddy_end")])
-

@@ -5,8 +5,8 @@
 [resource]
 script = ExtResource("1_ssx7b")
 id = "gather_starter_wood"
-title = "Wood for Moss's Trust"
-description = "Gather wood for the first dam repair - enough to show Moss you mean to stay."
+title = "Wood for the Dam"
+description = "Gather wood. Show Moss that you want to help."
 completion_type = 1
 resource = "wood"
 target_amount = 6
