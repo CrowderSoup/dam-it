@@ -371,7 +371,7 @@ func _advance_to_next_visible_line() -> void:
 	dialogue_ended.emit(finished_id)
 
 ## --- Save / load -------------------------------------------------------------
-## Serializes the "story" section of the version 2 campaign save payload -
+## Serializes the "story" section introduced in version 2 of the campaign save -
 ## see docs/design/dialogue-schema.md#save-load. Main.get_save_data()/
 ## apply_save_data() own assembling/dispatching the full payload; this is
 ## just ActOneController's own slice of it, the same split GameState uses

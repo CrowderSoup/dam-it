@@ -82,14 +82,19 @@ func _ready() -> void:
 	assert(ActOneController.get_objective_status("finish_willowbend_lodge") == "completed")
 	assert(ActOneController.get_objective_status("answer_marnie") == "active")
 	assert(marnie.visible and marnie.get_interaction().label == "Talk to Marnie")
+	assert(not main.is_act_one_ending_eligible(), "stage three must not skip Marnie's request and Moss's final acknowledgement")
 	print("OK: Eddy's check and Lodge milestones lead to Marnie's arrival")
 
+	var eligibility_events: Array[bool] = []
+	main.act_one_ending_eligibility_changed.connect(func(eligible: bool): eligibility_events.append(eligible))
 	marnie.get_interaction().perform.call()
 	_play_active_dialogue()
 	assert(ActOneController.get_objective_status("answer_marnie") == "completed")
 	assert(ActOneController.get_flag("aspen_meadow_requested"))
 	assert(ActOneController.get_flag("willowbend_narrative_spine_complete"))
 	assert(not get_tree().paused and ActOneController.get_active_dialogue_id().is_empty())
+	assert(main.is_act_one_ending_eligible(), "the completed stage-three narrative should expose #21's ending handoff")
+	assert(eligibility_events == [true], "eligibility should become true exactly once after the closing dialogue releases its input")
 	print("ALL NARRATIVE TESTS PASSED")
 	# Let the gauge's short SFX playback release before the headless process
 	# exits, matching the cleanup grace period in the mechanics suite.

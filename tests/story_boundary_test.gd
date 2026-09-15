@@ -64,6 +64,7 @@ func _ready() -> void:
 	_test_every_objective_save_boundary()
 	_test_supported_mid_dialogue_boundary()
 	await _test_out_of_order_world_events()
+	await _test_act_one_ending_eligibility()
 
 	print("ALL STORY BOUNDARY TESTS PASSED")
 	get_tree().quit()
@@ -210,6 +211,65 @@ func _test_out_of_order_world_events() -> void:
 	main.queue_free()
 	await get_tree().process_frame
 
+## Stage three exposes one explicit, non-mutating handoff to #21. Exercise
+## every prerequisite independently so future ending work cannot accidentally
+## infer readiness from the Lodge alone or replay a durable ending.
+func _test_act_one_ending_eligibility() -> void:
+	GameState.reset()
+	ActOneController.reset()
+	var main: Node = load("res://scenes/main/main.tscn").instantiate()
+	add_child(main)
+	_play_active_dialogue()
+
+	var eligible_story := _completed_story_save()
+	GameState.lodge_stage = GameState.LODGE_MAX_STAGE
+	ActOneController.load_from_save(eligible_story)
+	assert(main.is_act_one_ending_eligible(), "the complete stable stage-three boundary should be eligible")
+
+	var missing_pond := eligible_story.duplicate(true)
+	missing_pond["flags"].erase("pond_restored")
+	ActOneController.load_from_save(missing_pond)
+	assert(not main.is_act_one_ending_eligible())
+
+	var missing_eddy := eligible_story.duplicate(true)
+	missing_eddy["objectives"]["check_eddy_route"] = {"status": "active", "current": 0}
+	ActOneController.load_from_save(missing_eddy)
+	assert(not main.is_act_one_ending_eligible())
+
+	var missing_spine := eligible_story.duplicate(true)
+	missing_spine["flags"].erase("willowbend_narrative_spine_complete")
+	ActOneController.load_from_save(missing_spine)
+	assert(not main.is_act_one_ending_eligible())
+
+	ActOneController.load_from_save(eligible_story)
+	GameState.lodge_stage = GameState.LODGE_MAX_STAGE - 1
+	assert(not main.is_act_one_ending_eligible())
+	GameState.lodge_stage = GameState.LODGE_MAX_STAGE
+
+	var active_dialogue := eligible_story.duplicate(true)
+	active_dialogue["active_dialogue_id"] = "willowbend_arrival"
+	active_dialogue["active_dialogue_line"] = 0
+	ActOneController.load_from_save(active_dialogue)
+	assert(not main.is_act_one_ending_eligible(), "active dialogue must block the ending handoff")
+	ActOneController.load_from_save(eligible_story)
+
+	main.get_node("Journal").open()
+	assert(not main.is_act_one_ending_eligible(), "the journal must block the ending handoff")
+	main.get_node("Journal").close()
+	main.get_node("GameMenu").open()
+	assert(not main.is_act_one_ending_eligible(), "the pause menu must block the ending handoff")
+	main.get_node("GameMenu").close()
+
+	ActOneController.set_flag("act_one_ending_started")
+	assert(not main.is_act_one_ending_eligible(), "a started ending must not start twice")
+	ActOneController.load_from_save(eligible_story)
+	ActOneController.set_flag("act_one_complete")
+	assert(not main.is_act_one_ending_eligible(), "a completed chapter must remain in calm play")
+	print("OK: stage-three ending eligibility requires every story/UI prerequisite and is idempotent")
+
+	main.queue_free()
+	await get_tree().process_frame
+
 func _story_save_at(boundary_index: int) -> Dictionary:
 	var save := _empty_story_save()
 	for objective_index in OBJECTIVE_ORDER.size():
@@ -236,6 +296,17 @@ func _empty_story_save() -> Dictionary:
 		"active_dialogue_line": -1,
 		"active_dialogue_choice": "",
 	}
+
+func _completed_story_save() -> Dictionary:
+	var save := _empty_story_save()
+	for objective_id in OBJECTIVE_ORDER:
+		save["objectives"][objective_id] = {"status": "completed", "current": 0}
+	save["current_objective_id"] = "answer_marnie"
+	save["flags"] = {
+		"pond_restored": true,
+		"willowbend_narrative_spine_complete": true,
+	}
+	return save
 
 func _load_act1_content() -> void:
 	var objectives: Array[ObjectiveDefinition] = []

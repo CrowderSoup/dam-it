@@ -50,7 +50,7 @@ state and presentation belong to the linked feature issues.
 | Area | Case | Exit condition | Status / dependency |
 | --- | --- | --- | --- |
 | Lodge/residents | Restore each implemented resident routine and Bramble introduction boundary | Routine availability derives correctly and authored one-time beats do not replay | Pending the #20 implementation slices |
-| Chapter | Become eligible for the ending | Eligibility requires the final shipped Lodge/resident/Bramble state and is idempotent across load | Pending #20 and #21 |
+| Chapter | Become eligible for the ending | Stage three, pond response, Eddy's check, Marnie's request/Moss acknowledgement, clear overlays, and unstarted completion state are all required | `narrative_test`, `story_boundary_test`; automated #20 handoff shipped |
 | Chapter | Save before, during, and after the ending | The sequence resumes only at supported boundaries; `act_one_complete` cannot fire twice | Pending #21 |
 | Chapter | Finish and remain in calm post-chapter play | Controls, resident interactions, saves, and the next-region hook settle into the authored final state | Pending #21 |
 | Web / keyboard | Complete Act I in the public Web build | No blockers; roughly 30–45 minutes without outside instructions | Manual release-candidate session |

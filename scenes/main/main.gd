@@ -17,6 +17,11 @@ const RACCOON_SPAWN_POINTS := [
 	Vector2(250, 150), Vector2(1150, 200), Vector2(250, 650), Vector2(1000, 650), Vector2(700, 720),
 ]
 
+## Emitted only when the complete #21 eligibility contract changes. The ending
+## controller can schedule/cancel its safe delay from this signal without
+## inferring story readiness from resident visibility or Lodge artwork.
+signal act_one_ending_eligibility_changed(eligible: bool)
+
 @onready var pond: Polygon2D = $Pond
 @onready var river_water: Area2D = $RiverWater
 @onready var dam_slots: Node2D = $DamSlots
@@ -34,6 +39,7 @@ const RACCOON_SPAWN_POINTS := [
 var _storms_active := false
 var _storm_timer: Timer
 var _raccoon_timer: Timer
+var _act_one_ending_was_eligible := false
 
 func _ready() -> void:
 	hud.set_camera(camera)
@@ -51,6 +57,8 @@ func _ready() -> void:
 	game_menu.new_game_requested.connect(_start_new_game)
 	game_menu.set_journal(journal)
 	journal.set_game_menu(game_menu)
+	game_menu.visibility_changed.connect(_refresh_act_one_ending_eligibility)
+	journal.visibility_changed.connect(_refresh_act_one_ending_eligibility)
 	hud.journal_requested.connect(journal.open)
 	# A dialogue pauses the tree itself (see dialogue_box.gd), same as
 	# GameMenu - but GameMenu stays PROCESS_MODE_ALWAYS so it can still open
@@ -76,6 +84,7 @@ func _ready() -> void:
 	dialogue_box.restore_from_state()
 	if not ActOneController.get_active_dialogue_id().is_empty():
 		_on_dialogue_started(ActOneController.get_active_dialogue_id())
+	_refresh_act_one_ending_eligibility()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("restart"):
@@ -84,6 +93,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func _on_dialogue_started(_dialogue_id: String) -> void:
 	game_menu.process_mode = Node.PROCESS_MODE_DISABLED
 	journal.process_mode = Node.PROCESS_MODE_DISABLED
+	_refresh_act_one_ending_eligibility()
 
 func _on_dialogue_ended(_dialogue_id: String) -> void:
 	# game_menu.tscn sets GameMenu's own process_mode to ALWAYS (see its
@@ -92,6 +102,7 @@ func _on_dialogue_ended(_dialogue_id: String) -> void:
 	# once a dialogue has been opened and closed.
 	game_menu.process_mode = Node.PROCESS_MODE_ALWAYS
 	journal.process_mode = Node.PROCESS_MODE_ALWAYS
+	_refresh_act_one_ending_eligibility()
 
 ## Shared by the "restart" shortcut and the game menu's "New Game" button.
 func _start_new_game() -> void:
@@ -147,6 +158,7 @@ func _reconcile_act1_story() -> void:
 
 func _on_story_objective_started(_objective_id: String) -> void:
 	_sync_active_story_progress()
+	_refresh_act_one_ending_eligibility()
 
 func _on_story_objective_completed(objective_id: String) -> void:
 	match objective_id:
@@ -156,6 +168,7 @@ func _on_story_objective_completed(objective_id: String) -> void:
 			ActOneController.start_objective("witness_pond_return")
 		"finish_willowbend_lodge":
 			ActOneController.start_objective("answer_marnie")
+	_refresh_act_one_ending_eligibility()
 
 func _on_water_observed() -> void:
 	_sync_active_story_progress()
@@ -165,6 +178,30 @@ func _on_dam_progress_changed(_built: int, _total: int) -> void:
 
 func _on_lodge_stage_changed(_stage: int) -> void:
 	_sync_active_story_progress()
+	_refresh_act_one_ending_eligibility()
+
+## The pure, public handoff from #20 to #21. Stage three alone is deliberately
+## insufficient: the pond response, Eddy's flow check, and Marnie's request
+## (whose closing Moss line acknowledges Reed's home) must all be complete.
+## Presentation overlays and the ending's own durable flags prevent an unsafe
+## or duplicate start. This method never mutates story or world state.
+func is_act_one_ending_eligible() -> bool:
+	return GameState.lodge_stage == GameState.LODGE_MAX_STAGE \
+		and ActOneController.get_flag("pond_restored") \
+		and ActOneController.get_objective_status("check_eddy_route") == "completed" \
+		and ActOneController.get_flag("willowbend_narrative_spine_complete") \
+		and ActOneController.get_active_dialogue_id().is_empty() \
+		and not game_menu.visible \
+		and not journal.visible \
+		and not ActOneController.get_flag("act_one_ending_started") \
+		and not ActOneController.get_flag("act_one_complete")
+
+func _refresh_act_one_ending_eligibility() -> void:
+	var eligible := is_act_one_ending_eligible()
+	if eligible == _act_one_ending_was_eligible:
+		return
+	_act_one_ending_was_eligible = eligible
+	act_one_ending_eligibility_changed.emit(eligible)
 
 ## World events report absolute totals and may be re-announced after load.
 ## The controller setter is therefore absolute/idempotent too: no save can
@@ -286,6 +323,7 @@ func _start_recurring_scavenging_if_eligible() -> void:
 	_schedule_next_raccoon()
 
 func _on_story_flag_changed(flag_name: String, value: bool) -> void:
+	_refresh_act_one_ending_eligibility()
 	if flag_name != "bramble_intro_complete":
 		return
 	if value:
@@ -330,8 +368,8 @@ func get_save_data() -> Dictionary:
 		"garden_spots_built": garden_spots_built,
 		"player_x": player.global_position.x,
 		"player_y": player.global_position.y,
-		# Story flags/objective progress/mid-dialogue boundary - version 2 of
-		# the save format (see docs/design/dialogue-schema.md#save-load).
+		# Story flags/objective progress/mid-dialogue boundary, introduced in
+		# save version 2 (see docs/design/dialogue-schema.md#save-load).
 		# ActOneController owns the semantics of what's in here; Main just
 		# slots it into the payload alongside its own scene-shaped state.
 		"story": ActOneController.get_save_data(),
