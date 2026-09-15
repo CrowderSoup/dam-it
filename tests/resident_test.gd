@@ -15,6 +15,7 @@ func _ready() -> void:
 	var fresh_eddy: Resident = fresh_main.get_node("Residents/Eddy")
 	var butterfly: Critter = fresh_main.get_node("Critters/Butterfly")
 	assert(fresh_moss.visible and fresh_moss.monitorable)
+	assert(fresh_moss.dialogue_ids.size() == 6, "Moss's nested scene instance must retain every authored dialogue id")
 	assert(fresh_moss.get_active_route_id() == "opening")
 	assert(fresh_moss.get_route_points().size() >= 2, "Moss needs a visible opening routine")
 	assert(not fresh_eddy.visible and not fresh_eddy.monitorable, "Eddy must wait for restored habitat")
