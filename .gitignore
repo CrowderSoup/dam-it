@@ -13,3 +13,6 @@
 # OS / editor cruft
 .DS_Store
 *.swp
+
+# Claude Code local state (agent worktrees, etc.)
+.claude/
