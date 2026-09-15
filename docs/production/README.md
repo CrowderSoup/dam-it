@@ -11,6 +11,9 @@ to move *Dam it!* through its roadmap milestones.
   against which the Act I vertical slice will be evaluated.
 - [Dam economy notes](dam-economy-notes.md) records the before/after
   resource-action budget for the issue #19 gathering/dam retune.
+- [Act I presentation and readability audit](act1-presentation-readability-audit.md)
+  prioritizes the Web UI findings, directional movement slice, audio-state
+  contract, and final validation gate for issue #9.
 - [Act I Lodge and resident implementation matrix](act1-lodge-resident-matrix.md)
   defines the stage payoffs, named-resident routines, first Bramble gate,
   save-state contract, and collision-free delivery order for issue #20.
