@@ -17,6 +17,9 @@ to move *Dam it!* through its roadmap milestones.
 - [Act I Lodge and resident implementation matrix](act1-lodge-resident-matrix.md)
   defines the stage payoffs, named-resident routines, first Bramble gate,
   save-state contract, and collision-free delivery order for issue #20.
+- [Act I regression and exit-criteria matrix](act1-regression-coverage-matrix.md)
+  maps dialogue, objective, save, migration, chapter, and human-validation
+  cases to their owning suites and feature dependencies for issue #15.
 
 Milestone 1 implementation work is tracked in the
 [Act I narrative vertical slice milestone](https://github.com/CrowderSoup/dam-it/milestone/1).
