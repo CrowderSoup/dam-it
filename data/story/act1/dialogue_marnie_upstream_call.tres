@@ -1,0 +1,56 @@
+[gd_resource type="Resource" script_class="DialogueDefinition" load_steps=12 format=3]
+
+[ext_resource type="Script" path="res://scripts/story/dialogue_definition.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/story/dialogue_line.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/story/story_effect.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/story/story_condition.gd" id="4"]
+
+[sub_resource type="Resource" id="Condition_answer"]
+script = ExtResource("4")
+type = 2
+target_id = "answer_marnie"
+
+[sub_resource type="Resource" id="Line_marnie"]
+script = ExtResource("2")
+text = "Reed? I am Marnie, from Aspen Meadow. Our channels jump their banks, then vanish. Today they carried mud and charred branches."
+
+[sub_resource type="Resource" id="Line_moss"]
+script = ExtResource("2")
+speaker = "moss"
+text = "Willowbend's pond is holding. That does not mean the water above us is well."
+
+[sub_resource type="Resource" id="Line_marnie_plan"]
+script = ExtResource("2")
+text = "Your dam brought this place back. Come upstream and build one for us before the next pulse arrives."
+
+[sub_resource type="Resource" id="Line_reed"]
+script = ExtResource("2")
+speaker = "reed"
+text = "I will come look. Eddy taught me that the same build can help one place and trouble another."
+
+[sub_resource type="Resource" id="Effect_answer"]
+script = ExtResource("3")
+type = 4
+target_id = "answer_marnie"
+
+[sub_resource type="Resource" id="Effect_request"]
+script = ExtResource("3")
+target_id = "aspen_meadow_requested"
+
+[sub_resource type="Resource" id="Effect_spine"]
+script = ExtResource("3")
+target_id = "willowbend_narrative_spine_complete"
+
+[sub_resource type="Resource" id="Line_moss_end"]
+script = ExtResource("2")
+speaker = "moss"
+text = "You heard the beaver: look first. Then come back. This is your home now, which means we expect you back."
+effects = Array[ExtResource("3")]([SubResource("Effect_answer"), SubResource("Effect_request"), SubResource("Effect_spine")])
+
+[resource]
+script = ExtResource("1")
+id = "marnie_upstream_call"
+speaker = "marnie"
+condition = SubResource("Condition_answer")
+lines = Array[ExtResource("2")]([SubResource("Line_marnie"), SubResource("Line_moss"), SubResource("Line_marnie_plan"), SubResource("Line_reed"), SubResource("Line_moss_end")])
+

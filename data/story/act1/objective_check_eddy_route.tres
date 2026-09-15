@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="ObjectiveDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/story/objective_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "check_eddy_route"
+title = "Check Both Sides"
+description = "Speak with Eddy in the new pond and check how the repaired dam changed the flowing route."
+

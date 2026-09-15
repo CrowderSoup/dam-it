@@ -185,17 +185,24 @@ position = Vector2(740, 640)
 
 [node name="Frog" parent="Critters" instance=ExtResource("10")]
 kind = 0
-required_stage = 1
+required_stage = 0
+resident_name = "Moss"
+dialogue_ids = PackedStringArray("moss_intro", "moss_supplies_ready", "pond_returns", "moss_lodge_foundation", "moss_lodge_walls")
 position = Vector2(680, 675)
 
 [node name="Duck" parent="Critters" instance=ExtResource("10")]
 kind = 1
-required_stage = 2
+required_stage = 3
+resident_name = "Marnie"
+dialogue_ids = PackedStringArray("marnie_upstream_call")
 position = Vector2(550, 460)
 
 [node name="Fish" parent="Critters" instance=ExtResource("10")]
 kind = 2
-required_stage = 3
+required_stage = 0
+resident_name = "Eddy"
+dialogue_ids = PackedStringArray("eddy_flow_check")
+requires_restored_pond = true
 position = Vector2(740, 400)
 
 [node name="Butterfly" parent="Critters" instance=ExtResource("10")]

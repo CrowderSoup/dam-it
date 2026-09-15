@@ -7,8 +7,8 @@ extends Node2D
 ## storms occasionally weaken a dam piece into a leak, and a raccoon
 ## occasionally shows up to raid the resource pile if not shooed off. Also
 ## keeps the HUD's edge-arrow indicators pointed at whichever of those is
-## currently active. Also bootstraps Act I's first objective beat into
-## ActOneController - see _setup_act1_objective() below.
+## currently active. It also connects Willowbend's authored Act I story
+## beats to the world-state signals that actually earn them.
 
 const STORM_MIN_INTERVAL := 90.0
 const STORM_MAX_INTERVAL := 150.0
@@ -46,6 +46,9 @@ func _ready() -> void:
 
 	GameState.dam_completed.connect(_on_dam_completed)
 	GameState.dam_completed.connect(_start_challenges)
+	GameState.water_observed.connect(_on_water_observed)
+	GameState.dam_progress_changed.connect(_on_dam_progress_changed)
+	GameState.lodge_stage_changed.connect(_on_lodge_stage_changed)
 	game_menu.new_game_requested.connect(_start_new_game)
 	game_menu.set_journal(journal)
 	journal.set_game_menu(game_menu)
@@ -57,11 +60,15 @@ func _ready() -> void:
 	# (advance/choose) as the only thing "menu" and friends can reach.
 	ActOneController.dialogue_started.connect(_on_dialogue_started)
 	ActOneController.dialogue_ended.connect(_on_dialogue_ended)
+	ActOneController.objective_started.connect(_on_story_objective_started)
+	ActOneController.objective_completed.connect(_on_story_objective_completed)
 	# Story content must exist before apply_save_data() asks the controller to
 	# restore objective/dialogue ids. The old order silently discarded every
 	# saved story entry as unknown, then started the first objective fresh.
-	_setup_act1_objective()
+	_setup_act1_story()
 	SaveManager.load_into(self)
+	_refresh_resident_visibility()
+	_reconcile_act1_story()
 	hud.restore_from_state()
 	dialogue_box.restore_from_state()
 	if not ActOneController.get_active_dialogue_id().is_empty():
@@ -95,25 +102,99 @@ func _start_new_game() -> void:
 	ActOneController.reset()
 	get_tree().reload_current_scene()
 
-## Loads Act I's data-driven content (see docs/design/dialogue-schema.md)
-## into ActOneController and starts its opening objective, so the HUD/
-## journal added by issue #16 have a real objective to show in actual play.
-## Idempotent (load_content() would assert on a duplicate id otherwise) -
-## needed because tests instantiate more than one Main in the same process.
-##
-## Moss's introduction dialogue (data/story/act1/dialogue_moss_intro.tres)
-## is the "real" way this objective is meant to start, once a resident's
-## interact() can offer it and a dialogue UI exists to play it (issues
-## #17/#18) - until then, this starts the objective directly so it isn't
-## stuck behind unbuilt dialogue presentation.
-func _setup_act1_objective() -> void:
+## Registers the Willowbend narrative in story order. Registration happens
+## before save restoration so every saved id is known to the controller.
+## Idempotent because tests may instantiate several Main scenes in one run.
+func _setup_act1_story() -> void:
 	if not ActOneController.has_objective("gather_starter_wood"):
-		var objective: ObjectiveDefinition = load("res://data/story/act1/objective_gather_starter_wood.tres")
-		var dialogue: DialogueDefinition = load("res://data/story/act1/dialogue_moss_intro.tres")
-		var objectives: Array[ObjectiveDefinition] = [objective]
-		var dialogues: Array[DialogueDefinition] = [dialogue]
+		var objectives: Array[ObjectiveDefinition] = [
+			load("res://data/story/act1/objective_meet_moss.tres"),
+			load("res://data/story/act1/objective_gather_starter_wood.tres"),
+			load("res://data/story/act1/objective_read_willowbend_water.tres"),
+			load("res://data/story/act1/objective_repair_willowbend_dam.tres"),
+			load("res://data/story/act1/objective_witness_pond_return.tres"),
+			load("res://data/story/act1/objective_check_eddy_route.tres"),
+			load("res://data/story/act1/objective_build_lodge_foundation.tres"),
+			load("res://data/story/act1/objective_talk_moss_home.tres"),
+			load("res://data/story/act1/objective_finish_willowbend_lodge.tres"),
+			load("res://data/story/act1/objective_answer_marnie.tres"),
+		]
+		var dialogues: Array[DialogueDefinition] = [
+			load("res://data/story/act1/dialogue_willowbend_arrival.tres"),
+			load("res://data/story/act1/dialogue_moss_intro.tres"),
+			load("res://data/story/act1/dialogue_moss_supplies_ready.tres"),
+			load("res://data/story/act1/dialogue_pond_returns.tres"),
+			load("res://data/story/act1/dialogue_eddy_flow_check.tres"),
+			load("res://data/story/act1/dialogue_moss_lodge_foundation.tres"),
+			load("res://data/story/act1/dialogue_moss_lodge_walls.tres"),
+			load("res://data/story/act1/dialogue_marnie_upstream_call.tres"),
+		]
 		ActOneController.load_content(objectives, dialogues)
-	ActOneController.start_objective("gather_starter_wood")
+
+## Fresh games begin with a short authored arrival. Existing saves retain
+## their exact objective/dialogue boundary, including saves from before this
+## content existed (which enter through the same arrival rather than being
+## dropped into the middle of Act I).
+func _reconcile_act1_story() -> void:
+	if ActOneController.get_active_dialogue_id().is_empty() \
+			and ActOneController.get_current_objective_id().is_empty():
+		ActOneController.start_dialogue("willowbend_arrival")
+		return
+	_sync_active_story_progress()
+
+func _on_story_objective_started(_objective_id: String) -> void:
+	_sync_active_story_progress()
+
+func _on_story_objective_completed(objective_id: String) -> void:
+	match objective_id:
+		"gather_starter_wood":
+			ActOneController.start_objective("read_willowbend_water")
+		"repair_willowbend_dam":
+			ActOneController.start_objective("witness_pond_return")
+		"finish_willowbend_lodge":
+			ActOneController.start_objective("answer_marnie")
+
+func _on_water_observed() -> void:
+	_sync_active_story_progress()
+
+func _on_dam_progress_changed(_built: int, _total: int) -> void:
+	_sync_active_story_progress()
+
+func _on_lodge_stage_changed(_stage: int) -> void:
+	_sync_active_story_progress()
+
+## World events report absolute totals and may be re-announced after load.
+## The controller setter is therefore absolute/idempotent too: no save can
+## accidentally count a dam piece or Lodge stage twice.
+func _sync_active_story_progress() -> void:
+	if ActOneController.get_objective_status("read_willowbend_water") == "active" \
+			and GameState.water_read:
+		ActOneController.complete_objective("read_willowbend_water")
+		ActOneController.start_objective("repair_willowbend_dam")
+
+	if ActOneController.get_objective_status("repair_willowbend_dam") == "active":
+		ActOneController.set_objective_progress("repair_willowbend_dam", GameState.dam_pieces_built)
+		if GameState.is_dam_complete():
+			ActOneController.complete_objective("repair_willowbend_dam")
+
+	if ActOneController.get_objective_status("build_lodge_foundation") == "active":
+		ActOneController.set_objective_progress("build_lodge_foundation", GameState.lodge_stage)
+		if GameState.lodge_stage >= 1:
+			ActOneController.complete_objective("build_lodge_foundation")
+			ActOneController.start_objective("talk_moss_home")
+
+	if ActOneController.get_objective_status("finish_willowbend_lodge") == "active":
+		ActOneController.set_objective_progress("finish_willowbend_lodge", GameState.lodge_stage)
+		if GameState.lodge_stage >= 2 \
+				and not ActOneController.get_flag("moss_saw_lodge_walls"):
+			ActOneController.set_flag("lodge_walls_ready")
+		if GameState.lodge_stage >= GameState.LODGE_MAX_STAGE:
+			ActOneController.complete_objective("finish_willowbend_lodge")
+
+func _refresh_resident_visibility() -> void:
+	for critter in $Critters.get_children():
+		if critter.has_method("refresh_visibility"):
+			critter.refresh_visibility()
 
 func _on_dam_completed() -> void:
 	river_water.queue_free()
@@ -231,7 +312,7 @@ func get_save_data() -> Dictionary:
 func apply_save_data(data: Dictionary) -> void:
 	GameState.load_from_save(data)
 	# Content (objectives/dialogues) must already be registered via
-	# _setup_act1_objective() before this runs; otherwise every saved id would
+	# _setup_act1_story() before this runs; otherwise every saved id would
 	# be treated as removed content and silently skipped.
 	ActOneController.load_from_save(_saved_dictionary(data, "story"))
 

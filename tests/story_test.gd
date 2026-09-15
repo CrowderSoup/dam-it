@@ -15,11 +15,12 @@ func _ready() -> void:
 
 	# --- Loading the Act I fixture: Moss's introduction + the first
 	# gathering objective (data/story/act1/) ---
+	var meet_objective: ObjectiveDefinition = load("res://data/story/act1/objective_meet_moss.tres")
 	var objective: ObjectiveDefinition = load("res://data/story/act1/objective_gather_starter_wood.tres")
 	var dialogue: DialogueDefinition = load("res://data/story/act1/dialogue_moss_intro.tres")
-	assert(objective != null and dialogue != null, "fixture .tres files failed to load")
+	assert(meet_objective != null and objective != null and dialogue != null, "fixture .tres files failed to load")
 
-	var objectives: Array[ObjectiveDefinition] = [objective]
+	var objectives: Array[ObjectiveDefinition] = [meet_objective, objective]
 	var dialogues: Array[DialogueDefinition] = [dialogue]
 	ActOneController.load_content(objectives, dialogues)
 	assert(ActOneController.has_objective("gather_starter_wood"))
@@ -34,10 +35,11 @@ func _ready() -> void:
 	var dialogue_ended_events: Array = []
 	ActOneController.dialogue_ended.connect(func(id): dialogue_ended_events.append(id))
 
+	ActOneController.start_objective("meet_moss")
 	ActOneController.start_dialogue("moss_intro")
 	assert(ActOneController.get_active_dialogue_id() == "moss_intro")
 	assert(ActOneController.get_current_speaker() == "moss")
-	assert(ActOneController.get_current_line().text.begins_with("You're the beaver"))
+	assert(ActOneController.get_current_line().text.begins_with("So you are Hazel's grandkit"))
 	assert(started_events == ["moss_intro"])
 	assert(line_shown_events == [["moss_intro", 0]])
 	print("OK: start_dialogue() emits dialogue_started and begins the fixture dialogue on its first line")
@@ -90,6 +92,7 @@ func _ready() -> void:
 	GameState.reset()
 	ActOneController.reset()
 	ActOneController.load_content(objectives, dialogues)
+	ActOneController.start_objective("meet_moss")
 
 	# Mid-objective: active, with partial progress, no dialogue active.
 	ActOneController.start_dialogue("moss_intro")
@@ -135,6 +138,7 @@ func _ready() -> void:
 	GameState.reset()
 	ActOneController.reset()
 	ActOneController.load_content(objectives, dialogues)
+	ActOneController.start_objective("meet_moss")
 	ActOneController.start_dialogue("moss_intro")
 	ActOneController.advance_dialogue()
 	var mid_dialogue_line := ActOneController.get_current_line()

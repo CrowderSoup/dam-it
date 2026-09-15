@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="DialogueDefinition" load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://scripts/story/dialogue_definition.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/story/dialogue_line.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/story/story_effect.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/story/story_condition.gd" id="4"]
+
+[sub_resource type="Resource" id="Condition_ready"]
+script = ExtResource("4")
+type = 0
+target_id = "lodge_walls_ready"
+
+[sub_resource type="Resource" id="Line_moss"]
+script = ExtResource("2")
+text = "Walls already? The pond held while you worked. Eddy crossed the middle route twice."
+
+[sub_resource type="Resource" id="Effect_seen"]
+script = ExtResource("3")
+target_id = "moss_saw_lodge_walls"
+
+[sub_resource type="Resource" id="Effect_clear_ready"]
+script = ExtResource("3")
+type = 1
+target_id = "lodge_walls_ready"
+
+[sub_resource type="Resource" id="Line_reed"]
+script = ExtResource("2")
+speaker = "reed"
+text = "Then the Lodge can wait one moment. I want to see what the water is doing too."
+effects = Array[ExtResource("3")]([SubResource("Effect_seen"), SubResource("Effect_clear_ready")])
+
+[resource]
+script = ExtResource("1")
+id = "moss_lodge_walls"
+speaker = "moss"
+condition = SubResource("Condition_ready")
+lines = Array[ExtResource("2")]([SubResource("Line_moss"), SubResource("Line_reed")])

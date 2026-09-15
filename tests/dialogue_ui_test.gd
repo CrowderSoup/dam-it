@@ -48,13 +48,16 @@ func _ready() -> void:
 	var hud: CanvasLayer = main.get_node("HUD")
 	var player: CharacterBody2D = main.get_node("Player")
 
-	# Main's own _ready() already registers the Moss fixture and starts
-	# "gather_starter_wood" (see _setup_act1_objective() in main.gd, issue
-	# #16's stopgap ahead of a resident's interact() really offering this
-	# dialogue) - loading it again here would hit register_*()'s duplicate-id
-	# asserts for no reason.
+	# Main registers the full Willowbend fixture and begins its short arrival
+	# conversation on a fresh save. Finish that prologue to reach the resident
+	# interaction state this presentation test exercises.
 	assert(ActOneController.has_objective("gather_starter_wood"), "Main should have already loaded the Act I fixture on _ready()")
-	assert(ActOneController.get_objective_status("gather_starter_wood") == "active", "Main's bootstrap should have already started the objective ahead of any dialogue")
+	assert(ActOneController.get_active_dialogue_id() == "willowbend_arrival")
+	assert(dialogue_box.visible and get_tree().paused, "the authored arrival should be visible and pause gameplay")
+	for i in 4:
+		ActOneController.advance_dialogue()
+	assert(ActOneController.get_objective_status("meet_moss") == "active")
+	assert(ActOneController.get_objective_status("gather_starter_wood") == "inactive")
 	assert(hud._current_tutorial_id == hud.TUTORIAL_MOVE, "starting the objective during Main._ready() must not replace the fresh player's movement tutorial")
 	assert(hud.TUTORIAL_JOURNAL in hud._pending_tutorial_ids, "the journal tutorial should wait behind movement help")
 
@@ -75,7 +78,7 @@ func _ready() -> void:
 	assert(game_menu.process_mode == Node.PROCESS_MODE_DISABLED, "GameMenu should be disabled while a dialogue is open")
 	assert(journal.process_mode == Node.PROCESS_MODE_DISABLED, "Journal should be disabled while a dialogue is open")
 	assert(dialogue_box.speaker_label.text == "Moss", "the speaker label should show the capitalized speaker id")
-	assert(dialogue_box.text_label.text.begins_with("You're the beaver"), "the text label should show the current line")
+	assert(dialogue_box.text_label.text.begins_with("So you are Hazel's grandkit"), "the text label should show the current line")
 	assert(dialogue_box.continue_hint.visible and not dialogue_box.choices_container.visible, "a plain line should show the continue hint, not choices")
 	print("OK: starting a dialogue shows speaker/text, pauses the tree, and disables the pause menu")
 
@@ -119,11 +122,8 @@ func _ready() -> void:
 	click.pressed = true
 	dialogue_box._unhandled_input(click)
 	assert(ActOneController.get_current_line().text.begins_with("Fine."), "a mouse click should advance past the acknowledgement to the closing line")
-	# The closing line's own effect also targets "gather_starter_wood" - it's
-	# a no-op here since Main's bootstrap already started it (see the assert
-	# above), but confirms applying it again doesn't corrupt the objective's
-	# state (start_objective() is guarded to only affect an "inactive" one).
-	assert(ActOneController.get_objective_status("gather_starter_wood") == "active", "the objective should still be active after its (idempotent) start-objective effect re-fires")
+	assert(ActOneController.get_objective_status("meet_moss") == "completed")
+	assert(ActOneController.get_objective_status("gather_starter_wood") == "active", "the closing line should start the gathering objective")
 	print("OK: a mouse click advances dialogue too")
 
 	# --- Leaving the dialogue: hides the box, unpauses, and re-enables the
@@ -140,11 +140,13 @@ func _ready() -> void:
 	# acknowledgement in the DialogueBox instead of leaving the controller
 	# active behind a hidden UI or replaying choice effects.
 	ActOneController.reset()
+	var meet_objective: ObjectiveDefinition = load("res://data/story/act1/objective_meet_moss.tres")
 	var objective: ObjectiveDefinition = load("res://data/story/act1/objective_gather_starter_wood.tres")
 	var dialogue: DialogueDefinition = load("res://data/story/act1/dialogue_moss_intro.tres")
-	var objectives: Array[ObjectiveDefinition] = [objective]
+	var objectives: Array[ObjectiveDefinition] = [meet_objective, objective]
 	var dialogues: Array[DialogueDefinition] = [dialogue]
 	ActOneController.load_content(objectives, dialogues)
+	ActOneController.start_objective("meet_moss")
 	ActOneController.start_dialogue("moss_intro")
 	ActOneController.advance_dialogue()
 	ActOneController.choose("practical_start_together")

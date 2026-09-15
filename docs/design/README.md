@@ -15,6 +15,7 @@ document before they alter implementation scope.
 | [Cast](cast.md) | Names, desires, conflicts, relationship changes, habitat payoffs, and voices | Approved |
 | [Dialogue style](dialogue-style.md) | Length, humor, reading level, interruptions, and player-response rules | Approved |
 | [Dialogue and objective schema](dialogue-schema.md) | Data-driven dialogue/objective Resource schema and the ActOneController runtime | Implemented |
+| [Act I Willowbend beat sheet](act1-willowbend-beat-sheet.md) | Gameplay-triggered narrative sequence and issue boundaries | Implemented spine; ending deferred |
 
 ## Systems and visuals
 
@@ -25,4 +26,3 @@ document before they alter implementation scope.
 | [Willowbend](regions/willowbend.md) | Lower-creek visual reference | Approved direction |
 | [Aspen Meadow](regions/aspen-meadow.md) | Mid-elevation meadow visual reference and configuration contrast | Approved direction |
 | [Moraine Basin](regions/moraine-basin.md) | Burned headwaters visual reference and recovery framing | Approved direction |
-

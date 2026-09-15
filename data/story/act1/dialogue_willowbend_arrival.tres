@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="DialogueDefinition" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/story/dialogue_definition.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/story/dialogue_line.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/story/story_effect.gd" id="3"]
+
+[sub_resource type="Resource" id="Line_letter"]
+script = ExtResource("2")
+speaker = "hazel"
+text = "Dear Reed, Willowbend once held deep pools and more willow than our family could use. Trust what you learned, then learn what this creek needs."
+
+[sub_resource type="Resource" id="Line_arrival"]
+script = ExtResource("2")
+speaker = "reed"
+text = "Grandma's Willowbend? This creek could not float a twig, and there is nowhere deep enough for a lodge."
+
+[sub_resource type="Resource" id="Line_choice"]
+script = ExtResource("2")
+speaker = "reed"
+text = "I came to build a home of my own. I can leave, or I can see what remains."
+
+[sub_resource type="Resource" id="Effect_meet"]
+script = ExtResource("3")
+type = 2
+target_id = "meet_moss"
+
+[sub_resource type="Resource" id="Line_voice"]
+script = ExtResource("2")
+speaker = "moss"
+text = "What remains has ears. Try the last shallow pool before you declare the whole creek empty."
+effects = Array[ExtResource("3")]([SubResource("Effect_meet")])
+
+[resource]
+script = ExtResource("1")
+id = "willowbend_arrival"
+speaker = "reed"
+lines = Array[ExtResource("2")]([SubResource("Line_letter"), SubResource("Line_arrival"), SubResource("Line_choice"), SubResource("Line_voice")])
+
