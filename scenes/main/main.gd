@@ -142,6 +142,9 @@ func _setup_act1_story() -> void:
 			load("res://data/story/act1/dialogue_moss_lodge_foundation.tres"),
 			load("res://data/story/act1/dialogue_moss_lodge_walls.tres"),
 			load("res://data/story/act1/dialogue_marnie_upstream_call.tres"),
+			load("res://data/story/act1/dialogue_moss_post_chapter.tres"),
+			load("res://data/story/act1/dialogue_eddy_post_chapter.tres"),
+			load("res://data/story/act1/dialogue_marnie_post_chapter.tres"),
 		]
 		ActOneController.load_content(objectives, dialogues)
 

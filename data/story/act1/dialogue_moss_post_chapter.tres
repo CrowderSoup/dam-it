@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="DialogueDefinition" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/story/dialogue_definition.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/story/dialogue_line.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/story/story_condition.gd" id="3"]
+
+[sub_resource type="Resource" id="Condition_complete"]
+script = ExtResource("3")
+target_id = "act_one_complete"
+
+[sub_resource type="Resource" id="Line_moss"]
+script = ExtResource("2")
+text = "Listen to that pond. Not quiet anymore—and neither is this Lodge. Hazel would have liked the company."
+
+[resource]
+script = ExtResource("1")
+id = "moss_post_chapter"
+speaker = "moss"
+condition = SubResource("Condition_complete")
+lines = Array[ExtResource("2")]([SubResource("Line_moss")])

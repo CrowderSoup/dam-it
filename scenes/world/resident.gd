@@ -17,6 +17,7 @@ enum Availability { ALWAYS, DAM_COMPLETE, OBJECTIVE_REACHED }
 @export var stage_one_points: PackedVector2Array = []
 @export var settled_objective_id: String = ""
 @export var settled_points: PackedVector2Array = []
+@export var post_chapter_points: PackedVector2Array = []
 @export var move_speed := 24.0
 @export var pause_seconds := 1.4
 
@@ -83,6 +84,8 @@ func _is_available_from_story() -> bool:
 	return false
 
 func _select_route() -> Array:
+	if ActOneController.get_flag("act_one_complete") and not post_chapter_points.is_empty():
+		return ["post_chapter", post_chapter_points]
 	if not settled_objective_id.is_empty() \
 			and ActOneController.get_objective_status(settled_objective_id) == "completed" \
 			and not settled_points.is_empty():
