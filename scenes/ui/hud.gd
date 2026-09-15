@@ -247,7 +247,7 @@ func _refresh_objective_display() -> void:
 	var text := objective.title
 	if status == "completed":
 		text = "[Done] " + text
-	elif objective.completion_type == ObjectiveDefinition.CompletionType.RESOURCE_AT_LEAST:
+	elif objective.target_amount > 0:
 		text += " (%d/%d)" % [ActOneController.get_objective_progress(id), objective.target_amount]
 	objective_label.text = text
 	objective_label.show()

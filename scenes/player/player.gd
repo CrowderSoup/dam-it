@@ -87,7 +87,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func _resolve_target(area: Area2D) -> Node:
 	if area.is_in_group("tree_areas") or area.is_in_group("rock_areas"):
 		return area.get_parent()
-	if area.is_in_group("dam_slots") or area.is_in_group("lodge") or area.is_in_group("garden_spots") or area.is_in_group("raccoons") or area.is_in_group("berry_bushes") or area.is_in_group("pond_plants") or area.is_in_group("river_gauges"):
+	if area.is_in_group("dam_slots") or area.is_in_group("lodge") or area.is_in_group("garden_spots") or area.is_in_group("raccoons") or area.is_in_group("berry_bushes") or area.is_in_group("pond_plants") or area.is_in_group("river_gauges") or area.is_in_group("residents"):
 		return area
 	return null
 
@@ -112,6 +112,11 @@ func _nearest_interaction_target() -> Node:
 	for area in interact_area.get_overlapping_areas():
 		var target := _resolve_target(area)
 		if target == null:
+			continue
+		# An overlap that currently offers no action (a depleted tree, an
+		# unnamed ambient critter, or a resident with no eligible conversation)
+		# must not hide a usable target standing just behind it.
+		if not target.has_method("get_interaction") or target.get_interaction() == null:
 			continue
 		var dist := global_position.distance_squared_to(target.global_position)
 		if dist < nearest_dist:

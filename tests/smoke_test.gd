@@ -21,6 +21,12 @@ func _ready() -> void:
 	var main_scene: PackedScene = load("res://scenes/main/main.tscn")
 	var main: Node = main_scene.instantiate()
 	add_child(main)
+	# Fresh games intentionally open on a four-line arrival conversation.
+	# Close it before this mechanics-focused suite starts driving the world.
+	assert(ActOneController.get_active_dialogue_id() == "willowbend_arrival")
+	for i in 4:
+		ActOneController.advance_dialogue()
+	assert(not get_tree().paused)
 
 	var player: CharacterBody2D = main.get_node("Player")
 	var tree1: StaticBody2D = main.get_node("Trees/Tree1")
@@ -338,14 +344,14 @@ func _ready() -> void:
 	assert(GameState.wood == 0, "wood should never go negative")
 	print("OK: GameState.remove_wood()/remove_stone() clamp at zero")
 
-	assert(not frog.visible, "frog should not be visible before lodge stage 1")
+	assert(frog.visible, "Moss should be present from the start so the opening objective is actionable")
 	GameState.add_wood(10)
 	GameState.add_stone(10)
 	assert(lodge.can_advance() and GameState.can_afford_lodge_stage())
 	lodge.advance()
 	assert(GameState.lodge_stage == 1)
-	assert(frog.visible, "frog should appear once lodge reaches stage 1")
-	print("OK: advancing the lodge spends resources, and the frog appears at stage 1")
+	assert(frog.visible, "Moss should remain visible once the Lodge reaches stage 1")
+	print("OK: advancing the lodge spends resources, and Moss remains available")
 
 	# advance() now guards its own affordability (it used to trust Player to
 	# have already checked can_afford_lodge_stage() first) - top up before
@@ -611,19 +617,17 @@ func _ready() -> void:
 	assert(SaveManager.peek_slot(1)["save_version"] == SaveManager.SAVE_VERSION, "saved data should include its format version")
 	print("OK: peek_slot() reads a slot's data without loading it into a scene")
 
-	# Main now bootstraps Act I's first objective on _ready() (see
-	# _setup_act1_objective() in main.gd, issue #16), so the story section is
-	# no longer empty - but exactly how much wood has been gathered by this
-	# point (and therefore whether the objective has already completed) is
-	# incidental to everything chopped/built earlier in this test, not worth
-	# pinning down here. See story_test.gd for real story save/load coverage.
+	# This mechanics-focused run has completed the arrival but deliberately
+	# has not talked to Moss, so its story state should remain at that exact
+	# boundary even though the test drove later world mechanics directly.
 	var story_data: Dictionary = saved_data["story"]
 	assert(story_data["flags"] == {}, "no flags should be set without any dialogue having run")
 	assert(story_data["active_dialogue_id"] == "" and story_data["active_dialogue_line"] == -1 and story_data["active_dialogue_choice"] == "", "no dialogue is active outside of dialogue_ui_test.gd")
-	assert(story_data["current_objective_id"] == "gather_starter_wood", "the HUD's current objective must survive a save/load")
-	assert(story_data["objectives"].keys() == ["gather_starter_wood"], "Main's bootstrapped fixture objective should be the only one registered")
-	assert(story_data["objectives"]["gather_starter_wood"]["status"] in ["active", "completed"], "the bootstrapped objective should have started")
-	print("OK: get_save_data() includes the version 2 story section, reflecting Main's bootstrapped objective")
+	assert(story_data["current_objective_id"] == "meet_moss", "the HUD's current objective must survive a save/load")
+	assert(story_data["objectives"].size() == 10, "Main should register the complete Willowbend objective spine")
+	assert(story_data["objectives"]["meet_moss"]["status"] == "active")
+	assert(story_data["objectives"]["gather_starter_wood"]["status"] == "inactive")
+	print("OK: get_save_data() preserves the exact authored story boundary")
 
 	# --- Save version migration (issue #8): a version-1 file (from before
 	# the "story" section existed) should read back upgraded to the current
@@ -741,8 +745,8 @@ func _ready() -> void:
 	assert(restored_flower_spot.visible and restored_flower_spot.built, "loading should restore built garden spots")
 	var restored_butterfly: Node2D = main2.get_node("Critters/Butterfly")
 	assert(restored_butterfly.visible, "loading a built garden spot should re-reveal its critter")
-	assert(ActOneController.get_objective_status("gather_starter_wood") == story_data["objectives"]["gather_starter_wood"]["status"], "Main must register story content before loading its saved objective state")
-	assert(ActOneController.get_current_objective_id() == "gather_starter_wood", "loading should restore the HUD's current objective")
+	assert(ActOneController.get_objective_status("meet_moss") == story_data["objectives"]["meet_moss"]["status"], "Main must register story content before loading its saved objective state")
+	assert(ActOneController.get_current_objective_id() == "meet_moss", "loading should restore the HUD's current objective")
 	assert(main2.get_node("HUD").objective_label.visible, "the HUD should refresh from restored objective state")
 	print("OK: a fresh scene instance auto-loads the active session's slot on _ready()")
 

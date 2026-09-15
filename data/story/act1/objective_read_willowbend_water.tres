@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="ObjectiveDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/story/objective_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "read_willowbend_water"
+title = "Read the Creek"
+description = "Inspect the reed-marked gauge beside the broken dam before closing its strongest gap."
+

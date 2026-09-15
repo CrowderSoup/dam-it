@@ -1,0 +1,43 @@
+[gd_resource type="Resource" script_class="DialogueDefinition" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/story/dialogue_definition.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/story/dialogue_line.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/story/story_effect.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/story/story_condition.gd" id="4"]
+
+[sub_resource type="Resource" id="Condition_talk"]
+script = ExtResource("4")
+type = 2
+target_id = "talk_moss_home"
+
+[sub_resource type="Resource" id="Line_moss"]
+script = ExtResource("2")
+text = "A real foundation. I thought you would admire the pond, call it proof, and follow the next creek."
+
+[sub_resource type="Resource" id="Line_reed"]
+script = ExtResource("2")
+speaker = "reed"
+text = "I came for a home. Now it would feel unfinished if the neighbors had nowhere to stay."
+
+[sub_resource type="Resource" id="Effect_complete"]
+script = ExtResource("3")
+type = 4
+target_id = "talk_moss_home"
+
+[sub_resource type="Resource" id="Effect_finish"]
+script = ExtResource("3")
+type = 2
+target_id = "finish_willowbend_lodge"
+
+[sub_resource type="Resource" id="Line_end"]
+script = ExtResource("2")
+text = "Neighbors. Hm. Finish the roof, Reed. I would like to hear how that word sounds with a spring chorus behind it."
+effects = Array[ExtResource("3")]([SubResource("Effect_complete"), SubResource("Effect_finish")])
+
+[resource]
+script = ExtResource("1")
+id = "moss_lodge_foundation"
+speaker = "moss"
+condition = SubResource("Condition_talk")
+lines = Array[ExtResource("2")]([SubResource("Line_moss"), SubResource("Line_reed"), SubResource("Line_end")])
+

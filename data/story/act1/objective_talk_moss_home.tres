@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="ObjectiveDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/story/objective_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "talk_moss_home"
+title = "More Than a Foundation"
+description = "Talk with Moss beside the first stage of Reed's Lodge."
+

@@ -14,6 +14,9 @@ to move *Dam it!* through its roadmap milestones.
 - [Act I presentation and readability audit](act1-presentation-readability-audit.md)
   prioritizes the Web UI findings, directional movement slice, audio-state
   contract, and final validation gate for issue #9.
+- [Act I Lodge and resident implementation matrix](act1-lodge-resident-matrix.md)
+  defines the stage payoffs, named-resident routines, first Bramble gate,
+  save-state contract, and collision-free delivery order for issue #20.
 
 Milestone 1 implementation work is tracked in the
 [Act I narrative vertical slice milestone](https://github.com/CrowderSoup/dam-it/milestone/1).

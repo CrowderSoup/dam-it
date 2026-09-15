@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ObjectiveDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/story/objective_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "build_lodge_foundation"
+title = "Start a Lodge"
+description = "Build the first Lodge stage on the south bank of the new pond."
+target_amount = 1
+

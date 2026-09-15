@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="ObjectiveDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/story/objective_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "meet_moss"
+title = "A Voice by the Shallows"
+description = "Find the frog beside Willowbend's last shallow pool and introduce yourself."
+

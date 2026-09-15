@@ -38,7 +38,7 @@ godot --path .
   tree, mine a nearby rock, build a dam piece at a nearby empty slot if you
   have enough wood + stone, harvest a berry bush, eat from a cattail/lily
   patch growing in the pond, feed a berry to a raccoon to shoo it off, or
-  rest or upgrade your resource pouch at a finished Lodge
+  talk to a resident, rest, or upgrade your resource pouch at a finished Lodge
 - `R` / gamepad Start — reset ALL progress (dam + Lodge + pouch) and start over
 - `J` / gamepad Y — open/close the journal: your current objective plus a
   compact history of completed and in-progress ones, in plain language.
@@ -75,11 +75,12 @@ means to an end, not the whole game:
    (fading in, not just a rectangle getting taller), there's a completion
    sound plus a particle burst at every slot - and the **Lodge** appears
    for the first time, south of the new pond.
-6. Walk up to the Lodge and interact repeatedly to build it up through
+6. Moss, Eddy, and Marnie connect those construction milestones to Reed's
+   reason for staying: talk with them when the HUD/journal points you their
+   way. Walk up to the Lodge and interact repeatedly to build it up through
    three stages - foundation, walls, roof - each costing more wood + stone
-   than the last. A critter moves in at each milestone: a frog at the
-   foundation, a duck once the walls are up, and a fish in the pond once
-   the roof's on.
+   than the last. Moss is present from the opening, Eddy arrives with the
+   pond, and Marnie arrives when the Lodge is complete.
 7. Once the Lodge is complete, two **garden spots** appear near it - a
    flower bed and a bench, 3 wood + 2 stone each, one-time purchases with
    no further stages. Building one reveals its own critter (a butterfly
@@ -254,14 +255,16 @@ godot --headless --export-release "Web" builds/web/index.html
 
 There's a headless regression test at `tests/smoke_test.gd` (no real
 framework like GUT/GoDotTest set up - just plain `assert()`s against the
-actual game objects), plus companions covering the data-driven story layer,
-its UI, and presentation: `tests/story_test.gd` (ActOneController's dialogue/
+actual game objects), plus five companions covering the data-driven story
+layer, its UI, and presentation: `tests/story_test.gd` (ActOneController's dialogue/
 objective runtime, no UI), `tests/dialogue_ui_test.gd` (the dialogue box UI
 on top of it - see docs/design/dialogue-schema.md), and
 `tests/journal_test.gd` (the current-objective HUD display, the Journal
 (`scenes/ui/journal.gd`), and staged tutorials' "seen" tracking
-(`GameState.seen_tutorials`)), and `tests/player_visual_test.gd` (Reed's
-cardinal poses and layered walk cycle). Run them after making logic changes:
+(`GameState.seen_tutorials`)), and `tests/narrative_test.gd` (the complete
+Willowbend story sequence through resident interactions and world signals),
+and `tests/player_visual_test.gd` (Reed's cardinal poses and layered walk
+cycle). Run them after making logic changes:
 
 ```
 godot --headless --editor --path . --quit # populate a fresh checkout's import cache
@@ -270,6 +273,7 @@ godot --headless --path . tests/story_test.tscn
 godot --headless --path . tests/dialogue_ui_test.tscn
 godot --headless --path . tests/journal_test.tscn
 godot --headless --path . tests/player_visual_test.tscn
+godot --headless --path . tests/narrative_test.tscn
 ```
 
 `smoke_test.gd` instantiates `main.tscn`, drives the real Tree/Rock/DamSlot/
