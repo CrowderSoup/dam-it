@@ -67,6 +67,9 @@ func _ready() -> void:
 	# saved story entry as unknown, then started the first objective fresh.
 	_setup_act1_story()
 	SaveManager.load_into(self)
+	# Select dry/restored ambience from the fully applied save. This path is
+	# intentionally sting-free; only the live dam_completed signal celebrates.
+	Ambience.sync_from_game_state(true)
 	_refresh_resident_visibility()
 	_reconcile_act1_story()
 	hud.restore_from_state()
