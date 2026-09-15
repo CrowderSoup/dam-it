@@ -12,12 +12,12 @@ target_id = "talk_moss_home"
 
 [sub_resource type="Resource" id="Line_moss"]
 script = ExtResource("2")
-text = "A real foundation. I thought you would admire the pond, call it proof, and follow the next creek."
+text = "A real floor. I thought you might point to the pond, call the job done, and leave."
 
 [sub_resource type="Resource" id="Line_reed"]
 script = ExtResource("2")
 speaker = "reed"
-text = "I came for a home. Now it would feel unfinished if the neighbors had nowhere to stay."
+text = "I came for a home. Now it would feel wrong if my neighbors had no place to stay."
 
 [sub_resource type="Resource" id="Effect_complete"]
 script = ExtResource("3")
@@ -31,7 +31,7 @@ target_id = "finish_willowbend_lodge"
 
 [sub_resource type="Resource" id="Line_end"]
 script = ExtResource("2")
-text = "Neighbors. Hm. Finish the roof, Reed. I would like to hear how that word sounds with a spring chorus behind it."
+text = "Neighbors. Hmm. Finish the roof, Reed. I want to hear that word with spring frogs singing behind it."
 effects = Array[ExtResource("3")]([SubResource("Effect_complete"), SubResource("Effect_finish")])
 
 [resource]
@@ -40,4 +40,3 @@ id = "moss_lodge_foundation"
 speaker = "moss"
 condition = SubResource("Condition_talk")
 lines = Array[ExtResource("2")]([SubResource("Line_moss"), SubResource("Line_reed"), SubResource("Line_end")])
-

@@ -13,7 +13,7 @@ target_id = "meet_moss"
 
 [sub_resource type="Resource" id="Resource_ksi20"]
 script = ExtResource("1_v2ow3")
-text = "So you are Hazel's grandkit. I remember her pools. I also remember every traveler who promised this puddle would become a creek again."
+text = "So you are Hazel's grandkit. I remember her pools. I also remember each traveler who said this puddle would be a creek again."
 
 [sub_resource type="Resource" id="Resource_226v6"]
 script = ExtResource("3_xw20q")
@@ -22,29 +22,29 @@ target_id = "met_moss"
 [sub_resource type="Resource" id="Resource_eckc0"]
 script = ExtResource("2_6dvoy")
 id = "earnest_stay_for_everyone"
-text = "I want to bring the water back for everyone here, not just me."
-acknowledgement = "...We'll see if that holds past the first hard week."
+text = "I want to bring the water back for all of us, not just me."
+acknowledgement = "We will see if you still mean that when the work gets hard."
 effects = Array[ExtResource("3_xw20q")]([SubResource("Resource_226v6")])
 
 [sub_resource type="Resource" id="Resource_3t6nf"]
 script = ExtResource("2_6dvoy")
 id = "practical_start_together"
 tone = 1
-text = "One repaired dam is a start. Let's find out together."
-acknowledgement = "Practical. I can work with practical."
+text = "One fixed dam is a start. Let us find out together."
+acknowledgement = "A clear plan. I can work with that."
 effects = Array[ExtResource("3_xw20q")]([SubResource("Resource_226v6")])
 
 [sub_resource type="Resource" id="Resource_4qg18"]
 script = ExtResource("2_6dvoy")
 id = "playful_lucky_you"
 tone = 2
-text = "Lucky for you, I happen to know a good dam-builder."
-acknowledgement = "That confidence again. Let's see it fed."
+text = "Good news! I know a fine dam builder."
+acknowledgement = "Big words. Let us see you back them up."
 effects = Array[ExtResource("3_xw20q")]([SubResource("Resource_226v6")])
 
 [sub_resource type="Resource" id="Resource_kv0pn"]
 script = ExtResource("1_v2ow3")
-text = "A new beaver and one old dam will not mend everything. Why stay when you came here for a private lodge?"
+text = "One new beaver cannot fix it all. Why stay when you came to build a home just for yourself?"
 choices = Array[ExtResource("2_6dvoy")]([SubResource("Resource_eckc0"), SubResource("Resource_3t6nf"), SubResource("Resource_4qg18")])
 
 [sub_resource type="Resource" id="Resource_ique5"]
@@ -59,7 +59,7 @@ target_id = "meet_moss"
 
 [sub_resource type="Resource" id="Resource_em67l"]
 script = ExtResource("1_v2ow3")
-text = "Fine. If you're staying, you'll need wood before I trust your word. Start gathering, and I'll be watching."
+text = "Fine. If you will stay, gather some wood. Show me that I can trust your word."
 effects = Array[ExtResource("3_xw20q")]([SubResource("Effect_complete_meet"), SubResource("Resource_ique5")])
 
 [resource]

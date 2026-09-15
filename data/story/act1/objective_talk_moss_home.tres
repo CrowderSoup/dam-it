@@ -5,6 +5,5 @@
 [resource]
 script = ExtResource("1")
 id = "talk_moss_home"
-title = "More Than a Foundation"
-description = "Talk with Moss beside the first stage of Reed's Lodge."
-
+title = "More Than a Floor"
+description = "Talk to Moss by the new Lodge floor."

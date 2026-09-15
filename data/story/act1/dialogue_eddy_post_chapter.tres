@@ -10,7 +10,7 @@ target_id = "act_one_complete"
 
 [sub_resource type="Resource" id="Line_eddy"]
 script = ExtResource("2")
-text = "The middle route still runs clear. I will keep checking it while you see what is stirring upstream."
+text = "The middle path is still clear. I will watch it while you find out what is wrong upstream."
 
 [resource]
 script = ExtResource("1")

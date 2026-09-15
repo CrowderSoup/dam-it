@@ -6,5 +6,4 @@
 script = ExtResource("1")
 id = "read_willowbend_water"
 title = "Read the Creek"
-description = "Inspect the reed-marked gauge beside the broken dam before closing its strongest gap."
-
+description = "Check the post by the old dam. See where the water runs fast."

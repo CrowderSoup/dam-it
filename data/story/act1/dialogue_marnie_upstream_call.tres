@@ -12,21 +12,21 @@ target_id = "answer_marnie"
 
 [sub_resource type="Resource" id="Line_marnie"]
 script = ExtResource("2")
-text = "Reed? I am Marnie, from Aspen Meadow. Our channels jump their banks, then vanish. Today they carried mud and charred branches."
+text = "Reed? I am Marnie from Aspen Meadow. Our streams flood, then go dry. Today they brought mud and burned branches."
 
 [sub_resource type="Resource" id="Line_moss"]
 script = ExtResource("2")
 speaker = "moss"
-text = "Willowbend's pond is holding. That does not mean the water above us is well."
+text = "Willowbend's pond is full. That does not mean the water above us is safe."
 
 [sub_resource type="Resource" id="Line_marnie_plan"]
 script = ExtResource("2")
-text = "Your dam brought this place back. Come upstream and build one for us before the next pulse arrives."
+text = "Your dam brought this place back. Come upstream and help us before the next rush of mud."
 
 [sub_resource type="Resource" id="Line_reed"]
 script = ExtResource("2")
 speaker = "reed"
-text = "I will come look. Eddy taught me that the same build can help one place and trouble another."
+text = "I will come look. Eddy taught me that one build can help here but cause trouble somewhere else."
 
 [sub_resource type="Resource" id="Effect_answer"]
 script = ExtResource("3")
@@ -44,7 +44,7 @@ target_id = "willowbend_narrative_spine_complete"
 [sub_resource type="Resource" id="Line_moss_end"]
 script = ExtResource("2")
 speaker = "moss"
-text = "You heard the beaver: look first. Then come back. This is your home now, which means we expect you back."
+text = "You heard Reed: look first. Then come back. This is your home now, so we want you back."
 effects = Array[ExtResource("3")]([SubResource("Effect_answer"), SubResource("Effect_request"), SubResource("Effect_spine")])
 
 [resource]
@@ -53,4 +53,3 @@ id = "marnie_upstream_call"
 speaker = "marnie"
 condition = SubResource("Condition_answer")
 lines = Array[ExtResource("2")]([SubResource("Line_marnie"), SubResource("Line_moss"), SubResource("Line_marnie_plan"), SubResource("Line_reed"), SubResource("Line_moss_end")])
-

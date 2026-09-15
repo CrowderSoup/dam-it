@@ -6,6 +6,5 @@
 script = ExtResource("1")
 id = "build_lodge_foundation"
 title = "Start a Lodge"
-description = "Build the first Lodge stage on the south bank of the new pond."
+description = "Build the floor of your Lodge on the south side of the pond."
 target_amount = 1
-

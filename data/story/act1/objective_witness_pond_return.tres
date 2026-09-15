@@ -5,5 +5,5 @@
 [resource]
 script = ExtResource("1")
 id = "witness_pond_return"
-title = "What the Water Woke"
-description = "Return to Moss and look over the pond Willowbend's repaired dam restored."
+title = "The Pond Is Back"
+description = "Go back to Moss. Look at the new pond together."

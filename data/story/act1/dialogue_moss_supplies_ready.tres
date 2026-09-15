@@ -11,11 +11,11 @@ target_id = "read_willowbend_water"
 
 [sub_resource type="Resource" id="Line_one"]
 script = ExtResource("2")
-text = "That is enough wood to begin. The old dam failed where the current pushed hardest, not where the gap looked widest."
+text = "That is enough wood. The old dam broke where the water pushed hard, not where the gap looked wide."
 
 [sub_resource type="Resource" id="Line_two"]
 script = ExtResource("2")
-text = "Hazel used a reed-marked post beside the channel. Read the water there before you close the middle gap."
+text = "Hazel put a reed on a post by the creek. Check the water there before you close the middle gap."
 
 [resource]
 script = ExtResource("1")
@@ -23,4 +23,3 @@ id = "moss_supplies_ready"
 speaker = "moss"
 condition = SubResource("Condition_read")
 lines = Array[ExtResource("2")]([SubResource("Line_one"), SubResource("Line_two")])
-

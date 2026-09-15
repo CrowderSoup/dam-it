@@ -6,5 +6,4 @@
 script = ExtResource("1")
 id = "check_eddy_route"
 title = "Check Both Sides"
-description = "Speak with Eddy in the new pond and check how the repaired dam changed the flowing route."
-
+description = "Talk to Eddy in the pond. Check where the water can still flow."

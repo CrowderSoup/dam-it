@@ -12,17 +12,17 @@ target_id = "bramble_material_taken"
 [sub_resource type="Resource" id="Line_moss"]
 script = ExtResource("2")
 speaker = "moss"
-text = "Bramble. Those supplies belong to Willowbend. Taking what another home needs still causes harm."
+text = "Bramble. Those things belong to Willowbend. You hurt this home when you take what it needs."
 
 [sub_resource type="Resource" id="Line_bramble"]
 script = ExtResource("2")
 speaker = "bramble"
-text = "My shelter burned upstream. The mud keeps coming, and asking does not keep the rain out."
+text = "My home burned upstream. Mud keeps coming. Asking for help will not keep the rain out."
 
 [sub_resource type="Resource" id="Line_reed"]
 script = ExtResource("2")
 speaker = "reed"
-text = "Then we follow the water and fix what is driving you here. You do not get to make Willowbend pay alone."
+text = "Then we will follow the water and fix the cause. You cannot make Willowbend pay for it alone."
 
 [resource]
 script = ExtResource("1")

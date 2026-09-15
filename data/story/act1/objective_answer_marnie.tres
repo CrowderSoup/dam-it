@@ -6,5 +6,4 @@
 script = ExtResource("1")
 id = "answer_marnie"
 title = "Trouble Upstream"
-description = "Speak with Marnie, the duck who arrived from Aspen Meadow."
-
+description = "Talk to Marnie. She is the duck from Aspen Meadow."

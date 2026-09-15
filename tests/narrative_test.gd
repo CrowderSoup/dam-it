@@ -22,6 +22,7 @@ func _ready() -> void:
 	_play_active_dialogue()
 	assert(ActOneController.get_objective_status("meet_moss") == "active")
 	assert(moss.visible and moss.get_interaction().label == "Talk to Moss")
+	assert(main.hud.story_indicator.target == moss, "the first task should point a new player toward Moss")
 	print("OK: the Willowbend arrival leads to a visible, actionable Moss")
 
 	moss.get_interaction().perform.call()
@@ -29,6 +30,7 @@ func _ready() -> void:
 	assert(ActOneController.get_flag("met_moss"))
 	assert(ActOneController.get_objective_status("meet_moss") == "completed")
 	assert(ActOneController.get_objective_status("gather_starter_wood") == "active")
+	assert(main.hud.story_indicator.target == null, "resource tasks should not keep pointing at the last speaker")
 
 	GameState.add_wood(6)
 	assert(ActOneController.get_objective_status("gather_starter_wood") == "completed")

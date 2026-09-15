@@ -116,7 +116,7 @@ func _ready() -> void:
 	# auto-advance the plot (dialogue-style.md) ---
 	assert(not dialogue_box.choices_container.visible, "choices should hide once one is picked")
 	assert(dialogue_box.continue_hint.visible, "the continue hint should return so the player can move past the acknowledgement")
-	assert(dialogue_box.text_label.text == "Practical. I can work with practical.", "the acknowledgement should replace the line text")
+	assert(dialogue_box.text_label.text == "A clear plan. I can work with that.", "the acknowledgement should replace the line text")
 	print("OK: picking a choice shows its acknowledgement and waits for another confirm, instead of auto-advancing")
 
 	# --- A mouse click advances a plain line/acknowledgement too ---
@@ -159,7 +159,7 @@ func _ready() -> void:
 	ActOneController.load_from_save(acknowledgement_save)
 	dialogue_box.restore_from_state()
 	assert(dialogue_box.visible and get_tree().paused, "restoring active dialogue state should make its UI visible and pause gameplay")
-	assert(dialogue_box.text_label.text == "Practical. I can work with practical.")
+	assert(dialogue_box.text_label.text == "A clear plan. I can work with that.")
 	assert(not dialogue_box.choices_container.visible and dialogue_box.continue_hint.visible, "a restored acknowledgement must not offer its choices again")
 	dialogue_box._unhandled_input(key_e)
 	assert(ActOneController.get_current_line().text.begins_with("Fine."), "the restored acknowledgement should advance normally")

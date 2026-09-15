@@ -10,7 +10,7 @@ target_id = "act_one_complete"
 
 [sub_resource type="Resource" id="Line_moss"]
 script = ExtResource("2")
-text = "Listen to that pond. Not quiet anymore—and neither is this Lodge. Hazel would have liked the company."
+text = "Listen to that pond. It is not quiet now, and neither is this Lodge. Hazel would have liked the friends."
 
 [resource]
 script = ExtResource("1")

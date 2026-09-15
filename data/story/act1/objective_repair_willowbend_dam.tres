@@ -6,6 +6,5 @@
 script = ExtResource("1")
 id = "repair_willowbend_dam"
 title = "Bring Back the Pond"
-description = "Repair all five gaps in Willowbend's old dam. Keep the middle gap for last until you have read the current."
+description = "Fix all five gaps in the old dam. Read the water before you fix the middle gap."
 target_amount = 5
-

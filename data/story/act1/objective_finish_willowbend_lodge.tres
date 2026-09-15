@@ -6,6 +6,5 @@
 script = ExtResource("1")
 id = "finish_willowbend_lodge"
 title = "A Home at Willowbend"
-description = "Finish the three-stage Lodge beside the restored pond."
+description = "Build the walls and roof of your Lodge."
 target_amount = 3
-

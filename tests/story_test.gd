@@ -54,7 +54,7 @@ func _ready() -> void:
 	assert(not ActOneController.get_flag("met_moss"), "met_moss should not be set before a choice is made")
 	ActOneController.choose("practical_start_together")
 	assert(ActOneController.get_flag("met_moss"), "choosing a response should set the met_moss flag")
-	assert(choice_events == [["moss_intro", "practical_start_together", "Practical. I can work with practical."]])
+	assert(choice_events == [["moss_intro", "practical_start_together", "A clear plan. I can work with that."]])
 	print("OK: choosing a response applies its effect and reports its acknowledgement")
 
 	ActOneController.advance_dialogue()
@@ -170,7 +170,7 @@ func _ready() -> void:
 	ActOneController.load_content(objectives, dialogues)
 	ActOneController.load_from_save(acknowledgement_save)
 	assert(ActOneController.get_active_choice_id() == "playful_lucky_you")
-	assert(ActOneController.get_active_choice_acknowledgement() == "That confidence again. Let's see it fed.")
+	assert(ActOneController.get_active_choice_acknowledgement() == "Big words. Let us see you back them up.")
 	ActOneController.advance_dialogue()
 	assert(ActOneController.get_active_choice_id().is_empty(), "advancing should leave the restored acknowledgement phase")
 	assert(ActOneController.get_current_line().text.begins_with("Fine."), "advancing a restored acknowledgement should reach the next line")
