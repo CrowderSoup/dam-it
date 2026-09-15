@@ -2,6 +2,9 @@
 
 Status: **Implementation contract for issue #21**
 
+The eligibility query and change signal described below are implemented on
+`Main`; issue #21 can consume them without duplicating the prerequisite logic.
+
 This storyboard covers the final 60–90 seconds after Reed answers Marnie's
 upstream request. It turns the already-authored Willowbend narrative ending
 into an unmistakable chapter-complete sequence without making Lodge completion
