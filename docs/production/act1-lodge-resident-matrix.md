@@ -20,13 +20,14 @@ chapter-ending presentation remains owned by issue #21.
 
 - `GameState.lodge_stage` already persists stages 0–3, and `Lodge` already
   draws a site marker, foundation, walls, and roof.
-- `Critter` is a decorative `Node2D`: it has no collision, interaction, named
-  identity, dialogue, or routine. The frog, duck, and fish currently appear at
-  Lodge stages 1, 2, and 3 only because `required_stage` is configured that
-  way in `main.tscn`.
-- `Raccoon` is currently an anonymous repeating timer event. `Main` starts its
-  timer as soon as the dam is complete, which violates issue #20's authored
-  introduction gate.
+- The #17 narrative spine shipped named interactions by temporarily putting
+  collision and dialogue on every `Critter`. The first #20 slice replaces that
+  bridge with a composed `Resident` actor while returning garden wildlife to a
+  lightweight visual-only `Critter`.
+- Before #20 implementation, `Raccoon` was an anonymous repeating timer event
+  started as soon as the dam completed. The first slice now leaves the storm
+  timer intact but refuses to create a scavenging timer until the future
+  authored introduction has set `bramble_intro_complete`.
 - Story flags, objective state, current dialogue, and choice acknowledgement
   already persist inside the version-2 `story` payload. Resident visibility
   should be derived from those facts on load rather than adding another copy
@@ -69,24 +70,25 @@ flags or objective ids. The #20 lane must consume them; it must not infer them
 from resident visibility or node position. Issue #21 owns setting
 `act_one_complete` after the authored sequence and route reveal complete.
 
-Recommended stable identifiers are:
+The #17 narrative landed before this matrix could freeze its proposed flag
+names. Existing objective ids are already save-schema commitments, so #20 uses
+this compatibility map rather than silently renaming player progress:
 
 | Kind | Identifier | Producer | Consumer |
 |---|---|---|---|
-| Existing flag | `met_moss` | `moss_intro` | Moss dialogue/routine selection |
-| Flag | `dam_reaction_complete` | #17 dam-completion dialogue | Eddy availability and Lodge-stage dialogue selection |
-| Flag | `eddy_flow_route_restored` | #17 Eddy/flow objective | Eddy's post-restoration routine and ending eligibility |
-| Flag | `moss_lodge_foundation_seen` | #17 stage-one Lodge dialogue | Moss relationship/routine selection |
-| Flag | `moss_accepts_reed_staying` | #17 final required Lodge dialogue | Ending eligibility and post-chapter Moss line |
+| Existing flag | `met_moss` | `moss_intro` | Moss dialogue selection |
+| Existing objective / flag | completed `witness_pond_return` / `pond_restored` | `pond_returns` | Full reaction / pond state; Eddy visibility itself derives from the completed dam |
+| Existing objective | completed `check_eddy_route` | `eddy_flow_check` | Eddy's post-restoration routine and ending eligibility |
+| Existing objective | completed `talk_moss_home` | `moss_lodge_foundation` | Moss's foundation acknowledgement |
+| Pending #20 flag | `moss_accepts_reed_staying` | final required Lodge conversation | Ending eligibility and post-chapter Moss line |
 | Flag | `bramble_intro_started` | #20 encounter orchestrator | Prevent duplicate scheduling and choose restoration state |
 | Flag | `bramble_material_taken` | #20 encounter orchestrator | Make the recoverable loss idempotent across save/load |
 | Flag | `bramble_intro_complete` | #20 encounter completion | Permit post-introduction behavior; prevent authored replay |
 | Campaign flag | `act_one_complete` | #21 ending sequence | Restore the upstream route and calm post-chapter state |
 
-If #17 selects different ids in its beat sheet, it must publish one mapping
-before either implementation branch wires conditions. Renaming ids after saves
-are produced silently drops unknown flags by design, so these identifiers
-become save-schema commitments as soon as a test or release build writes them.
+The proposed Bramble and campaign ids remain unchanged. Renaming any identifier
+after saves are produced silently drops unknown flags by design, so future
+slices must continue consuming this mapping or ship an explicit migration.
 
 ## Resident scene contract
 
@@ -215,4 +217,3 @@ tests. For later implementation, use these boundaries:
   completion.
 - Required progression never depends on the optional pouch purchase, ambient
   dialogue, exact routine position, or retained recurring scavenging.
-

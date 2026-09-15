@@ -36,7 +36,7 @@ func _ready() -> void:
 	var river_gauge: RiverGauge = main.get_node("RiverGauge")
 	var river_water: Area2D = main.get_node("RiverWater")
 	var lodge: Area2D = main.get_node("Lodge")
-	var frog: Node2D = main.get_node("Critters/Frog")
+	var moss: Resident = main.get_node("Residents/Moss")
 	var raccoon: Raccoon = main.get_node("Raccoon")
 	var hud: CanvasLayer = main.get_node("HUD")
 	var berry_bush1: Area2D = main.get_node("BerryBushes/BerryBush1")
@@ -344,14 +344,25 @@ func _ready() -> void:
 	assert(GameState.wood == 0, "wood should never go negative")
 	print("OK: GameState.remove_wood()/remove_stone() clamp at zero")
 
-	assert(frog.visible, "Moss should be present from the start so the opening objective is actionable")
+	assert(moss.visible, "Moss should be present from the start so the opening objective is actionable")
 	GameState.add_wood(10)
 	GameState.add_stone(10)
 	assert(lodge.can_advance() and GameState.can_afford_lodge_stage())
 	lodge.advance()
 	assert(GameState.lodge_stage == 1)
-	assert(frog.visible, "Moss should remain visible once the Lodge reaches stage 1")
+	assert(moss.visible, "Moss should remain visible once the Lodge reaches stage 1")
 	print("OK: advancing the lodge spends resources, and Moss remains available")
+
+	# The foundation is useful immediately: a tired Reed can rest before
+	# committing resources to the next Lodge stage.
+	GameState.restore_energy_fully()
+	GameState.spend_energy(80.0)
+	assert(lodge.can_rest(), "the stage-one dry platform should unlock resting")
+	var stage_one_rest: InteractionOption = lodge.get_interaction()
+	assert(stage_one_rest != null and stage_one_rest.label == "Rest" and stage_one_rest.available)
+	lodge.rest()
+	assert(GameState.energy == GameState.ENERGY_MAX)
+	print("OK: the stage-one Lodge platform provides a full rest")
 
 	# advance() now guards its own affordability (it used to trust Player to
 	# have already checked can_afford_lodge_stage() first) - top up before
@@ -395,11 +406,11 @@ func _ready() -> void:
 	GameState.pouch_tier = backup_pouch_tier
 	print("OK: Lodge.get_interaction() explains why nothing succeeds once its amenities run out, instead of staying silent")
 
-	# --- Resting at the finished Lodge ---
+	# --- Resting remains available at the finished Lodge ---
 	GameState.restore_energy_fully()
 	assert(not lodge.can_rest(), "a lodge at full energy should not offer resting")
 	GameState.spend_energy(80.0)
-	assert(lodge.can_rest(), "a finished lodge should offer resting once energy is below max")
+	assert(lodge.can_rest(), "a finished lodge should still offer resting once energy is below max")
 	assert(player._resolve_target(lodge) == lodge)
 	var rest_option: InteractionOption = lodge.get_interaction()
 	assert(rest_option != null and rest_option.label == "Rest" and rest_option.available, "a tired, finished lodge should offer an available Rest action")

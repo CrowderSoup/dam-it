@@ -3,12 +3,11 @@ extends Node2D
 ## player restart the level at any time, owns save/load for the level
 ## (SaveManager only knows how to read/write the file - it asks us for the
 ## data and hands us back whatever it finds on disk), and runs the ongoing
-## "Storms & Scavengers" challenges that start once the dam is complete:
-## storms occasionally weaken a dam piece into a leak, and a raccoon
-## occasionally shows up to raid the resource pile if not shooed off. Also
-## keeps the HUD's edge-arrow indicators pointed at whichever of those is
-## currently active. It also connects Willowbend's authored Act I story
-## beats to the world-state signals that actually earn them.
+## low-stakes ongoing challenges: storms begin once the dam is complete, while
+## recurring scavenging remains locked behind Bramble's authored introduction.
+## It keeps the HUD's edge-arrow indicators pointed at whichever is currently
+## active and connects Willowbend's authored Act I story beats to the
+## world-state signals that actually earn them.
 
 const STORM_MIN_INTERVAL := 90.0
 const STORM_MAX_INTERVAL := 150.0
@@ -32,7 +31,7 @@ const RACCOON_SPAWN_POINTS := [
 @onready var journal: CanvasLayer = $Journal
 @onready var dialogue_box: CanvasLayer = $DialogueBox
 
-var _challenges_active := false
+var _storms_active := false
 var _storm_timer: Timer
 var _raccoon_timer: Timer
 
@@ -62,6 +61,7 @@ func _ready() -> void:
 	ActOneController.dialogue_ended.connect(_on_dialogue_ended)
 	ActOneController.objective_started.connect(_on_story_objective_started)
 	ActOneController.objective_completed.connect(_on_story_objective_completed)
+	ActOneController.flag_changed.connect(_on_story_flag_changed)
 	# Story content must exist before apply_save_data() asks the controller to
 	# restore objective/dialogue ids. The old order silently discarded every
 	# saved story entry as unknown, then started the first objective fresh.
@@ -195,9 +195,8 @@ func _sync_active_story_progress() -> void:
 			ActOneController.complete_objective("finish_willowbend_lodge")
 
 func _refresh_resident_visibility() -> void:
-	for critter in $Critters.get_children():
-		if critter.has_method("refresh_visibility"):
-			critter.refresh_visibility()
+	for resident in $Residents.get_children():
+		resident.restore_from_story_state()
 
 func _on_dam_completed() -> void:
 	river_water.queue_free()
@@ -215,14 +214,15 @@ func _on_dam_completed() -> void:
 	zoom_tween.tween_property(camera, "zoom", base_zoom * 1.15, 0.25)
 	zoom_tween.tween_property(camera, "zoom", base_zoom, 0.4)
 
-## Storms and the raccoon only begin once there's a finished dam to
-## threaten - no point stressing a new player before they have a pond.
+## Storms begin once there's a finished dam to threaten. Recurring scavenging
+## has its own authored-introduction gate below.
 ## Idempotent: safe to call from both the live dam_completed signal and
 ## the save-load path (a save can already have the dam complete).
 func _start_challenges() -> void:
-	if _challenges_active:
+	if _storms_active:
+		_start_recurring_scavenging_if_eligible()
 		return
-	_challenges_active = true
+	_storms_active = true
 
 	_storm_timer = Timer.new()
 	_storm_timer.one_shot = true
@@ -230,11 +230,7 @@ func _start_challenges() -> void:
 	_storm_timer.timeout.connect(_on_storm_timeout)
 	_schedule_next_storm()
 
-	_raccoon_timer = Timer.new()
-	_raccoon_timer.one_shot = true
-	add_child(_raccoon_timer)
-	_raccoon_timer.timeout.connect(_on_raccoon_timeout)
-	_schedule_next_raccoon()
+	_start_recurring_scavenging_if_eligible()
 
 func _schedule_next_storm() -> void:
 	_storm_timer.wait_time = randf_range(STORM_MIN_INTERVAL, STORM_MAX_INTERVAL)
@@ -270,8 +266,37 @@ func _update_storm_indicator() -> void:
 		hud.clear_storm_indicator()
 
 func _schedule_next_raccoon() -> void:
+	if not is_instance_valid(_raccoon_timer):
+		return
 	_raccoon_timer.wait_time = randf_range(RACCOON_MIN_INTERVAL, RACCOON_MAX_INTERVAL)
 	_raccoon_timer.start()
+
+## Bramble's first appearance is authored in a later #20 slice. Until that
+## encounter has completed, no random timer exists and scavenging is
+## impossible even on a restored dam-complete save.
+func _start_recurring_scavenging_if_eligible() -> void:
+	if not _storms_active or not ActOneController.get_flag("bramble_intro_complete"):
+		return
+	if is_instance_valid(_raccoon_timer):
+		return
+	_raccoon_timer = Timer.new()
+	_raccoon_timer.one_shot = true
+	add_child(_raccoon_timer)
+	_raccoon_timer.timeout.connect(_on_raccoon_timeout)
+	_schedule_next_raccoon()
+
+func _on_story_flag_changed(flag_name: String, value: bool) -> void:
+	if flag_name != "bramble_intro_complete":
+		return
+	if value:
+		_start_recurring_scavenging_if_eligible()
+	elif is_instance_valid(_raccoon_timer):
+		_raccoon_timer.stop()
+		_raccoon_timer.queue_free()
+		_raccoon_timer = null
+
+func is_recurring_scavenging_enabled() -> bool:
+	return is_instance_valid(_raccoon_timer)
 
 func _on_raccoon_timeout() -> void:
 	var spawn_point: Vector2 = RACCOON_SPAWN_POINTS[randi() % RACCOON_SPAWN_POINTS.size()]
