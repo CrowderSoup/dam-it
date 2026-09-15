@@ -1,0 +1,54 @@
+[gd_resource type="Resource" script_class="DialogueDefinition" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/story/dialogue_definition.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/story/dialogue_line.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/story/story_effect.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/story/story_condition.gd" id="4"]
+
+[sub_resource type="Resource" id="Condition_dam"]
+script = ExtResource("4")
+type = 2
+target_id = "witness_pond_return"
+
+[sub_resource type="Resource" id="Line_moss"]
+script = ExtResource("2")
+speaker = "moss"
+text = "Well. That is no puddle. The wet edge already reaches the willow roots, and I hear another frog answering."
+
+[sub_resource type="Resource" id="Effect_pond"]
+script = ExtResource("3")
+target_id = "pond_restored"
+
+[sub_resource type="Resource" id="Line_reed"]
+script = ExtResource("2")
+speaker = "reed"
+text = "It is deep enough for my lodge. I did not expect the whole bank to wake up with it."
+effects = Array[ExtResource("3")]([SubResource("Effect_pond")])
+
+[sub_resource type="Resource" id="Line_eddy"]
+script = ExtResource("2")
+speaker = "eddy"
+text = "The pond is welcome, but silt is settling over my gravel. A dam helps most when water and fish still have a route."
+
+[sub_resource type="Resource" id="Effect_check"]
+script = ExtResource("3")
+type = 2
+target_id = "check_eddy_route"
+
+[sub_resource type="Resource" id="Effect_complete_pond"]
+script = ExtResource("3")
+type = 4
+target_id = "witness_pond_return"
+
+[sub_resource type="Resource" id="Line_moss_end"]
+script = ExtResource("2")
+speaker = "moss"
+text = "One success, one new problem. You may actually belong here. Check both sides with Eddy before building your lodge."
+effects = Array[ExtResource("3")]([SubResource("Effect_complete_pond"), SubResource("Effect_check")])
+
+[resource]
+script = ExtResource("1")
+id = "pond_returns"
+speaker = "moss"
+condition = SubResource("Condition_dam")
+lines = Array[ExtResource("2")]([SubResource("Line_moss"), SubResource("Line_reed"), SubResource("Line_eddy"), SubResource("Line_moss_end")])

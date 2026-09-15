@@ -114,6 +114,6 @@ func _on_item_selected(index: int) -> void:
 	var objective: ObjectiveDefinition = ActOneController.get_objective(id)
 	var status := ActOneController.get_objective_status(id)
 	var status_text := "Completed" if status == "completed" else "In progress"
-	if status == "active" and objective.completion_type == ObjectiveDefinition.CompletionType.RESOURCE_AT_LEAST:
+	if status == "active" and objective.target_amount > 0:
 		status_text += " (%d/%d)" % [ActOneController.get_objective_progress(id), objective.target_amount]
 	description_label.text = "%s\n\n%s" % [objective.description, status_text]

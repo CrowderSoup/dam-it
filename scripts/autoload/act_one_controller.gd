@@ -132,6 +132,16 @@ func reset() -> void:
 func get_flag(flag_name: String) -> bool:
 	return bool(_flags.get(flag_name, false))
 
+## Gameplay orchestration sometimes reaches a story beat without going
+## through a DialogueLine (finishing the dam, for example). Keep flag writes
+## centralized here so save data and listeners see the same change either way.
+func set_flag(flag_name: String, value: bool = true) -> void:
+	assert(StoryIdentifiers.is_valid(flag_name), "set_flag() called with invalid flag '%s'" % flag_name)
+	if get_flag(flag_name) == value and _flags.has(flag_name):
+		return
+	_flags[flag_name] = value
+	flag_changed.emit(flag_name, value)
+
 ## --- Objectives -------------------------------------------------------------
 
 func has_objective(id: String) -> bool:
@@ -197,6 +207,18 @@ func advance_objective(id: String, amount: int = 1) -> void:
 	state["current"] += amount
 	objective_progress_changed.emit(id, state["current"], _objectives[id].target_amount)
 	_check_objective_completion(id)
+
+## Sets counted gameplay progress absolutely. Scene signals often report a
+## total (dam pieces built, Lodge stage) rather than a delta, and save restore
+## may announce that total again. An absolute setter keeps those paths
+## idempotent instead of double-counting after load.
+func set_objective_progress(id: String, current: int) -> void:
+	assert(_objectives.has(id), "set_objective_progress() on unknown objective '%s'" % id)
+	var state: Dictionary = _objective_state[id]
+	if state["status"] != "active":
+		return
+	state["current"] = maxi(0, current)
+	objective_progress_changed.emit(id, state["current"], _objectives[id].target_amount)
 
 func complete_objective(id: String) -> void:
 	assert(_objectives.has(id), "complete_objective() on unknown objective '%s'" % id)
@@ -279,6 +301,15 @@ func get_current_speaker() -> String:
 	var dialogue: DialogueDefinition = _dialogues[_active_dialogue_id]
 	return dialogue.speaker_for_line(line)
 
+## Whether an interaction may offer this dialogue right now. This deliberately
+## mirrors start_dialogue()'s condition check without mutating state, allowing
+## residents to participate in the shared interaction/prompt contract.
+func can_start_dialogue(id: String) -> bool:
+	if not _dialogues.has(id) or not _active_dialogue_id.is_empty():
+		return false
+	var dialogue: DialogueDefinition = _dialogues[id]
+	return dialogue.condition == null or dialogue.condition.is_met(_flags, _objective_state)
+
 ## Begins `id` if no dialogue is already active and its own condition (if
 ## any) is met. A no-op (not an error) if the condition blocks it - a
 ## caller like a resident's interact() is expected to check readiness itself
@@ -287,7 +318,7 @@ func start_dialogue(id: String) -> void:
 	assert(_dialogues.has(id), "start_dialogue() on unknown dialogue '%s'" % id)
 	assert(_active_dialogue_id.is_empty(), "start_dialogue('%s') called while '%s' is still active" % [id, _active_dialogue_id])
 	var dialogue: DialogueDefinition = _dialogues[id]
-	if dialogue.condition != null and not dialogue.condition.is_met(_flags, _objective_state):
+	if not can_start_dialogue(id):
 		return
 	_active_dialogue_id = id
 	_active_line_index = -1
@@ -439,11 +470,9 @@ func load_from_save(data: Dictionary) -> void:
 func _apply_effect(effect: StoryEffect) -> void:
 	match effect.type:
 		StoryEffect.Type.SET_FLAG:
-			_flags[effect.target_id] = true
-			flag_changed.emit(effect.target_id, true)
+			set_flag(effect.target_id)
 		StoryEffect.Type.CLEAR_FLAG:
-			_flags[effect.target_id] = false
-			flag_changed.emit(effect.target_id, false)
+			set_flag(effect.target_id, false)
 		StoryEffect.Type.START_OBJECTIVE:
 			start_objective(effect.target_id)
 		StoryEffect.Type.ADVANCE_OBJECTIVE:

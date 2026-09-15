@@ -1,13 +1,19 @@
-[gd_resource type="Resource" script_class="DialogueDefinition" format=3]
+[gd_resource type="Resource" script_class="DialogueDefinition" load_steps=15 format=3]
 
 [ext_resource type="Script" path="res://scripts/story/dialogue_line.gd" id="1_v2ow3"]
 [ext_resource type="Script" path="res://scripts/story/dialogue_choice.gd" id="2_6dvoy"]
 [ext_resource type="Script" path="res://scripts/story/story_effect.gd" id="3_xw20q"]
 [ext_resource type="Script" path="res://scripts/story/dialogue_definition.gd" id="4_q2c4n"]
+[ext_resource type="Script" path="res://scripts/story/story_condition.gd" id="5_condition"]
+
+[sub_resource type="Resource" id="Condition_meet"]
+script = ExtResource("5_condition")
+type = 2
+target_id = "meet_moss"
 
 [sub_resource type="Resource" id="Resource_ksi20"]
 script = ExtResource("1_v2ow3")
-text = "You're the beaver who's been poking at that old dam. I've watched three floods and two droughts from this puddle."
+text = "So you are Hazel's grandkit. I remember her pools. I also remember every traveler who promised this puddle would become a creek again."
 
 [sub_resource type="Resource" id="Resource_226v6"]
 script = ExtResource("3_xw20q")
@@ -38,7 +44,7 @@ effects = Array[ExtResource("3_xw20q")]([SubResource("Resource_226v6")])
 
 [sub_resource type="Resource" id="Resource_kv0pn"]
 script = ExtResource("1_v2ow3")
-text = "Everyone who visits promises the water will come back. It never does."
+text = "A new beaver and one old dam will not mend everything. Why stay when you came here for a private lodge?"
 choices = Array[ExtResource("2_6dvoy")]([SubResource("Resource_eckc0"), SubResource("Resource_3t6nf"), SubResource("Resource_4qg18")])
 
 [sub_resource type="Resource" id="Resource_ique5"]
@@ -46,13 +52,19 @@ script = ExtResource("3_xw20q")
 type = 2
 target_id = "gather_starter_wood"
 
+[sub_resource type="Resource" id="Effect_complete_meet"]
+script = ExtResource("3_xw20q")
+type = 4
+target_id = "meet_moss"
+
 [sub_resource type="Resource" id="Resource_em67l"]
 script = ExtResource("1_v2ow3")
 text = "Fine. If you're staying, you'll need wood before I trust your word. Start gathering, and I'll be watching."
-effects = Array[ExtResource("3_xw20q")]([SubResource("Resource_ique5")])
+effects = Array[ExtResource("3_xw20q")]([SubResource("Effect_complete_meet"), SubResource("Resource_ique5")])
 
 [resource]
 script = ExtResource("4_q2c4n")
 id = "moss_intro"
 speaker = "moss"
+condition = SubResource("Condition_meet")
 lines = Array[ExtResource("1_v2ow3")]([SubResource("Resource_ksi20"), SubResource("Resource_kv0pn"), SubResource("Resource_em67l")])

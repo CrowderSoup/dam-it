@@ -1,0 +1,43 @@
+[gd_resource type="Resource" script_class="DialogueDefinition" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/story/dialogue_definition.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/story/dialogue_line.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/story/story_effect.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/story/story_condition.gd" id="4"]
+
+[sub_resource type="Resource" id="Condition_check"]
+script = ExtResource("4")
+type = 2
+target_id = "check_eddy_route"
+
+[sub_resource type="Resource" id="Line_eddy"]
+script = ExtResource("2")
+text = "The deeper pool is good shelter. Along the middle brace, water still slips through the sticks instead of dropping all its silt."
+
+[sub_resource type="Resource" id="Line_reed"]
+script = ExtResource("2")
+speaker = "reed"
+text = "So the strong gap I watched became the route I needed to keep porous."
+
+[sub_resource type="Resource" id="Effect_complete"]
+script = ExtResource("3")
+type = 4
+target_id = "check_eddy_route"
+
+[sub_resource type="Resource" id="Effect_lodge"]
+script = ExtResource("3")
+type = 2
+target_id = "build_lodge_foundation"
+
+[sub_resource type="Resource" id="Line_eddy_end"]
+script = ExtResource("2")
+text = "Exactly. Look above and below every build. For this one, you left us both a place to live."
+effects = Array[ExtResource("3")]([SubResource("Effect_complete"), SubResource("Effect_lodge")])
+
+[resource]
+script = ExtResource("1")
+id = "eddy_flow_check"
+speaker = "eddy"
+condition = SubResource("Condition_check")
+lines = Array[ExtResource("2")]([SubResource("Line_eddy"), SubResource("Line_reed"), SubResource("Line_eddy_end")])
+
