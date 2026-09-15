@@ -42,10 +42,11 @@ var _storms_active := false
 var _storm_timer: Timer
 var _raccoon_timer: Timer
 var _act_one_ending_was_eligible := false
+var _moss_diagnostic_shown := false
 
 func _ready() -> void:
 	hud.set_camera(camera)
-	player.interaction_option_changed.connect(hud.set_action_prompt)
+	player.interaction_option_changed.connect(_on_interaction_option_changed)
 	player.interaction_failed.connect(hud.show_failure)
 	for slot in dam_slots.get_children():
 		slot.leak_changed.connect(_update_storm_indicator)
@@ -96,7 +97,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	# Showing the same world coordinates in native and Web builds distinguishes
 	# resident-state divergence from camera/render projection immediately.
 	if event is InputEventKey and event.pressed and not event.echo \
-			and event.physical_keycode == KEY_P:
+			and (event.physical_keycode == KEY_P or event.keycode == KEY_P):
 		_show_position_diagnostic()
 		get_viewport().set_input_as_handled()
 		return
@@ -112,6 +113,13 @@ func _show_position_diagnostic() -> void:
 	]
 	print("POSITION DIAGNOSTIC: " + message)
 	hud.show_toast(message, 30.0)
+
+func _on_interaction_option_changed(option: InteractionOption) -> void:
+	hud.set_action_prompt(option)
+	if _moss_diagnostic_shown or option == null or option.label != "Talk to Moss":
+		return
+	_moss_diagnostic_shown = true
+	_show_position_diagnostic()
 
 func _format_position(value: Vector2) -> String:
 	return "(%d,%d)" % [roundi(value.x), roundi(value.y)]
@@ -130,6 +138,10 @@ func _on_dialogue_ended(_dialogue_id: String) -> void:
 		game_menu.process_mode = Node.PROCESS_MODE_ALWAYS
 		journal.process_mode = Node.PROCESS_MODE_ALWAYS
 	_refresh_act_one_ending_eligibility()
+	if not _moss_diagnostic_shown \
+			and ActOneController.get_current_objective_id() == "meet_moss":
+		_moss_diagnostic_shown = true
+		_show_position_diagnostic()
 
 ## Shared by the "restart" shortcut and the game menu's "New Game" button.
 func _start_new_game() -> void:
