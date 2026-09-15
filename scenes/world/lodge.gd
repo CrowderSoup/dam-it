@@ -41,7 +41,7 @@ func can_advance() -> bool:
 ## See interaction_option.gd. Mirrors the old Player._try_interact()
 ## priority while making the stage-one platform's first practical payoff
 ## reachable: a tired beaver rests before advancing again; upgrading the
-## pouch is the last resort) and then adds informative, non-priority
+## reinforced pouch is the last resort) and then adds informative, non-priority
 ## fallbacks for the "nothing succeeded" cases the old code left silent:
 ## an unaffordable advance/upgrade, or a fully-built, fully-rested,
 ## fully-upgraded Lodge with nothing left to offer right now.
@@ -55,12 +55,11 @@ func get_interaction() -> InteractionOption:
 		if GameState.can_afford_lodge_stage():
 			return InteractionOption.new("Advance Lodge", advance, true, "", stage_cost)
 	if can_upgrade_pouch():
-		var upgrade_cost: Dictionary = GameState.POUCH_UPGRADE_COSTS[GameState.pouch_tier]
-		return InteractionOption.new("Upgrade Pouch", upgrade_pouch, true, "", upgrade_cost)
+		return InteractionOption.new("Reinforce Pouch", upgrade_pouch, true, "", GameState.POUCH_UPGRADE_COST)
 	if can_advance():
 		return InteractionOption.new("Advance Lodge", advance, false, "Not enough wood or stone", GameState.LODGE_STAGE_COSTS[GameState.lodge_stage])
 	if GameState.pouch_tier < GameState.POUCH_MAX_TIER:
-		return InteractionOption.new("Upgrade Pouch", upgrade_pouch, false, "Not enough wood or stone", GameState.POUCH_UPGRADE_COSTS[GameState.pouch_tier])
+		return InteractionOption.new("Reinforce Pouch", upgrade_pouch, false, "Not enough wood or stone", GameState.POUCH_UPGRADE_COST)
 	return InteractionOption.new("Rest", rest, false, "Not tired right now")
 
 ## The affordability check used to live only in Player (the group-based
@@ -86,12 +85,12 @@ func rest() -> void:
 	Sfx.play_rest()
 	Fx.burst(global_position, Color(0.95, 0.9, 0.6), 12)
 
-## A third finished-Lodge amenity alongside rest() - only reachable once
-## resting isn't (i.e. not tired), so a single E press never has to choose
-## between the two. Widens the beaver's carry pouch; see
+## The stage-two dry-storage payoff alongside rest() - only reachable once
+## resting isn't urgent, so a single E press never has to choose between the
+## two. Widens the beaver's carry pouch once; see
 ## GameState.purchase_pouch_upgrade().
 func can_upgrade_pouch() -> bool:
-	return visible and GameState.lodge_stage >= GameState.LODGE_MAX_STAGE and GameState.can_afford_pouch_upgrade()
+	return visible and GameState.lodge_stage >= 2 and GameState.can_afford_pouch_upgrade()
 
 func upgrade_pouch() -> void:
 	if not can_upgrade_pouch():

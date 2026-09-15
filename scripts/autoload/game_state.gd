@@ -28,21 +28,17 @@ signal water_observed
 const WOOD_PER_DAM_PIECE := 2
 const STONE_PER_DAM_PIECE := 1
 
-## How much wood/stone the beaver's pouch can hold at once, before any
+## How much wood, stone, or berries the beaver's pouch can hold at once before
 ## upgrades - gathering past this does nothing until some is spent or the
-## pouch is upgraded (see POUCH_UPGRADE_COSTS below, bought at a finished
-## Lodge - Lodge.can_upgrade_pouch()).
+## pouch is reinforced (see POUCH_UPGRADE_COST below, unlocked by the Lodge's
+## stage-two dry storage - Lodge.can_upgrade_pouch()).
 const POUCH_BASE_CAPACITY := 10
 const POUCH_CAPACITY_PER_TIER := 5
-const POUCH_MAX_TIER := 3
-## Index 0 is the cost of upgrading FROM tier 0 TO tier 1, etc. Each cost is
-## always affordable at the capacity it's bought at (10/15/20), so an
-## upgrade is never out of reach because of the very cap it raises.
-const POUCH_UPGRADE_COSTS := [
-	{"wood": 6, "stone": 3},
-	{"wood": 10, "stone": 6},
-	{"wood": 14, "stone": 9},
-]
+const POUCH_MAX_TIER := 1
+## Willowbend offers one optional capability upgrade rather than an escalating
+## capacity ladder. The cost fits inside the starting pouch, so it can never
+## become unreachable because of the cap it raises.
+const POUCH_UPGRADE_COST := {"wood": 6, "stone": 3}
 
 ## Index 0 is the cost of advancing FROM stage 0 TO stage 1, etc.
 const LODGE_STAGE_COSTS := [
@@ -76,9 +72,9 @@ var water_read: bool = false
 ## Staged tutorial banners (see hud.gd) the player has already dismissed or
 ## let time out, keyed by tutorial id - so a seen tutorial doesn't reappear
 ## after loading a save. This is a straightforward additive JSON field
-## (see Main.get_save_data()/load_from_save() below). It is additive to the
-## version-2 payload, so older version-2 saves simply default to nothing
-## seen while the explicit version-1 migration remains unchanged.
+## (see Main.get_save_data()/load_from_save() below). It was additive to the
+## version-2 payload, so saves written before the field existed simply default
+## to nothing seen.
 var seen_tutorials: Dictionary = {}
 
 func has_seen_tutorial(id: String) -> bool:
@@ -93,18 +89,24 @@ func wood_capacity() -> int:
 func stone_capacity() -> int:
 	return POUCH_BASE_CAPACITY + pouch_tier * POUCH_CAPACITY_PER_TIER
 
+func berry_capacity() -> int:
+	return POUCH_BASE_CAPACITY + pouch_tier * POUCH_CAPACITY_PER_TIER
+
 func has_wood_room() -> bool:
 	return wood < wood_capacity()
 
 func has_stone_room() -> bool:
 	return stone < stone_capacity()
 
+func has_berry_room() -> bool:
+	return berries < berry_capacity()
+
 ## Shared wording for a full pouch, used both by the pouch_full signal's HUD
 ## toast and by Tree/Rock's get_interaction() failure reason, so a chop/mine
 ## attempted through Player and one called directly always read the same.
 func pouch_full_message(kind: String) -> String:
-	var noun: String = "Wood" if kind == "wood" else "Stone"
-	return "%s pouch is full! Build something or upgrade your pouch at the Lodge." % noun
+	var noun := {"wood": "Wood", "stone": "Stone", "berries": "Berry"}.get(kind, "Resource") as String
+	return "%s pouch is full! Spend something or reinforce your pouch at the Lodge." % noun
 
 ## Called by each DamSlot on _ready() so the total is derived from the
 ## scene instead of duplicated as a magic number.
@@ -141,7 +143,7 @@ func remove_stone(amount: int) -> int:
 ## Berries are harvested from bushes and spent feeding raccoons to shoo them
 ## off - see BerryBush.harvest() and Raccoon.feed().
 func add_berries(amount: int) -> void:
-	berries += amount
+	berries = mini(berries + amount, berry_capacity())
 	berries_changed.emit(berries)
 
 func remove_berries(amount: int) -> int:
@@ -219,15 +221,13 @@ func advance_lodge_stage() -> void:
 func can_afford_pouch_upgrade() -> bool:
 	if pouch_tier >= POUCH_MAX_TIER:
 		return false
-	var cost: Dictionary = POUCH_UPGRADE_COSTS[pouch_tier]
-	return wood >= cost["wood"] and stone >= cost["stone"]
+	return wood >= POUCH_UPGRADE_COST["wood"] and stone >= POUCH_UPGRADE_COST["stone"]
 
 func purchase_pouch_upgrade() -> void:
 	if not can_afford_pouch_upgrade():
 		return
-	var cost: Dictionary = POUCH_UPGRADE_COSTS[pouch_tier]
-	wood -= cost["wood"]
-	stone -= cost["stone"]
+	wood -= POUCH_UPGRADE_COST["wood"]
+	stone -= POUCH_UPGRADE_COST["stone"]
 	wood_changed.emit(wood)
 	stone_changed.emit(stone)
 	pouch_tier += 1
@@ -264,7 +264,7 @@ func load_from_save(data: Dictionary) -> void:
 	pouch_tier = _saved_int(data, "pouch_tier", 0, 0, POUCH_MAX_TIER)
 	wood = _saved_int(data, "wood", 0, 0, wood_capacity())
 	stone = _saved_int(data, "stone", 0, 0, stone_capacity())
-	berries = _saved_int(data, "berries", 0, 0, 999999)
+	berries = _saved_int(data, "berries", 0, 0, berry_capacity())
 	lodge_stage = _saved_int(data, "lodge_stage", 0, 0, LODGE_MAX_STAGE)
 	energy = _saved_float(data, "energy", ENERGY_MAX, 0.0, ENERGY_MAX)
 	seen_tutorials = _saved_tutorials(data)

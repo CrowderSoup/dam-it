@@ -167,7 +167,7 @@ the current-objective HUD, journal, and dialogue presentation.
 `SaveManager` (`scripts/autoload/save_manager.gd`) owns the save file and its
 `save_version`, but not what's in the payload - that's assembled by
 `Main.get_save_data()`/`apply_save_data()` from `GameState` and
-`ActOneController`. Version 2 adds a `"story"` section, produced by
+`ActOneController`. Version 2 added a `"story"` section, produced by
 `ActOneController.get_save_data()`:
 
 ```gdscript
@@ -210,6 +210,11 @@ content existed to have flags or an active dialogue against. Migrations are
 explicit, named functions keyed by source version in `SaveManager._MIGRATIONS`
 and covered in `tests/smoke_test.gd`; a version with no registered migration
 is treated as unreadable (`peek_slot()` returns `{}`) rather than guessed at.
+
+**Migrating version 2 saves**: version 3 replaces the prototype's three pouch
+tiers with one Reinforced Pouch. `_migrate_v2_to_v3()` preserves any player
+who bought at least one old tier as upgraded, then normal loading clamps wood
+and stone to the supported 15-item capacity.
 
 ## The fixture
 

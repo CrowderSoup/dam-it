@@ -37,6 +37,7 @@ to a different suite only when its production ownership changes.
 | Save boundary | `answer_marnie` active | Same contract | `story_boundary_test` | Automated |
 | Save boundary | Narrative spine completed | Final objective and existing completion/request flags restore without inventing chapter completion | `story_boundary_test` | Automated |
 | Migration | Read a version-1 save | Existing fields survive and an empty version-2 story payload is added | `smoke_test` | Automated |
+| Migration | Read a version-2 save with an old pouch tier | Any prior upgrade becomes the one Reinforced Pouch and resources clamp to its capacity | `smoke_test` | Automated |
 | Migration | Read a future-version or unversioned save | The unsupported payload is rejected rather than guessed at | `smoke_test` | Automated |
 | Migration | Read unknown/removed story ids | Known data survives; removed objective/dialogue ids are ignored safely | `story_test` | Automated |
 | Migration | Read malformed/out-of-range scalar data | Values use safe defaults or clamp to supported limits | `smoke_test` | Automated |

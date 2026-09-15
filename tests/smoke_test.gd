@@ -363,16 +363,30 @@ func _ready() -> void:
 	lodge.rest()
 	assert(GameState.energy == GameState.ENERGY_MAX)
 	print("OK: the stage-one Lodge platform provides a full rest")
+	assert(not lodge.can_upgrade_pouch(), "the Reinforced Pouch must stay locked at Lodge stage one")
 
-	# advance() now guards its own affordability (it used to trust Player to
-	# have already checked can_afford_lodge_stage() first) - top up before
-	# each of the remaining two stages (add_wood()/add_stone() clamp to the
-	# pouch's capacity, so this has to happen per-stage rather than as one
-	# big lump sum) so this still walks all the way to LODGE_MAX_STAGE
-	# instead of silently stalling on the second/third hit.
+	# Stage two's dry storage unlocks the one optional Reinforced Pouch. Use a
+	# resource balance that can afford the pouch (6/3) but not the roof (6/4),
+	# proving the optional action is reachable without making it a story gate.
 	GameState.add_wood(10)
 	GameState.add_stone(10)
 	lodge.advance()
+	assert(GameState.lodge_stage == 2)
+	GameState.wood = GameState.POUCH_UPGRADE_COST["wood"]
+	GameState.stone = GameState.POUCH_UPGRADE_COST["stone"]
+	assert(lodge.can_upgrade_pouch(), "Lodge stage two should unlock the Reinforced Pouch")
+	assert(not GameState.can_afford_lodge_stage(), "the test balance should leave the optional pouch as the available stage-two action")
+	var reinforce_option: InteractionOption = lodge.get_interaction()
+	assert(reinforce_option != null and reinforce_option.label == "Reinforce Pouch" and reinforce_option.available)
+	assert(reinforce_option.cost_text() == "6 Wood, 3 Stone")
+	lodge.upgrade_pouch()
+	assert(GameState.pouch_tier == GameState.POUCH_MAX_TIER)
+	assert(GameState.wood_capacity() == 15 and GameState.stone_capacity() == 15 and GameState.berry_capacity() == 15)
+	assert(not lodge.can_upgrade_pouch(), "the Reinforced Pouch must be a one-time upgrade")
+	print("OK: Lodge stage two unlocks one optional Reinforced Pouch")
+
+	# Top up after the optional purchase and finish the Lodge; buying the pouch
+	# is not required by advance() or any objective.
 	GameState.add_wood(10)
 	GameState.add_stone(10)
 	lodge.advance()
@@ -380,30 +394,12 @@ func _ready() -> void:
 	assert(not lodge.can_advance(), "lodge should not advance past max stage")
 	print("OK: lodge reaches max stage and stops accepting further advances")
 
-	# --- Lodge.get_interaction() fallback messaging: a maxed, fully-rested,
-	# resource-starved Lodge should still say something (why the next best
-	# amenity - upgrading the pouch - isn't available right now) instead of
-	# the old silent no-op. ---
-	var lodge_wood_backup := GameState.wood
-	var lodge_stone_backup := GameState.stone
-	GameState.wood = 0
-	GameState.stone = 0
+	# Once every amenity is exhausted, resting is the last thing left to offer
+	# and explains why it is unavailable while Reed is fully rested.
 	GameState.restore_energy_fully()
-	var idle_lodge_option: InteractionOption = lodge.get_interaction()
-	assert(idle_lodge_option != null and idle_lodge_option.label == "Upgrade Pouch" and not idle_lodge_option.available, "a maxed, well-rested, resource-starved lodge should fall back to an unavailable Upgrade Pouch with a reason")
-	assert(idle_lodge_option.reason == "Not enough wood or stone")
-	GameState.wood = lodge_wood_backup
-	GameState.stone = lodge_stone_backup
-
-	# And once every amenity really is exhausted (pouch maxed out too),
-	# resting is the last thing left to offer - shown as unavailable with a
-	# reason once the beaver isn't tired, rather than nothing at all.
-	var backup_pouch_tier := GameState.pouch_tier
-	GameState.pouch_tier = GameState.POUCH_MAX_TIER
 	var fully_idle_option: InteractionOption = lodge.get_interaction()
 	assert(fully_idle_option != null and fully_idle_option.label == "Rest" and not fully_idle_option.available, "a lodge with nothing left to build/upgrade should fall back to an unavailable Rest with a reason")
 	assert(fully_idle_option.reason == "Not tired right now")
-	GameState.pouch_tier = backup_pouch_tier
 	print("OK: Lodge.get_interaction() explains why nothing succeeds once its amenities run out, instead of staying silent")
 
 	# --- Resting remains available at the finished Lodge ---
@@ -419,40 +415,40 @@ func _ready() -> void:
 	assert(not lodge.can_rest(), "a freshly-rested lodge should not offer resting again immediately")
 	print("OK: resting at a finished lodge fully refills energy")
 
-	# --- Pouch capacity + upgrades ---
+	# --- Reinforced pouch capacity ---
 	GameState.wood = 0
 	GameState.stone = 0
-	assert(GameState.pouch_tier == 0 and GameState.wood_capacity() == GameState.POUCH_BASE_CAPACITY, "pouch should start at tier 0 / base capacity")
-	GameState.add_wood(GameState.POUCH_BASE_CAPACITY + 5)
-	GameState.add_stone(GameState.POUCH_BASE_CAPACITY + 5)
-	assert(GameState.wood == GameState.POUCH_BASE_CAPACITY and GameState.stone == GameState.POUCH_BASE_CAPACITY, "add_wood()/add_stone() should clamp at the pouch's capacity")
-	assert(not GameState.has_wood_room() and not GameState.has_stone_room(), "a full pouch should report no room left")
+	GameState.berries = 0
+	assert(GameState.pouch_tier == 1 and GameState.wood_capacity() == 15, "the reinforced pouch should remain at its one upgraded tier")
+	GameState.add_wood(20)
+	GameState.add_stone(20)
+	GameState.add_berries(20)
+	assert(GameState.wood == 15 and GameState.stone == 15 and GameState.berries == 15, "gathered resources should clamp at the reinforced capacity")
+	assert(hud.berries_label.text == "15/15", "the HUD should show reinforced berry capacity alongside its count")
+	assert(not GameState.has_wood_room() and not GameState.has_stone_room() and not GameState.has_berry_room(), "a full pouch should report no room left")
 
 	var pouch_full_events := []
 	GameState.pouch_full.connect(func(kind): pouch_full_events.append(kind))
 	tree1.depleted = false
 	tree1.hits_taken = 0
 	tree1.chop()
-	assert(GameState.wood == GameState.POUCH_BASE_CAPACITY, "chopping with a full wood pouch should not add more wood")
+	assert(GameState.wood == 15, "chopping with a full wood pouch should not add more wood")
 	assert(tree1.hits_taken == 0, "chopping with a full pouch should not register a hit, so nothing is wasted")
 	rock1.depleted = false
 	rock1.hits_taken = 0
 	rock1.mine()
-	assert(GameState.stone == GameState.POUCH_BASE_CAPACITY, "mining with a full stone pouch should not add more stone")
+	assert(GameState.stone == 15, "mining with a full stone pouch should not add more stone")
 	assert(rock1.hits_taken == 0, "mining with a full pouch should not register a hit either")
-	assert(pouch_full_events == ["wood", "stone"], "a blocked chop/mine should emit pouch_full() so the HUD can toast it")
+	berry_bush1.depleted = false
+	var full_berry_option: InteractionOption = berry_bush1.get_interaction()
+	assert(full_berry_option != null and not full_berry_option.available and full_berry_option.reason == GameState.pouch_full_message("berries"))
+	berry_bush1.harvest()
+	assert(GameState.berries == 15 and not berry_bush1.depleted, "harvesting with a full berry pouch should preserve both the stock and bush")
+	assert(pouch_full_events == ["wood", "stone", "berries"], "blocked gathering should identify each full pouch resource")
 	print("OK: a full pouch blocks further chopping/mining until there's room")
 
-	assert(GameState.can_afford_pouch_upgrade(), "a full pouch (10/10) should afford the first upgrade (6 wood/3 stone)")
-	assert(lodge.can_upgrade_pouch(), "a maxed lodge should offer a pouch upgrade when one is affordable")
-	var upgrade_option: InteractionOption = lodge.get_interaction()
-	assert(upgrade_option != null and upgrade_option.label == "Upgrade Pouch" and upgrade_option.available, "an affordable pouch upgrade should take priority once the lodge doesn't need resting")
-	assert(upgrade_option.cost_text() == "6 Wood, 3 Stone", "the tier-0 upgrade cost should show as 6 Wood, 3 Stone, got: %s" % upgrade_option.cost_text())
-	lodge.upgrade_pouch()
-	assert(GameState.pouch_tier == 1, "upgrade_pouch() should raise the pouch tier")
-	assert(GameState.wood_capacity() == GameState.POUCH_BASE_CAPACITY + GameState.POUCH_CAPACITY_PER_TIER, "wood capacity should grow by one tier's worth")
-	assert(GameState.stone_capacity() == GameState.POUCH_BASE_CAPACITY + GameState.POUCH_CAPACITY_PER_TIER, "stone capacity should grow by one tier's worth too")
-	print("OK: upgrading the pouch at a finished lodge raises both wood and stone capacity")
+	assert(not GameState.can_afford_pouch_upgrade(), "the single Reinforced Pouch cannot be purchased twice")
+	print("OK: the Reinforced Pouch raises capacity once and still enforces its new cap")
 
 	# --- Garden spots (post-Lodge cosmetic decorations) ---
 	var flower_spot: GardenSpot = main.get_node("GardenSpots/FlowerBedSpot")
@@ -670,6 +666,20 @@ func _ready() -> void:
 	assert(migrated_data["dam_slots_built"]["DamSlot1"] == true, "migration should preserve pre-existing dam-slot state untouched")
 	assert(migrated_data["story"] == {"flags": {}, "objectives": {}, "current_objective_id": "", "active_dialogue_id": "", "active_dialogue_line": -1, "active_dialogue_choice": ""}, "migrating a version-1 save should introduce the story section at its empty default")
 	print("OK: SaveManager migrates a version-1 save to the current version, preserving its data and adding an empty default story section")
+
+	# Version 2 allowed three escalating pouch tiers. Version 3 deliberately
+	# collapses every previously upgraded tier to the one Reinforced Pouch so
+	# old players keep the capability without retaining an unsupported ladder.
+	var legacy_v2_file := FileAccess.open(legacy_path, FileAccess.WRITE)
+	assert(legacy_v2_file != null, "could not open slot 3 for the pouch migration test")
+	legacy_v2_file.store_string(JSON.stringify({"save_version": 2, "pouch_tier": 3, "wood": 20, "stone": 20, "berries": 20, "story": {}}))
+	legacy_v2_file.close()
+	var migrated_v2_data: Dictionary = SaveManager.peek_slot(3)
+	assert(migrated_v2_data["save_version"] == SaveManager.SAVE_VERSION)
+	assert(migrated_v2_data["pouch_tier"] == 1, "an old upgraded pouch should migrate to the single Reinforced Pouch")
+	GameState.load_from_save(migrated_v2_data)
+	assert(GameState.pouch_tier == 1 and GameState.wood == 15 and GameState.stone == 15 and GameState.berries == 15, "migrated resources should clamp to the Reinforced Pouch capacity")
+	print("OK: version-2 pouch tiers migrate to one Reinforced Pouch without exceeding its capacity")
 
 	# A save from a version this build has no migration path for is treated
 	# as unreadable rather than guessed at - the same documented fallback
