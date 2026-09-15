@@ -246,6 +246,14 @@ func _ready() -> void:
 	assert(hud.raccoon_indicator.target == raccoon)
 	hud.clear_raccoon_indicator()
 	assert(hud.raccoon_indicator.target == null, "clear_raccoon_indicator() should drop the target")
+	var ui_hidden_target := Node2D.new()
+	main.add_child(ui_hidden_target)
+	ui_hidden_target.global_position = main.camera.global_position + Vector2(0, 170)
+	hud.point_to_story_target(ui_hidden_target)
+	hud.story_indicator._process(0.0)
+	assert(hud.story_indicator.visible and hud.story_indicator.position.y <= hud.story_indicator.SAFE_RECT.end.y, "a target hidden by the bottom HUD must retain a visible safe-area arrow")
+	hud.clear_story_indicator()
+	ui_hidden_target.queue_free()
 	print("OK: HUD shows a toast on dam completion, and the edge indicators track/clear targets")
 
 	# --- Storms: a leak on a built dam slot, repaired without re-triggering
