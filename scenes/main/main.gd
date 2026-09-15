@@ -36,6 +36,7 @@ signal act_one_ending_eligibility_changed(eligible: bool)
 @onready var game_menu: CanvasLayer = $GameMenu
 @onready var journal: CanvasLayer = $Journal
 @onready var dialogue_box: CanvasLayer = $DialogueBox
+@onready var act_one_ending: ActOneEnding = $ActOneEnding
 
 var _storms_active := false
 var _storm_timer: Timer
@@ -88,7 +89,7 @@ func _ready() -> void:
 	_refresh_act_one_ending_eligibility()
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("restart"):
+	if event.is_action_pressed("restart") and not act_one_ending.is_active():
 		game_menu.request_new_game()
 
 func _on_dialogue_started(_dialogue_id: String) -> void:
@@ -101,8 +102,9 @@ func _on_dialogue_ended(_dialogue_id: String) -> void:
 	# docstring) so it can open while paused - restore that, not the
 	# CanvasLayer default of INHERIT, or Escape/Start would stop reaching it
 	# once a dialogue has been opened and closed.
-	game_menu.process_mode = Node.PROCESS_MODE_ALWAYS
-	journal.process_mode = Node.PROCESS_MODE_ALWAYS
+	if not act_one_ending.is_active():
+		game_menu.process_mode = Node.PROCESS_MODE_ALWAYS
+		journal.process_mode = Node.PROCESS_MODE_ALWAYS
 	_refresh_act_one_ending_eligibility()
 
 ## Shared by the "restart" shortcut and the game menu's "New Game" button.
@@ -146,6 +148,7 @@ func _setup_act1_story() -> void:
 			load("res://data/story/act1/dialogue_moss_post_chapter.tres"),
 			load("res://data/story/act1/dialogue_eddy_post_chapter.tres"),
 			load("res://data/story/act1/dialogue_marnie_post_chapter.tres"),
+			load("res://data/story/act1/dialogue_bramble_willowbend_intro.tres"),
 		]
 		ActOneController.load_content(objectives, dialogues)
 

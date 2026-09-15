@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="DialogueDefinition" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/story/dialogue_definition.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/story/dialogue_line.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/story/story_condition.gd" id="3"]
+
+[sub_resource type="Resource" id="Condition_taken"]
+script = ExtResource("3")
+type = 0
+target_id = "bramble_material_taken"
+
+[sub_resource type="Resource" id="Line_moss"]
+script = ExtResource("2")
+speaker = "moss"
+text = "Bramble. Those supplies belong to Willowbend. Taking what another home needs still causes harm."
+
+[sub_resource type="Resource" id="Line_bramble"]
+script = ExtResource("2")
+speaker = "bramble"
+text = "My shelter burned upstream. The mud keeps coming, and asking does not keep the rain out."
+
+[sub_resource type="Resource" id="Line_reed"]
+script = ExtResource("2")
+speaker = "reed"
+text = "Then we follow the water and fix what is driving you here. You do not get to make Willowbend pay alone."
+
+[resource]
+script = ExtResource("1")
+id = "bramble_willowbend_intro"
+speaker = "bramble"
+condition = SubResource("Condition_taken")
+lines = Array[ExtResource("2")]([SubResource("Line_moss"), SubResource("Line_bramble"), SubResource("Line_reed")])

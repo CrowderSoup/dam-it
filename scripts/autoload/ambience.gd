@@ -30,6 +30,8 @@ var _mix_tween: Tween
 var _loop_start_count := 0
 var _transformation_sting_count := 0
 var _transformation_player: AudioStreamPlayer
+var _chapter_complete_player: AudioStreamPlayer
+var _chapter_complete_cue_count := 0
 var _streams: Dictionary = {}
 var _playback_available := DisplayServer.get_name() != "headless"
 
@@ -47,6 +49,10 @@ func _ready() -> void:
 	_transformation_player.bus = "Master"
 	_transformation_player.stream = _make_sting()
 	add_child(_transformation_player)
+	_chapter_complete_player = AudioStreamPlayer.new()
+	_chapter_complete_player.bus = "Master"
+	_chapter_complete_player.stream = _make_chapter_complete_cue()
+	add_child(_chapter_complete_player)
 
 	GameState.dam_completed.connect(_on_live_dam_completed)
 	ActOneController.dialogue_started.connect(_on_dialogue_started)
@@ -64,6 +70,9 @@ func _exit_tree() -> void:
 	if _transformation_player != null:
 		_transformation_player.stop()
 		_transformation_player.stream = null
+	if _chapter_complete_player != null:
+		_chapter_complete_player.stop()
+		_chapter_complete_player.stream = null
 	_streams.clear()
 
 ## Idempotently select a durable presentation state. Returns true only when
@@ -90,12 +99,16 @@ func sync_from_game_state(immediate: bool = true) -> void:
 		immediate
 	)
 
-## #21 owns when to enter/leave this state and the authored ending cue. The
-## slot exists now so that work can use the same idempotent state API without
-## adding another audio owner. Until then it deliberately keeps the restored
-## Willowbend bed underneath the sequence.
 func set_chapter_ending_active(active: bool) -> void:
 	set_state(State.CHAPTER_ENDING if active else State.RESTORED_POND)
+
+func play_chapter_complete_cue() -> void:
+	if _playback_available:
+		_chapter_complete_player.play()
+	_chapter_complete_cue_count += 1
+
+func get_chapter_complete_cue_count() -> int:
+	return _chapter_complete_cue_count
 
 func set_dialogue_ducked(ducked: bool, immediate: bool = false) -> bool:
 	if ducked == _dialogue_ducked:
@@ -121,9 +134,6 @@ func get_transformation_sting_count() -> int:
 
 func _start_loop_for_state(state: State, immediate: bool) -> void:
 	var stream_state := state
-	# The chapter-ending music itself remains unimplemented by design (#21).
-	if state == State.CHAPTER_ENDING:
-		stream_state = State.RESTORED_POND
 	if state == State.NONE:
 		_stop_all(immediate)
 		return
@@ -247,6 +257,8 @@ func _make_loop(state: State) -> AudioStreamWAV:
 			State.RESTORED_POND:
 				var ripple := sin(TAU * 1.5 * t) * noise * 1.8
 				sample = noise + ripple + sin(TAU * 130.5 * t) * 0.025 + sin(TAU * 196.0 * t) * 0.015
+			State.CHAPTER_ENDING:
+				sample = noise * 0.7 + sin(TAU * 146.5 * t) * 0.025 + sin(TAU * 220.0 * t) * 0.018 + sin(TAU * 293.0 * t) * 0.012
 			State.CALM_POST_CHAPTER:
 				sample = noise * 0.8 + sin(TAU * 130.5 * t) * 0.02 + sin(TAU * 174.5 * t) * 0.012
 		data.encode_s16(i * 2, int(clampf(sample, -1.0, 1.0) * 32767.0))
@@ -271,6 +283,25 @@ func _make_sting() -> AudioStreamWAV:
 			var t := float(i) / SAMPLE_RATE
 			var envelope := 1.0 - float(i) / frames_per_note
 			var sample := sin(TAU * frequencies[note_index] * t) * 0.35 * envelope
+			data.encode_s16((note_index * frames_per_note + i) * 2, int(sample * 32767.0))
+	var stream := AudioStreamWAV.new()
+	stream.format = AudioStreamWAV.FORMAT_16_BITS
+	stream.mix_rate = SAMPLE_RATE
+	stream.stereo = false
+	stream.data = data
+	return stream
+
+func _make_chapter_complete_cue() -> AudioStreamWAV:
+	var frequencies := [293.66, 369.99, 440.0, 587.33]
+	var note_seconds := 0.18
+	var frames_per_note := int(SAMPLE_RATE * note_seconds)
+	var data := PackedByteArray()
+	data.resize(frames_per_note * frequencies.size() * 2)
+	for note_index in frequencies.size():
+		for i in frames_per_note:
+			var t := float(i) / SAMPLE_RATE
+			var envelope := sin(PI * float(i) / frames_per_note)
+			var sample := sin(TAU * frequencies[note_index] * t) * 0.30 * envelope
 			data.encode_s16((note_index * frames_per_note + i) * 2, int(sample * 32767.0))
 	var stream := AudioStreamWAV.new()
 	stream.format = AudioStreamWAV.FORMAT_16_BITS

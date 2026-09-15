@@ -1,4 +1,4 @@
-[gd_scene load_steps=22 format=3]
+[gd_scene load_steps=25 format=3]
 
 [ext_resource type="Script" path="res://scenes/main/main.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2"]
@@ -20,6 +20,8 @@
 [ext_resource type="PackedScene" path="res://scenes/world/river_gauge.tscn" id="18"]
 [ext_resource type="PackedScene" path="res://scenes/world/resident.tscn" id="20"]
 [ext_resource type="PackedScene" path="res://scenes/world/bramble_encounter.tscn" id="21"]
+[ext_resource type="Script" path="res://scenes/main/act_one_ending.gd" id="22"]
+[ext_resource type="Script" path="res://scenes/world/upstream_route.gd" id="23"]
 
 [sub_resource type="ShaderMaterial" id="2"]
 shader = ExtResource("11")
@@ -263,6 +265,27 @@ position = Vector2(830, 655)
 [node name="BrambleEncounter" parent="." instance=ExtResource("21")]
 raccoon_path = NodePath("../Raccoon")
 
+[node name="EndingMudPulse" type="Polygon2D" parent="."]
+visible = false
+polygon = PackedVector2Array(380, 250, 450, 265, 530, 292, 610, 315, 600, 342, 515, 320, 435, 292, 370, 275)
+color = Color(0.35, 0.22, 0.12, 0.72)
+
+[node name="UpstreamRoute" type="Node2D" parent="."]
+visible = false
+position = Vector2(430, 275)
+script = ExtResource("23")
+
+[node name="EndingMarkers" type="Node2D" parent="."]
+
+[node name="EndingGroupFrame" type="Marker2D" parent="EndingMarkers"]
+position = Vector2(740, 560)
+
+[node name="EndingBrambleExit" type="Marker2D" parent="EndingMarkers"]
+position = Vector2(600, 390)
+
+[node name="UpstreamRouteFrame" type="Marker2D" parent="EndingMarkers"]
+position = Vector2(430, 275)
+
 [node name="Player" parent="." instance=ExtResource("2")]
 position = Vector2(200, 200)
 
@@ -273,3 +296,6 @@ position = Vector2(200, 200)
 [node name="DialogueBox" parent="." instance=ExtResource("17")]
 
 [node name="Journal" parent="." instance=ExtResource("19")]
+
+[node name="ActOneEnding" type="Node" parent="."]
+script = ExtResource("22")
