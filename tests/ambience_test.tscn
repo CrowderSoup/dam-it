@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://cfqv7hnrbvlph"]
+
+[ext_resource type="Script" uid="uid://bltkk36kklnxc" path="res://tests/ambience_test.gd" id="1"]
+
+[node name="AmbienceTest" type="Node"]
+script = ExtResource("1")
