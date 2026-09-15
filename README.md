@@ -68,25 +68,26 @@ means to an end, not the whole game:
    5 dam slots sitting along the river's crossing point (also highlights
    in range) and press interact to place a dam piece (costs 2 wood +
    1 stone). The center slot sits in the river's strongest current and
-   won't take a piece until you've read the water - walk up to the reed
-   gauge post on the near bank and interact to read it (free, instant, and
-   points out which gap needs bracing) before building there.
+   won't take a piece until you've surveyed Willowbend's last pool, the reed
+   gauge, and the downstream gravel. These free observations explain where
+   water and fish need room before construction begins.
 5. Once all 5 slots are filled: the slowdown goes away (dam's done, cross
    freely), a real pond-shaped body of water grows in behind the dam
    (fading in, not just a rectangle getting taller), there's a completion
    sound plus a particle burst at every slot - and the **Lodge** appears
    for the first time, south of the new pond.
-6. Moss, Eddy, and Marnie connect those construction milestones to Reed's
-   reason for staying: talk with them when the HUD/journal points you their
-   way. Walk up to the Lodge and interact repeatedly to build it up through
+6. Moss and Eddy connect those construction milestones to Reed's reason for
+   staying: talk with them when the HUD/journal points you their
+   way. After meeting Eddy, clear and brace his downstream side passage (2
+   wood + 1 stone), then watch him use the restored route. Walk up to the
+   Lodge and interact repeatedly to build it up through
    three stages - foundation, walls, roof - each costing more wood + stone
    than the last. Moss is present from the opening, Eddy arrives with the
-   pond, and Marnie arrives when the Lodge is complete.
-7. Once the Lodge is complete, two **garden spots** appear near it - a
-   flower bed and a bench, 3 wood + 2 stone each, one-time purchases with
-   no further stages. Building one reveals its own critter (a butterfly
-   for the flower bed, a rabbit for the bench), giving leftover resources
-   somewhere to go once the Lodge itself is finished.
+   pond, and Marnie arrives once Willowbend is ready to welcome neighbors.
+7. Once the Lodge is complete, three **community improvements** appear: a
+   flower bed, creek bench, and pond shelter. Each costs 3 wood + 2 stone;
+   complete any two to prepare Willowbend's gathering and bring Marnie into
+   the chapter. The unchosen project remains available in free play.
 8. Once the Lodge reaches stage two and your energy is full, you can optionally
    reinforce your resource pouch for 6 wood + 3 stone. Wood, stone, and berries
    each start with a capacity of 10; this one-time improvement raises all to 15.

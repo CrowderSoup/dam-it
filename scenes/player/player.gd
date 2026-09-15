@@ -18,7 +18,7 @@ signal interaction_option_changed(option: InteractionOption)
 signal interaction_failed(reason: String)
 
 const SPEED := 140.0
-const WORLD_BOUNDS := Rect2(20, 20, 1360, 760)
+const WORLD_BOUNDS := Rect2(20, 20, 2560, 860)
 const FOOTSTEP_INTERVAL := 0.35
 const WATER_SPEED_MULTIPLIER := 0.5
 const TIRED_SPEED_MULTIPLIER := 0.5
@@ -102,7 +102,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func _resolve_target(area: Area2D) -> Node:
 	if area.is_in_group("tree_areas") or area.is_in_group("rock_areas"):
 		return area.get_parent()
-	if area.is_in_group("dam_slots") or area.is_in_group("lodge") or area.is_in_group("garden_spots") or area.is_in_group("raccoons") or area.is_in_group("berry_bushes") or area.is_in_group("pond_plants") or area.is_in_group("river_gauges") or area.is_in_group("residents"):
+	if area.is_in_group("dam_slots") or area.is_in_group("lodge") or area.is_in_group("garden_spots") or area.is_in_group("raccoons") or area.is_in_group("berry_bushes") or area.is_in_group("pond_plants") or area.is_in_group("river_gauges") or area.is_in_group("residents") or area.is_in_group("survey_spots") or area.is_in_group("habitat_projects"):
 		return area
 	return null
 

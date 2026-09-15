@@ -10,22 +10,26 @@ const OBJECTIVE_ORDER: Array[String] = [
 	"repair_willowbend_dam",
 	"witness_pond_return",
 	"check_eddy_route",
+	"restore_eddy_passage",
 	"build_lodge_foundation",
 	"talk_moss_home",
 	"finish_willowbend_lodge",
+	"prepare_willowbend",
 	"answer_marnie",
 ]
 
 const BOUNDARY_PROGRESS := {
 	"meet_moss": 0,
 	"gather_starter_wood": 3,
-	"read_willowbend_water": 0,
+	"read_willowbend_water": 2,
 	"repair_willowbend_dam": 2,
 	"witness_pond_return": 0,
 	"check_eddy_route": 0,
+	"restore_eddy_passage": 0,
 	"build_lodge_foundation": 0,
 	"talk_moss_home": 0,
 	"finish_willowbend_lodge": 2,
+	"prepare_willowbend": 1,
 	"answer_marnie": 0,
 }
 
@@ -36,9 +40,11 @@ const OBJECTIVE_PATHS: Array[String] = [
 	"res://data/story/act1/objective_repair_willowbend_dam.tres",
 	"res://data/story/act1/objective_witness_pond_return.tres",
 	"res://data/story/act1/objective_check_eddy_route.tres",
+	"res://data/story/act1/objective_restore_eddy_passage.tres",
 	"res://data/story/act1/objective_build_lodge_foundation.tres",
 	"res://data/story/act1/objective_talk_moss_home.tres",
 	"res://data/story/act1/objective_finish_willowbend_lodge.tres",
+	"res://data/story/act1/objective_prepare_willowbend.tres",
 	"res://data/story/act1/objective_answer_marnie.tres",
 ]
 
@@ -121,14 +127,15 @@ func _test_every_objective_save_boundary() -> void:
 	assert(ActOneController.get_flag("willowbend_narrative_spine_complete"))
 	assert(not ActOneController.get_flag("act_one_complete"),
 		"#15 must not invent #21's future chapter-complete state")
-	print("OK: all 10 implemented objective boundaries and the narrative-spine completion boundary round-trip")
+	print("OK: all 12 implemented objective boundaries and the narrative-spine completion boundary round-trip")
 
 func _test_supported_mid_dialogue_boundary() -> void:
 	ActOneController.load_from_save(_empty_story_save())
 	ActOneController.start_dialogue("willowbend_arrival")
 	ActOneController.advance_dialogue()
 	ActOneController.advance_dialogue()
-	assert(ActOneController.get_current_line().text.begins_with("I came to build a home"))
+	assert(ActOneController.get_current_line().text.begins_with("I came to build my own home"),
+		"expected arrival line 3, got: %s" % ActOneController.get_current_line().text)
 
 	var mid_dialogue_save: Dictionary = ActOneController.get_save_data()
 	assert(mid_dialogue_save["active_dialogue_id"] == "willowbend_arrival")
@@ -136,7 +143,7 @@ func _test_supported_mid_dialogue_boundary() -> void:
 
 	ActOneController.load_from_save(mid_dialogue_save)
 	assert(ActOneController.get_active_dialogue_id() == "willowbend_arrival")
-	assert(ActOneController.get_current_line().text.begins_with("I came to build a home"))
+	assert(ActOneController.get_current_line().text.begins_with("I came to build my own home"))
 	ActOneController.advance_dialogue()
 	assert(ActOneController.get_objective_status("meet_moss") == "active",
 		"advancing a restored arrival must apply the next line's objective effect exactly once")
@@ -194,6 +201,10 @@ func _test_out_of_order_world_events() -> void:
 	moss.get_interaction().perform.call()
 	_play_active_dialogue("practical_start_together")
 	assert(ActOneController.get_objective_status("gather_starter_wood") == "completed")
+	assert(ActOneController.get_objective_status("read_willowbend_water") == "active")
+	ActOneController.set_flag("surveyed_moss_pool")
+	ActOneController.set_flag("surveyed_downstream_gravel")
+	main._sync_active_story_progress()
 	assert(ActOneController.get_objective_status("read_willowbend_water") == "completed")
 	assert(ActOneController.get_objective_status("repair_willowbend_dam") == "active")
 

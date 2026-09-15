@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1")
-id = "read_willowbend_water"
-title = "Survey Willowbend"
-description = "Inspect Moss's pool, the old gauge, and the downstream gravel before you build."
-target_amount = 3
+id = "restore_eddy_passage"
+title = "Room for the River"
+description = "Open and brace the side passage below the dam so Eddy can move through."
+target_amount = 1

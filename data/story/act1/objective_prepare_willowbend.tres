@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1")
-id = "read_willowbend_water"
-title = "Survey Willowbend"
-description = "Inspect Moss's pool, the old gauge, and the downstream gravel before you build."
-target_amount = 3
+id = "prepare_willowbend"
+title = "Neighbors at Willowbend"
+description = "Complete any two community improvements around the new Lodge and pond."
+target_amount = 2
