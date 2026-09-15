@@ -201,3 +201,25 @@ script = ExtResource("3")
 [node name="RaccoonIndicator" type="Control" parent="."]
 size = Vector2(20, 20)
 script = ExtResource("3")
+
+[node name="ChapterBanner" type="Panel" parent="."]
+visible = false
+position = Vector2(40, 124)
+size = Vector2(560, 104)
+theme_override_styles/panel = SubResource("1")
+
+[node name="Title" type="Label" parent="ChapterBanner"]
+position = Vector2(16, 14)
+size = Vector2(528, 42)
+label_settings = SubResource("3")
+text = "CHAPTER ONE COMPLETE"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Subtitle" type="Label" parent="ChapterBanner"]
+position = Vector2(16, 56)
+size = Vector2(528, 32)
+label_settings = SubResource("4")
+text = "The water leads upstream to Aspen Meadow"
+horizontal_alignment = 1
+vertical_alignment = 1

@@ -288,6 +288,7 @@ godot --headless --path . tests/resident_test.tscn
 godot --headless --path . tests/bramble_encounter_test.tscn
 godot --headless --path . tests/ambience_test.tscn
 godot --headless --path . tests/story_boundary_test.tscn
+godot --headless --path . tests/chapter_ending_test.tscn
 ```
 
 `smoke_test.gd` instantiates `main.tscn`, drives the real Tree/Rock/DamSlot/

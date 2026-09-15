@@ -32,8 +32,23 @@ const AMBIENT_DRAIN_AMOUNT := 1.0
 var _footstep_time := 0.0
 var _ambient_drain_time := 0.0
 var _highlighted_target: Node = null
+var input_enabled := true
+
+func set_input_enabled(enabled: bool) -> void:
+	input_enabled = enabled
+	if enabled:
+		return
+	velocity = Vector2.ZERO
+	visual.set_movement(Vector2.ZERO, 0.0)
+	if _highlighted_target and is_instance_valid(_highlighted_target):
+		_highlighted_target.set_highlighted(false)
+	_highlighted_target = null
+	interaction_option_changed.emit(null)
 
 func _physics_process(delta: float) -> void:
+	if not input_enabled:
+		velocity = Vector2.ZERO
+		return
 	var input_vector := Vector2.ZERO
 	if Input.is_action_pressed("move_up"):
 		input_vector.y -= 1
@@ -75,7 +90,7 @@ func _physics_process(delta: float) -> void:
 	_update_highlight()
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("interact"):
+	if input_enabled and event.is_action_pressed("interact"):
 		_try_interact()
 
 ## Trees and rocks register their InteractArea (a child) in a "*_areas"

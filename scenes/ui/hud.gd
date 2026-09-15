@@ -41,6 +41,9 @@ const TUTORIAL_JOURNAL := "journal"
 @onready var raccoon_indicator: Control = $RaccoonIndicator
 @onready var action_prompt_label: Label = $ActionPromptLabel
 @onready var action_prompt_background: Panel = $ActionPromptBackground
+@onready var chapter_banner: Panel = $ChapterBanner
+@onready var chapter_title: Label = $ChapterBanner/Title
+@onready var chapter_subtitle: Label = $ChapterBanner/Subtitle
 
 var _toast_generation := 0
 var _tutorial_generation := 0
@@ -70,6 +73,7 @@ func _ready() -> void:
 	_refresh_objective_display()
 	action_prompt_label.hide()
 	action_prompt_background.hide()
+	chapter_banner.hide()
 	tutorial_label.hide()
 	tutorial_background.hide()
 	tutorial_background.gui_input.connect(_on_tutorial_gui_input)
@@ -171,6 +175,14 @@ func set_action_prompt(option: InteractionOption) -> void:
 ## rather than an ambient event.
 func show_failure(reason: String) -> void:
 	show_toast(reason, FAILURE_TOAST_DURATION)
+
+func show_chapter_banner(title: String, subtitle: String) -> void:
+	chapter_title.text = title
+	chapter_subtitle.text = subtitle
+	chapter_banner.show()
+
+func hide_chapter_banner() -> void:
+	chapter_banner.hide()
 
 func _on_energy_changed(amount: float) -> void:
 	energy_label.text = str(int(round(amount)))
