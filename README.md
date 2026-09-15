@@ -38,8 +38,8 @@ godot --path .
   tree, mine a nearby rock, build a dam piece at a nearby empty slot if you
   have enough wood + stone, harvest a berry bush, eat from a cattail/lily
   patch growing in the pond, feed a berry to a raccoon to shoo it off, or
-  talk to a resident, rest at a Lodge platform, or upgrade your resource pouch
-  at a finished Lodge
+  talk to a resident, rest at a Lodge platform, or reinforce your resource
+  pouch once the Lodge has enclosed storage
 - `R` / gamepad Start — reset ALL progress (dam + Lodge + pouch) and start over
 - `J` / gamepad Y — open/close the journal: your current objective plus a
   compact history of completed and in-progress ones, in plain language.
@@ -87,10 +87,10 @@ means to an end, not the whole game:
    no further stages. Building one reveals its own critter (a butterfly
    for the flower bed, a rabbit for the bench), giving leftover resources
    somewhere to go once the Lodge itself is finished.
-8. Once the Lodge is complete and your energy is full, interact with it to
-   upgrade your resource pouch. Wood and stone each start with a capacity of
-   10; three upgrades raise both capacities to 15, 20, and 25. The upgrades
-   cost 6 wood + 3 stone, 10 wood + 6 stone, and 14 wood + 9 stone.
+8. Once the Lodge reaches stage two and your energy is full, you can optionally
+   reinforce your resource pouch for 6 wood + 3 stone. Wood, stone, and berries
+   each start with a capacity of 10; this one-time improvement raises all to 15.
+   It reduces gathering trips but never gates story progress.
 9. Progress **saves automatically** (periodically, when the dam is
    completed, and when you close the window) and reloads next time you
    start the game - close it and come back later, your pond is still

@@ -186,11 +186,12 @@ func _on_stone_changed(amount: int) -> void:
 	stone_label.text = "%d/%d" % [amount, GameState.stone_capacity()]
 
 ## The pouch capacity changed (an upgrade, or a load that restores one) -
-## the wood/stone labels' "/cap" half is stale until re-rendered, even
+## the resource labels' "/cap" half is stale until re-rendered, even
 ## though the carried amounts themselves didn't change.
 func _on_pouch_upgraded(_tier: int) -> void:
 	_on_wood_changed(GameState.wood)
 	_on_stone_changed(GameState.stone)
+	_on_berries_changed(GameState.berries)
 
 func _on_pouch_full(kind: String) -> void:
 	show_toast(GameState.pouch_full_message(kind), 3.0)
@@ -199,7 +200,7 @@ func _on_water_observed() -> void:
 	show_toast("You read the water: the current runs strongest through the middle gap. Brace that one well.")
 
 func _on_berries_changed(amount: int) -> void:
-	berries_label.text = str(amount)
+	berries_label.text = "%d/%d" % [amount, GameState.berry_capacity()]
 
 func _on_dam_progress_changed(built: int, total: int) -> void:
 	dam_label.text = "%d / %d" % [built, total]

@@ -29,15 +29,14 @@ extends Node
 ## SaveManager only owns the version number and dispatching to the right
 ## migration function - what actually goes in the payload is still entirely
 ## up to Main/GameState/ActOneController (see docs/design/dialogue-schema.md
-## #save-load for the version 2 shape).
+## #save-load for the current payload shape).
 
 const SLOT_COUNT := 3
 const AUTOSAVE_INTERVAL := 15.0
-## Version 2 adds the "story" section (flags/objective progress/the active
-## dialogue+line - see ActOneController.get_save_data() and
-## docs/design/dialogue-schema.md#save-load). Version 1 is every save from
-## before that existed; _migrate_v1_to_v2() upgrades one to the other.
-const SAVE_VERSION := 2
+## Version 2 added the story section. Version 3 replaces the demo's three
+## escalating pouch tiers with Willowbend's single Reinforced Pouch; any
+## previous upgraded tier therefore becomes the one supported upgraded state.
+const SAVE_VERSION := 3
 
 ## One explicit, testable function per supported upgrade, keyed by the
 ## version it upgrades *from*. Applied in sequence by _migrate() until the
@@ -47,6 +46,7 @@ const SAVE_VERSION := 2
 ## build genuinely doesn't know how to read.
 const _MIGRATIONS := {
 	1: "_migrate_v1_to_v2",
+	2: "_migrate_v2_to_v3",
 }
 
 ## Tests override this so they can never touch a player's real slots.
@@ -163,6 +163,18 @@ func _migrate_v1_to_v2(data: Dictionary) -> Dictionary:
 			"active_dialogue_line": -1,
 			"active_dialogue_choice": "",
 		}
+	return migrated
+
+## Old tiers 1-3 all represent a player who already bought at least one pouch
+## upgrade. Preserve that earned capability while collapsing the prototype
+## ladder to the single authored Willowbend upgrade.
+func _migrate_v2_to_v3(data: Dictionary) -> Dictionary:
+	var migrated := data.duplicate(true)
+	var old_tier: Variant = migrated.get("pouch_tier", 0)
+	if old_tier is int or old_tier is float:
+		migrated["pouch_tier"] = 1 if int(old_tier) > 0 else 0
+	else:
+		migrated["pouch_tier"] = 0
 	return migrated
 
 func save_game() -> bool:

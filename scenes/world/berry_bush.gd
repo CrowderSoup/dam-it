@@ -19,10 +19,14 @@ func _ready() -> void:
 func get_interaction() -> InteractionOption:
 	if not can_harvest():
 		return null
+	if not GameState.has_berry_room():
+		return InteractionOption.new("Harvest Berries", harvest, false, GameState.pouch_full_message("berries"))
 	return InteractionOption.new("Harvest Berries", harvest, true)
 
 func harvest() -> void:
-	if not can_harvest():
+	if not can_harvest() or not GameState.has_berry_room():
+		if can_harvest():
+			GameState.pouch_full.emit("berries")
 		return
 	GameState.add_berries(HARVEST_AMOUNT)
 	Sfx.play_harvest()
