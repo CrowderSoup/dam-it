@@ -7,7 +7,6 @@ const SAMPLE_RATE := 22050
 var _chop_player: AudioStreamPlayer
 var _mine_player: AudioStreamPlayer
 var _build_player: AudioStreamPlayer
-var _complete_player: AudioStreamPlayer
 var _footstep_player: AudioStreamPlayer
 var _storm_player: AudioStreamPlayer
 var _shoo_player: AudioStreamPlayer
@@ -20,7 +19,6 @@ func _ready() -> void:
 	_chop_player = _make_player(_make_tone(220.0, 0.08, 0.5))
 	_mine_player = _make_player(_make_tone(160.0, 0.05, 0.55))
 	_build_player = _make_player(_make_tone(120.0, 0.18, 0.6))
-	_complete_player = _make_player(_make_arpeggio([440.0, 554.0, 659.0, 880.0], 0.12))
 	_footstep_player = _make_player(_make_tone(90.0, 0.04, 0.2))
 	_storm_player = _make_player(_make_tone(70.0, 0.35, 0.45))
 	_shoo_player = _make_player(_make_tone(320.0, 0.06, 0.4))
@@ -28,7 +26,6 @@ func _ready() -> void:
 	_eat_player = _make_player(_make_arpeggio([180.0, 220.0], 0.05))
 	_harvest_player = _make_player(_make_arpeggio([260.0, 300.0], 0.05))
 	_rest_player = _make_player(_make_arpeggio([392.0, 494.0, 587.0], 0.1))
-	GameState.dam_completed.connect(play_complete)
 
 func play_chop() -> void:
 	_chop_player.play()
@@ -38,9 +35,6 @@ func play_mine() -> void:
 
 func play_build() -> void:
 	_build_player.play()
-
-func play_complete() -> void:
-	_complete_player.play()
 
 func play_footstep() -> void:
 	_footstep_player.play()

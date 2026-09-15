@@ -5,6 +5,8 @@ extends Node2D
 @onready var slots: Array[Panel] = [$Slots/Slot1, $Slots/Slot2, $Slots/Slot3]
 
 func _ready() -> void:
+	Ambience.set_state(Ambience.State.TITLE)
+	Ambience.set_dialogue_ducked(false, true)
 	for slot in slots:
 		slot.slot_chosen.connect(_on_slot_chosen)
 	_focus_first_available()

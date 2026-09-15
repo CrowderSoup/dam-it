@@ -22,6 +22,7 @@ GameState="*res://scripts/autoload/game_state.gd"
 ActOneController="*res://scripts/autoload/act_one_controller.gd"
 InputSetup="*res://scripts/autoload/input_setup.gd"
 Sfx="*res://scripts/autoload/sfx.gd"
+Ambience="*res://scripts/autoload/ambience.gd"
 Fx="*res://scripts/autoload/fx.gd"
 SaveManager="*res://scripts/autoload/save_manager.gd"
 
