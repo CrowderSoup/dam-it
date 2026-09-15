@@ -188,10 +188,11 @@ position = Vector2(740, 640)
 resident_id = "moss"
 speaker_id = "moss"
 resident_name = "Moss"
-dialogue_ids = PackedStringArray("moss_intro", "moss_supplies_ready", "pond_returns", "moss_lodge_foundation", "moss_lodge_walls")
+dialogue_ids = PackedStringArray("moss_post_chapter", "moss_intro", "moss_supplies_ready", "pond_returns", "moss_lodge_foundation", "moss_lodge_walls")
 opening_points = PackedVector2Array(590, 520, 650, 500)
 restored_points = PackedVector2Array(620, 500, 700, 520, 820, 500)
 stage_one_points = PackedVector2Array(620, 500, 700, 610, 780, 610)
+post_chapter_points = PackedVector2Array(700, 610, 780, 610, 700, 520, 620, 500)
 
 [node name="Visual" parent="Residents/Moss" index="0"]
 kind = 0
@@ -201,11 +202,12 @@ resident_id = "eddy"
 speaker_id = "eddy"
 resident_name = "Eddy"
 availability = 1
-dialogue_ids = PackedStringArray("eddy_flow_check")
+dialogue_ids = PackedStringArray("eddy_post_chapter", "eddy_flow_check")
 opening_points = PackedVector2Array(740, 400)
 restored_points = PackedVector2Array(700, 430, 780, 455)
 settled_objective_id = "check_eddy_route"
 settled_points = PackedVector2Array(650, 450, 760, 480, 860, 440)
+post_chapter_points = PackedVector2Array(650, 450, 760, 480, 860, 440, 800, 400)
 
 [node name="Visual" parent="Residents/Eddy" index="0"]
 kind = 2
@@ -216,8 +218,11 @@ speaker_id = "marnie"
 resident_name = "Marnie"
 availability = 2
 availability_objective_id = "answer_marnie"
-dialogue_ids = PackedStringArray("marnie_upstream_call")
+dialogue_ids = PackedStringArray("marnie_post_chapter", "marnie_upstream_call")
 opening_points = PackedVector2Array(550, 460, 500, 430)
+settled_objective_id = "answer_marnie"
+settled_points = PackedVector2Array(500, 430, 460, 390, 500, 350)
+post_chapter_points = PackedVector2Array(500, 350, 460, 390, 520, 410)
 
 [node name="Visual" parent="Residents/Marnie" index="0"]
 kind = 1

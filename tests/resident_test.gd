@@ -67,6 +67,40 @@ func _ready() -> void:
 	assert(not restored_main.is_recurring_scavenging_enabled(), "clearing the gate must stop the timer again")
 	print("OK: recurring scavenging is hard-gated by bramble_intro_complete")
 
+	# Marnie settles near the upstream route once her request is answered. The
+	# chapter-complete flag then derives calm routines and repeatable ambient
+	# conversations for every resident without persisting waypoint phase.
+	var settled_story := ActOneController.get_save_data()
+	settled_story["objectives"]["answer_marnie"] = {"status": "completed", "current": 0}
+	settled_story["objectives"]["check_eddy_route"] = {"status": "completed", "current": 0}
+	settled_story["flags"]["pond_restored"] = true
+	settled_story["flags"]["willowbend_narrative_spine_complete"] = true
+	ActOneController.load_from_save(settled_story)
+	for resident in [moss, eddy, marnie]:
+		resident.restore_from_story_state()
+	assert(marnie.visible and marnie.get_active_route_id() == "settled")
+	assert(marnie.global_position == marnie.get_route_points()[0], "Marnie's restored request boundary should begin at the upstream-route anchor")
+	assert(marnie.get_interaction() == null, "Marnie's required request must not replay after completion")
+	print("OK: Marnie settles at the upstream route after her request")
+
+	ActOneController.set_flag("act_one_complete")
+	for resident in [moss, eddy, marnie]:
+		assert(resident.get_active_route_id() == "post_chapter")
+		assert(resident.get_route_points().size() >= 2, "%s needs a visible post-chapter routine" % resident.resident_name)
+		var talk: InteractionOption = resident.get_interaction()
+		assert(talk != null and talk.label == "Talk to %s" % resident.resident_name)
+		talk.perform.call()
+		_play_active_dialogue()
+	print("OK: completed saves keep Moss, Eddy, and Marnie active in calm routines with ambient dialogue")
+
+	var completed_story := ActOneController.get_save_data()
+	ActOneController.load_from_save(completed_story)
+	for resident in [moss, eddy, marnie]:
+		resident.restore_from_story_state()
+		assert(resident.get_active_route_id() == "post_chapter")
+		assert(resident.global_position == resident.get_route_points()[0], "restoration should snap %s to a stable route anchor" % resident.resident_name)
+	print("OK: post-chapter resident state round-trips without saving animation phase")
+
 	restored_main.queue_free()
 	await get_tree().process_frame
 	SaveManager.delete_save(1)
@@ -111,3 +145,7 @@ func _write_stage_one_save() -> void:
 	assert(file != null, "could not write isolated resident test save")
 	file.store_string(JSON.stringify(data))
 	file.close()
+
+func _play_active_dialogue() -> void:
+	while not ActOneController.get_active_dialogue_id().is_empty():
+		ActOneController.advance_dialogue()
