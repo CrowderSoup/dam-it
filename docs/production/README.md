@@ -11,6 +11,9 @@ to move *Dam it!* through its roadmap milestones.
   against which the Act I vertical slice will be evaluated.
 - [Dam economy notes](dam-economy-notes.md) records the before/after
   resource-action budget for the issue #19 gathering/dam retune.
+- [Act I Lodge and resident implementation matrix](act1-lodge-resident-matrix.md)
+  defines the stage payoffs, named-resident routines, first Bramble gate,
+  save-state contract, and collision-free delivery order for issue #20.
 
 Milestone 1 implementation work is tracked in the
 [Act I narrative vertical slice milestone](https://github.com/CrowderSoup/dam-it/milestone/1).
