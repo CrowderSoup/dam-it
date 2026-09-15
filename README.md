@@ -109,10 +109,12 @@ gathering wood and stone:
   piece slows you again if you wade near it). Repair it the same way you
   built it - interact, same 2 wood + 1 stone cost.
 - **Bramble.** Random raccoon scavenging is now disabled until Bramble has
-  received an authored, save-safe introduction. That encounter is the next
-  #20 implementation slice; completing the dam alone can never start a random
-  raid. If recurring visits remain after playtesting, berries will provide the
-  same recoverable way to send Bramble off without a material loss.
+  completed the authored, save-safe introduction used by the Act I ending;
+  completing the dam alone can never start a random raid. The introduction
+  follows one fixed enter/take/flee route, never repeats its small recoverable
+  material loss after loading, and cannot consume resources reserved for an
+  active story objective. If recurring visits remain after playtesting,
+  berries provide the same recoverable way to send Bramble off without a loss.
 
 Storms start only once the dam is first completed, so a fresh game never has
 to deal with one. Active upkeep events are announced with a HUD toast and an
@@ -256,7 +258,7 @@ godot --headless --export-release "Web" builds/web/index.html
 
 There's a headless regression test at `tests/smoke_test.gd` (no real
 framework like GUT/GoDotTest set up - just plain `assert()`s against the
-actual game objects), plus eight companions covering the data-driven story
+actual game objects), plus nine companions covering the data-driven story
 layer, its UI, and presentation: `tests/story_test.gd` (ActOneController's
 dialogue/objective runtime, no UI), `tests/dialogue_ui_test.gd` (the dialogue
 box UI on top of it - see docs/design/dialogue-schema.md),
@@ -269,8 +271,10 @@ Willowbend objective save boundary), and `tests/player_visual_test.gd`
 (Reed's cardinal poses and layered walk cycle), and `tests/ambience_test.gd`
 (stable audio state, dialogue ducking, and live-versus-restored dam
 transitions), and `tests/resident_test.gd` (named-resident composition,
-routine and stage-one save restoration, and the Bramble scavenging gate). Run
-them after making logic changes:
+routine and stage-one save restoration, and the Bramble scavenging gate), and
+`tests/bramble_encounter_test.gd` (the authored route, protected loss,
+discrete save boundaries, and idempotent completion). Run them after making
+logic changes:
 
 ```
 godot --headless --editor --path . --quit # populate a fresh checkout's import cache
@@ -281,6 +285,7 @@ godot --headless --path . tests/journal_test.tscn
 godot --headless --path . tests/player_visual_test.tscn
 godot --headless --path . tests/narrative_test.tscn
 godot --headless --path . tests/resident_test.tscn
+godot --headless --path . tests/bramble_encounter_test.tscn
 godot --headless --path . tests/ambience_test.tscn
 godot --headless --path . tests/story_boundary_test.tscn
 ```
