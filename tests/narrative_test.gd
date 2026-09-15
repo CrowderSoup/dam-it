@@ -22,6 +22,7 @@ func _ready() -> void:
 	_play_active_dialogue()
 	assert(ActOneController.get_objective_status("meet_moss") == "active")
 	assert(moss.visible and moss.get_interaction().label == "Talk to Moss")
+	assert(moss.global_position.y < 275.0, "Moss's opening route must stay above the HUD safe edge")
 	assert(main.hud.story_indicator.target == moss, "the first task should point a new player toward Moss")
 	print("OK: the Willowbend arrival leads to a visible, actionable Moss")
 

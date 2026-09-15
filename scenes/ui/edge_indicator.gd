@@ -8,6 +8,10 @@ extends Control
 
 const BASE_VIEWPORT_SIZE := Vector2(640, 360)
 const EDGE_MARGIN := 22.0
+## Tutorial/objective banners occupy the top strip and the resource HUD plus
+## action prompts occupy the bottom. A target behind either is not meaningfully
+## visible, even though it is technically inside the raw viewport.
+const SAFE_RECT := Rect2(22, 54, 596, 220)
 const ARROW_COLOR := Color("fff0a0")
 
 var target: Node2D = null
@@ -33,19 +37,18 @@ func _process(_delta: float) -> void:
 		return
 
 	var screen_center := BASE_VIEWPORT_SIZE / 2.0
-	var half_size := screen_center - Vector2(EDGE_MARGIN, EDGE_MARGIN)
 	var offset := (target.global_position - _camera.global_position) * _camera.zoom
+	var screen_position := screen_center + offset
 
-	if absf(offset.x) <= half_size.x and absf(offset.y) <= half_size.y:
+	if SAFE_RECT.has_point(screen_position):
 		if visible:
 			hide()
 		return
 
-	var scale_x: float = half_size.x / absf(offset.x) if offset.x != 0.0 else INF
-	var scale_y: float = half_size.y / absf(offset.y) if offset.y != 0.0 else INF
-	var edge_scale: float = min(scale_x, scale_y)
-
-	position = screen_center + offset * edge_scale
+	position = Vector2(
+		clampf(screen_position.x, SAFE_RECT.position.x, SAFE_RECT.end.x),
+		clampf(screen_position.y, SAFE_RECT.position.y, SAFE_RECT.end.y)
+	)
 	rotation = offset.angle()
 	show()
 	queue_redraw()
