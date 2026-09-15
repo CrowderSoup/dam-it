@@ -90,6 +90,9 @@ func _ready() -> void:
 	assert(ActOneController.get_current_line().choices.size() == 3, "advancing should reach Moss's three response choices")
 	assert(dialogue_box.choices_container.visible and not dialogue_box.continue_hint.visible, "a line with choices should show the choice buttons, not the continue hint")
 	assert(dialogue_box.choice_buttons[0].has_focus(), "the first choice should be focused automatically, so gamepad/keyboard navigation never starts with nothing focused")
+	assert(dialogue_box.text_label.label_settings.font_size >= 16, "finished dialogue copy must retain the 640x360 readability floor")
+	for button in dialogue_box.choice_buttons:
+		assert(button.get_theme_font_size("font_size") >= 14, "choice copy must retain its readability floor")
 	print("OK: keyboard E advances a plain line, and a line with choices shows focused choice buttons")
 
 	# --- Gamepad A confirms whichever choice is focused, via the explicit

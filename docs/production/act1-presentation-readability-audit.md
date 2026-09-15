@@ -1,19 +1,20 @@
 # Act I Presentation and Readability Audit
 
-Status: **Early Milestone 1 pass**  
+Status: **Integrated Milestone 1 pass**
 Issue: [#9](https://github.com/CrowderSoup/dam-it/issues/9)  
 Target: 640x360 Godot viewport scaled into a desktop Web browser
 
-This audit captures the presentation work that can proceed before Act I's
-narrative, resident, and chapter-ending layouts are stable. It uses the
-current Willowbend scene, the browser captures reviewed in issue #32, and the
+This audit now covers the integrated Act I layouts after narrative, resident,
+and chapter-ending work stabilized. It uses the current Willowbend scene, the
+640x360 browser captures reviewed in issue #32, final authored copy, and the
 approved [visual direction](../design/visual-direction.md) as its baseline.
 
 The implementation paired with this audit replaces Reed's whole-body bob and
 mirrored two-direction drawing with four readable cardinal poses and a layered
 procedural walk cycle. It also establishes durable procedural ambience without
-coupling it to resident or ending choreography. Final UI and chapter-ending
-polish remain gated on #20 and #21.
+coupling it to resident or ending choreography. The integrated pass raises
+small interface copy, strengthens translucent HUD contrast, and validates the
+finished chapter-ending layout.
 
 ## Findings and priority
 
@@ -22,10 +23,10 @@ polish remain gated on #20 and #21.
 | P0 | Browser font fallback did not contain the journal's checkmark and bullet glyphs. | Resolved by PR #33 with ASCII status markers. Keep player-facing control/status copy within the shipped font's verified glyph set. | Journal and HUD tests assert the Web-safe strings. |
 | P0 | Long action reasons and the native-style Controls dialog could derive sizes wider than the base viewport. | Resolved by PR #33 with bounded wrapping panels/dialog copy. Preserve those bounds when narrative text is added. | Headless layout assertions cover the longest current action reason and Controls dialog. |
 | P1 | Reed only faced sideways and moved as a single bobbing cutout, so up/down travel and footfall were hard to read. | This slice adds front, back, left, and right silhouettes selected by the dominant movement axis, with alternating feet, body lift, and tail motion. | `player_visual_test.gd` covers all directions, diagonal selection, independent layers, and idle reset. |
-| P1 | The narrative dialogue and journal now exist, but chapter-ending copy and its densest layout do not, so a conclusive scale/contrast pass would still test placeholder density. | Defer final adjustment until #21 has representative longest strings. Add bounds/focus assertions with each content PR. | Required before #9 closes. |
-| P1 | The game has procedural effects but no ambient or musical state model. Wiring cues directly to current demo events would make dialogue/save transitions fragile. | Resolved for title, dry Willowbend, restored pond, save restoration, and dialogue ducking by the `Ambience` autoload. #21 still owns the authored chapter-ending cue. | `ambience_test.gd` verifies idempotence and live-versus-restored behavior. |
-| P2 | Resident motion is idle bobbing, not visible habitat use. | Owned by #20's resident routine work; #9 should polish poses only after those paths exist. | Verify Moss, Eddy, and Marnie at gameplay zoom. |
-| P2 | Current transformation feedback is visually clear but dam completion and chapter completion do not yet have distinct framing. | Preserve the dam cue; reserve a separate audiovisual state and camera sequence for #21. | Side-by-side playtest recognition check. |
+| P1 | Finished objective, prompt, journal, and dialogue copy was bounded, but several labels were only 11-14 px at the 640x360 target. | Raise persistent HUD copy to 13 px, journal copy to 15 px, dialogue to 16 px, and choices to 14 px; retain wrapping and safe rectangles. | UI tests cover the longest prompt, journal content, three-choice dialogue, and chapter banner. |
+| P1 | The game has procedural effects but no ambient or musical state model. Wiring cues directly to current demo events would make dialogue/save transitions fragile. | Resolved for title, dry Willowbend, restored pond, chapter ending, calm play, save restoration, and dialogue ducking by `Ambience`. | Ambience and chapter-ending tests verify idempotence and live-versus-restored behavior. |
+| P2 | Resident motion must read as habitat use, not static rewards. | Resolved through habitat-specific routes and post-chapter dialogue from #20. | Resident tests verify all three routine/restoration states. |
+| P2 | Dam completion and chapter completion need distinct framing. | Resolved: the dam uses a local water fade/punch/sting; the ending uses a gathering, muddy pulse, camera journey, permanent route, full-width banner, and separate cue. | Automated state coverage is complete; recognition remains a #15 human-playtest question. |
 
 ## Implemented movement contract
 
@@ -82,18 +83,15 @@ for #21, and intentionally retain the restored pond bed until that issue adds
 its authored cue and timing. `CALM_POST_CHAPTER` already derives from the
 future durable `act_one_complete` flag without replaying a celebration.
 
-## Remaining validation gate
+## Remaining human validation gate
 
-Do not close issue #9 with this early slice. After #17, #20, and #21 provide
-representative content:
+The source-level and automated presentation checks are complete. Issue #15's
+release-candidate playtest still needs to:
 
-- capture title, exploration, dialogue with three choices, journal with the
-  longest objective, every Lodge stage, transformation, and ending at the
-  Web target size;
 - verify focus visibility and navigation with keyboard and a physical gamepad;
 - check every overlay against the 640x360 safe rectangle and browser aspect
   ratios wider and narrower than 16:9;
-- compare normal and low-energy movement in all four directions;
+- spot-check normal and low-energy movement in all four directions;
 - verify ambience survives pause, dialogue, and save/load without restarting;
 - confirm first-time players distinguish dam completion from chapter ending;
   and

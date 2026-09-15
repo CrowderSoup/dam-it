@@ -228,6 +228,8 @@ func _ready() -> void:
 	assert(viewport_rect.encloses(hud3.action_prompt_background.get_rect()), "the action-prompt panel must stay inside the base viewport")
 	assert(viewport_rect.encloses(hud3.action_prompt_label.get_rect()), "the wrapped action-prompt label must stay inside the base viewport")
 	assert(hud3.action_prompt_label.autowrap_mode != TextServer.AUTOWRAP_OFF, "longer future prompts must wrap instead of drawing beyond their panel")
+	assert(hud3.action_prompt_label.label_settings.font_size >= 13, "persistent HUD copy must retain the 640x360 readability floor")
+	assert(hud3.toast_background.get_theme_stylebox("panel").bg_color.a >= 0.8, "HUD copy needs a sufficiently opaque field over every world color")
 	print("OK: long action prompts stay inside a bounded, wrapping panel")
 
 	# The journal tutorial appears the moment the player's first objective starts.
